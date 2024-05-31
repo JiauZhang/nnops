@@ -1,0 +1,6 @@
+include *.*
+include LICENSE
+recursive-include csrc *.*
+recursive-include datamana *.*
+prune */__pycache__
+global-exclude *.o *.so *.dylib *.a .git *.pyc *.swp

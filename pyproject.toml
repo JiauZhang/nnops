@@ -1,0 +1,40 @@
+[build-system]
+requires = [
+    "build",
+    "setuptools >= 42",
+    "wheel",
+    "ninja",
+    "cmake >= 3.15",
+    "nanobind >= 1.9.2",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nnops"
+version = "0.0.1"
+description = "Neural Network Operators"
+readme = "README.md"
+authors = [
+    {name = "Jiau Zhang", email = "jiauzhang@163.com"},
+]
+classifiers = [
+    'Intended Audience :: Developers',
+    'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+    'Programming Language :: Python :: 3.8',
+]
+keywords = [
+    'Deep Learning',
+    'Neural Network Operators',
+    'Artificial Intelligence',
+]
+requires-python = ">= 3.8"
+dependencies = [
+    "numpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/jiauzhang/nnops"
+
+[tool.setuptools]
+packages = ["nnops"]
