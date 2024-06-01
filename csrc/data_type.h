@@ -6,20 +6,21 @@
 using namespace std;
 namespace nb = nanobind;
 
-enum Type {
-    TYPE_FLOAT32,
-    TYPE_FLOAT16,
-    TYPE_INT32,
-    TYPE_INT16,
-    TYPE_UINT16,
-    TYPE_INT8,
-    TYPE_UINT8,
-};
-
 class DataType {
 public:
+    enum Type {
+        TYPE_FLOAT32,
+        TYPE_FLOAT16,
+        TYPE_INT32,
+        TYPE_INT16,
+        TYPE_UINT16,
+        TYPE_INT8,
+        TYPE_UINT8,
+    };
+
     DataType() {}
     DataType(DataType &dtype) { type_ = dtype.type_; }
+    DataType(Type type) { type_ = type; }
 
     enum Type type_;
 };

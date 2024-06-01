@@ -18,7 +18,7 @@ class DataType(__DataType):
 del __DataType
 
 class Tensor(__Tensor):
-    def __init__(self, dtype=None):
+    def __init__(self, dtype=None, shape=[], device=None):
         super().__init__()
 
 del __Tensor

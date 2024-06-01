@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nnops"
-version = "0.0.2"
+version = "0.0.3"
 description = "Neural Network Operators"
 readme = "README.md"
 authors = [

@@ -7,6 +7,11 @@
 using namespace std;
 namespace nb = nanobind;
 
+Tensor::Tensor(DataType &dtype, const TensorShape &shape) {
+    dtype_ = dtype;
+    shape_ = shape;
+}
+
 void Tensor::reshape(vector<int> &dims) {
     shape_.set_dims(dims);
 }
@@ -18,7 +23,9 @@ void Tensor::reshape(TensorShape &shape) {
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     nb::class_<Tensor>(m, "Tensor")
         .def(nb::init<>())
+        .def(nb::init<DataType &, const TensorShape &>())
         .def("reshape", [](Tensor &self, vector<int> &dims) { self.reshape(dims); })
         .def("reshape", [](Tensor &self, TensorShape &shape) { self.reshape(shape); })
+        .def_prop_ro("ndim", [](Tensor &t) { return t.shape_.ndim(); })
         .def_prop_ro("shape", [](Tensor &t) { return t.shape_.get_dims(); });
 }
