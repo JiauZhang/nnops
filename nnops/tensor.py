@@ -1,5 +1,7 @@
 from nnops._C import (
-    TensorShape as __TensorShape
+    TensorShape as __TensorShape,
+    DataType as __DataType,
+    Tensor as __Tensor,
 )
 
 class TensorShape(__TensorShape):
@@ -8,3 +10,15 @@ class TensorShape(__TensorShape):
         self.set_dims(shape)
 
 del __TensorShape
+
+class DataType(__DataType):
+    def __init__(self, dtype=None):
+        super().__init__()
+
+del __DataType
+
+class Tensor(__Tensor):
+    def __init__(self, dtype=None):
+        super().__init__()
+
+del __Tensor

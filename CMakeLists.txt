@@ -17,6 +17,9 @@ find_package(nanobind CONFIG REQUIRED)
 
 nanobind_add_module(
   _C STABLE_ABI
+  csrc/data_type.h csrc/data_type.cpp
+  csrc/tensor_shape.h csrc/tensor_shape.cpp
+  csrc/tensor.h csrc/tensor.cpp
   csrc/python.cpp
 )
 target_link_libraries(_C PRIVATE rt)
