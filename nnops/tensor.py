@@ -3,6 +3,7 @@ from nnops._C import (
     DataType as __DataType,
     Tensor as __Tensor,
 )
+import nnops.dtype as DT_
 
 class TensorShape(__TensorShape):
     def __init__(self, shape=[]):
@@ -11,14 +12,8 @@ class TensorShape(__TensorShape):
 
 del __TensorShape
 
-class DataType(__DataType):
-    def __init__(self, dtype=None):
-        super().__init__()
-
-del __DataType
-
 class Tensor(__Tensor):
-    def __init__(self, dtype=None, shape=[], device=None):
-        super().__init__()
+    def __init__(self, dtype=DT_.float32, shape=[], device=None):
+        super().__init__(dtype, shape)
 
 del __Tensor

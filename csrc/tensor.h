@@ -12,7 +12,8 @@ namespace nb = nanobind;
 class Tensor {
 public:
     Tensor() {}
-    Tensor(DataType &dtype, const TensorShape &shape);
+    Tensor(DataType &dtype, TensorShape &shape);
+    Tensor(DataType &dtype, vector<int> &dims);
 
     void reshape(vector<int> &dims);
     void reshape(TensorShape &shape);
