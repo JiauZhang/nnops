@@ -1,14 +1,12 @@
 from nnops._C import (
     TensorShape as __TensorShape,
-    DataType as __DataType,
     Tensor as __Tensor,
 )
 import nnops.dtype as DT_
 
 class TensorShape(__TensorShape):
     def __init__(self, shape=[]):
-        super().__init__()
-        self.set_dims(shape)
+        super().__init__(shape)
 
 del __TensorShape
 

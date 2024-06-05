@@ -1,8 +1,8 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/vector.h>
-#include "data_type.h"
-#include "tensor_shape.h"
-#include "tensor.h"
+#include <data_type.h>
+#include <tensor_shape.h>
+#include <tensor.h>
 
 using namespace std;
 namespace nb = nanobind;

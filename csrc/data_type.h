@@ -3,7 +3,6 @@
 
 #include <nanobind/nanobind.h>
 
-using namespace std;
 namespace nb = nanobind;
 
 enum DataType {
