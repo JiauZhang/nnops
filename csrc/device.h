@@ -15,6 +15,9 @@ enum DeviceType {
 class Device {
 public:
     static void register_device(DeviceType type, Device *device);
+    static Device *get_device(DeviceType type);
+
+    virtual void *malloc(size_t size) = 0;
 
 private:
     static std::map<DeviceType, Device *> devices_;
