@@ -2,7 +2,6 @@
 #define __DEVICE_TYPE_H__
 
 #include <nanobind/nanobind.h>
-#include <map>
 
 namespace nb = nanobind;
 
@@ -18,9 +17,6 @@ public:
     static Device *get_device(DeviceType type);
 
     virtual void *malloc(size_t size) = 0;
-
-private:
-    static std::map<DeviceType, Device *> devices_;
 };
 
 #define REGISTER_DEVICE(device_type, device_class)                      \
