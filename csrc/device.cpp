@@ -3,6 +3,8 @@
 
 namespace nb = nanobind;
 
+std::map<DeviceType, Device *> Device::devices_;
+
 void Device::register_device(DeviceType type, Device *device) {
     devices_[type] = device;
 }
