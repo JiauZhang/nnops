@@ -38,3 +38,10 @@ Homepage = "https://github.com/jiauzhang/nnops"
 
 [tool.setuptools]
 packages = ["nnops"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
