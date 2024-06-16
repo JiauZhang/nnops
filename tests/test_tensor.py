@@ -23,8 +23,14 @@ class TestTensor():
             tensor = Tensor(dtype=tp)
             assert tp == tensor.dtype
 
-    def test_tensor_device(self):
+    def test_tensor_exception(self):
+        runtime_error = False
         try:
             tensor = Tensor(device='fake_device')
         except RuntimeError:
-            ...
+            runtime_error = True
+        assert runtime_error == True
+
+    def test_tensor_nbytes_nelems(self):
+        tensor = Tensor(shape=[2, 3, 4], dtype=dtype.int16)
+        assert tensor.nelems == 24 and tensor.nbytes == tensor.nelems * 2

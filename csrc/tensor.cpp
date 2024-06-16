@@ -28,7 +28,7 @@ void Tensor::init_tensor(DataType &dtype, TensorShape &shape, std::string &devic
     device_ = Device::get_device(device);
 
     if (device_ == nullptr)
-        throw std::runtime_error("get device failed!\n");
+        throw std::runtime_error("get device failed!");
 
     nelems_ = 1;
     for (auto dim: shape_.get_dims())
@@ -39,7 +39,7 @@ void Tensor::init_tensor(DataType &dtype, TensorShape &shape, std::string &devic
     data_ptr_ = nullptr;
     data_ptr_ = device_->malloc(nbytes_);
     if (data_ptr_ == nullptr)
-        throw std::runtime_error("alloc tensor memory failed!\n");
+        throw std::runtime_error("alloc tensor memory failed!");
 }
 
 void Tensor::reshape(vector<int> &dims) {
@@ -59,5 +59,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("reshape", [](Tensor &self, vector<int> &dims) { self.reshape(dims); })
         .def("reshape", [](Tensor &self, TensorShape &shape) { self.reshape(shape); })
         .def_prop_ro("ndim", [](Tensor &t) { return t.shape_.ndim(); })
+        .def_prop_ro("nbytes", [](Tensor &t) { return t.nbytes_; })
+        .def_prop_ro("nelems", [](Tensor &t) { return t.nelems_; })
         .def_prop_ro("shape", [](Tensor &t) { return t.shape_.get_dims(); });
 }
