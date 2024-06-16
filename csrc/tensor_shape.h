@@ -14,7 +14,7 @@ public:
     TensorShape(vector<int> &dims) { dims_ = dims; }
 
     int ndim() { return dims_.size(); }
-    vector<int> get_dims() { return dims_; }
+    vector<int> &get_dims() { return dims_; }
     void set_dims(TensorShape &shape) { dims_ = shape.dims_; }
     void set_dims(vector<int> &dims) { dims_ = dims; }
 

@@ -22,3 +22,9 @@ class TestTensor():
         for tp in types:
             tensor = Tensor(dtype=tp)
             assert tp == tensor.dtype
+
+    def test_tensor_device(self):
+        try:
+            tensor = Tensor(device='fake_device')
+        except RuntimeError:
+            ...

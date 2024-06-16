@@ -16,6 +16,7 @@ enum DataType {
     TYPE_UINT8,
 };
 
+size_t sizeof_dtype(DataType dtype);
 void DEFINE_DATA_TYPE_MODULE(nb::module_ & (m));
 
 #endif // __DATA_TYPE_H__

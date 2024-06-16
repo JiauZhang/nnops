@@ -6,4 +6,8 @@ void *CPUDevice::malloc(size_t size) {
     return std::malloc(size);
 }
 
-REGISTER_DEVICE(DeviceType::CPU, CPUDevice);
+void CPUDevice::free(void *ptr) {
+    std::free(ptr);
+}
+
+REGISTER_DEVICE("cpu", DeviceType::CPU, CPUDevice);

@@ -5,13 +5,13 @@ from nnops._C import (
 import nnops.dtype as DT_
 
 class TensorShape(__TensorShape):
-    def __init__(self, shape=[]):
+    def __init__(self, *, shape=[]):
         super().__init__(shape)
 
 del __TensorShape
 
 class Tensor(__Tensor):
-    def __init__(self, dtype=DT_.float32, shape=[], device=None):
-        super().__init__(dtype, shape)
+    def __init__(self, *, dtype=DT_.float32, shape=[], device='cpu'):
+        super().__init__(dtype, shape, device)
 
 del __Tensor
