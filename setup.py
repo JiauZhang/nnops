@@ -117,17 +117,7 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
         )
 
-def get_version():
-    curfile = os.path.abspath(__file__)
-    curdir = os.path.dirname(curfile)
-    version_py = os.path.join(curdir, 'nnops/version.py')
-    with open(version_py, 'r') as f:
-        version = f.read().split('=')[-1].strip()
-    version = version[1:-1]
-    return version
-
 setup(
-    version = get_version(),
     ext_modules=[CMakeExtension("nnops._C", sourcedir=".")],
     cmdclass={"build_ext": CMakeBuild},
 )
