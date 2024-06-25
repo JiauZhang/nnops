@@ -14,7 +14,7 @@ class Tensor(__Tensor):
     def __init__(self, *, dtype=DT_.float32, shape=[], device='cpu'):
         super().__init__(dtype, shape, device)
 
-    def __getitem__(self, key):
+    def __getitem__(self, index):
         ...
 
 del __Tensor

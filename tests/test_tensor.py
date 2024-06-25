@@ -34,3 +34,7 @@ class TestTensor():
     def test_tensor_nbytes_nelems(self):
         tensor = Tensor(shape=[2, 3, 4], dtype=dtype.int16)
         assert tensor.nelems == 24 and tensor.nbytes == tensor.nelems * 2
+
+    def test_tensor_count(self):
+        tensor_a = Tensor(shape=[2, 3, 4, 5])
+        assert tensor_a.ref_count == 1

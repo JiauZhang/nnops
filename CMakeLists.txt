@@ -15,12 +15,12 @@ execute_process(
 list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 find_package(nanobind CONFIG REQUIRED)
 
-include_directories(${CMAKE_SOURCE_DIR}/csrc)
+include_directories(${CMAKE_SOURCE_DIR}/nnops)
 
 nanobind_add_module(
   _C STABLE_ABI
-  csrc/data_type.cpp csrc/tensor_shape.cpp csrc/tensor.cpp csrc/device.cpp
-  csrc/cpu/device.cpp csrc/cuda/device.cpp csrc/npu/device.cpp
-  csrc/python.cpp
+  nnops/data_type.cpp nnops/tensor_shape.cpp nnops/tensor.cpp nnops/device.cpp
+  nnops/cpu/device.cpp nnops/cuda/device.cpp nnops/npu/device.cpp
+  nnops/python.cpp
 )
 target_link_libraries(_C PRIVATE rt)

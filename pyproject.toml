@@ -37,7 +37,7 @@ dependencies = [
 Homepage = "https://github.com/jiauzhang/nnops"
 
 [tool.setuptools]
-packages = ["nnops"]
+package-dir = {"" = "python"}
 
 [tool.setuptools.dynamic]
 version = {attr = "nnops.__version__"}

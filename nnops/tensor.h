@@ -7,15 +7,16 @@
 #include <data_type.h>
 #include <device.h>
 #include <nanobind/stl/string.h>
+#include <tensor_buffer.h>
 
 using namespace std;
 namespace nb = nanobind;
 
 class Tensor {
 public:
-    Tensor() {}
     Tensor(DataType &dtype, TensorShape &shape, std::string &device);
     Tensor(DataType &dtype, vector<int> &dims, std::string &device);
+    Tensor(Tensor &other);
     ~Tensor();
 
     void reshape(vector<int> &dims);
@@ -24,11 +25,12 @@ public:
     TensorShape shape_;
     DataType dtype_;
     Device *device_;
-    void *data_ptr_;
+    TensorBuffer *tensor_buffer_;
     size_t nbytes_;
     size_t nelems_;
 
 private:
+    Tensor() {}
     void init_tensor(DataType &dtype, TensorShape &shape, std::string &device);
 };
 
