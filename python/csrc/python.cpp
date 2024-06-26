@@ -1,8 +1,11 @@
 #include <nanobind/nanobind.h>
 #include <tensor_shape.h>
-#include <data_type.h>
 #include <tensor.h>
 #include <device.h>
+
+namespace nb = nanobind;
+
+extern void DEFINE_DATA_TYPE_MODULE(nb::module_ & (m));
 
 NB_MODULE(_C, m) {
     DEFINE_TENSOR_SHAPE_MODULE(m);

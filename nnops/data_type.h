@@ -1,9 +1,7 @@
 #ifndef __DATA_TYPE_H__
 #define __DATA_TYPE_H__
 
-#include <nanobind/nanobind.h>
-
-namespace nb = nanobind;
+#include <cstddef>
 
 enum DataType {
     TYPE_FLOAT32,
@@ -17,6 +15,5 @@ enum DataType {
 };
 
 size_t sizeof_dtype(DataType dtype);
-void DEFINE_DATA_TYPE_MODULE(nb::module_ & (m));
 
 #endif // __DATA_TYPE_H__
