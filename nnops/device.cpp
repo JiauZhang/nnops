@@ -1,7 +1,4 @@
-#include <nanobind/nanobind.h>
 #include <device.h>
-
-namespace nb = nanobind;
 
 std::map<DeviceType, Device *> Device::devices_;
 std::map<std::string, Device *> Device::named_devices_;
@@ -23,12 +20,4 @@ Device *Device::get_device(std::string &name) {
         return named_devices_[name];
     else
         return nullptr;
-}
-
-void DEFINE_DEVICE_TYPE_MODULE(nb::module_ & (m)) {
-    nb::enum_<DeviceType>(m, "DeviceType")
-        .value("CPU", DeviceType::CPU)
-        .value("CUDA", DeviceType::CUDA)
-        .value("NPU", DeviceType::NPU)
-        .export_values();
 }

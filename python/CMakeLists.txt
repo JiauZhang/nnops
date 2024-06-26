@@ -23,7 +23,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN)
 
 nanobind_add_module(
   _C STABLE_ABI
-  csrc/data_type.cpp ${CMAKE_SOURCE_DIR}/nnops/tensor_shape.cpp ${CMAKE_SOURCE_DIR}/nnops/tensor.cpp
-  ${CMAKE_SOURCE_DIR}/nnops/device.cpp ${CMAKE_SOURCE_DIR}/nnops/cpu/device.cpp csrc/python.cpp
+  csrc/data_type.cpp csrc/tensor_shape.cpp csrc/tensor.cpp
+  csrc/device.cpp csrc/python.cpp
 )
 target_link_libraries(_C PRIVATE nnops)

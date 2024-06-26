@@ -1,11 +1,8 @@
 #ifndef __DEVICE_TYPE_H__
 #define __DEVICE_TYPE_H__
 
-#include <nanobind/nanobind.h>
 #include <map>
 #include <string.h>
-
-namespace nb = nanobind;
 
 enum DeviceType {
     CPU,
@@ -35,7 +32,5 @@ struct __##device_class_register {                                              
 };                                                                                                \
 static __##device_class_register *__registered_##device_class                                     \
     = new __##device_class_register(device_name, device_type, new device_class(device_name));
-
-void DEFINE_DEVICE_TYPE_MODULE(nb::module_ & (m));
 
 #endif // __DEVICE_TYPE_H__
