@@ -1,4 +1,4 @@
-#include <data_type.h>
+#include <nnops/data_type.h>
 #include <map>
 
 using namespace std;

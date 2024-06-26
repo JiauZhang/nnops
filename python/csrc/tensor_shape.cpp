@@ -1,4 +1,4 @@
-#include <tensor_shape.h>
+#include <nnops/tensor_shape.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/vector.h>
 

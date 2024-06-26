@@ -1,7 +1,7 @@
 #ifndef __NPU_DEVICE_H__
 #define __NPU_DEVICE_H__
 
-#include <device.h>
+#include <nnops/device.h>
 
 class NPUDevice final : public Device {
 public:

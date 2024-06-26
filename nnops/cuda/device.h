@@ -1,7 +1,7 @@
 #ifndef __CUDA_DEVICE_H__
 #define __CUDA_DEVICE_H__
 
-#include <device.h>
+#include <nnops/device.h>
 
 class CUDADevice final : public Device {
 public:

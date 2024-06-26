@@ -1,6 +1,6 @@
-#include <data_type.h>
-#include <tensor_shape.h>
-#include <tensor.h>
+#include <nnops/data_type.h>
+#include <nnops/tensor_shape.h>
+#include <nnops/tensor.h>
 
 using namespace std;
 

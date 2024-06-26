@@ -1,4 +1,4 @@
-#include <tensor_shape.h>
+#include <nnops/tensor_shape.h>
 
 TensorShape::TensorShape(const TensorShape &shape) { 
     dims_ = shape.dims_;

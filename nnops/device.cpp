@@ -1,4 +1,4 @@
-#include <device.h>
+#include <nnops/device.h>
 
 std::map<DeviceType, Device *> Device::devices_;
 std::map<std::string, Device *> Device::named_devices_;

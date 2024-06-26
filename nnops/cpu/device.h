@@ -1,7 +1,7 @@
 #ifndef __CPU_DEVICE_H__
 #define __CPU_DEVICE_H__
 
-#include <device.h>
+#include <nnops/device.h>
 #include <string>
 
 class CPUDevice final : public Device {

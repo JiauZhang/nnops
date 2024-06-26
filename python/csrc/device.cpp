@@ -1,4 +1,4 @@
-#include <device.h>
+#include <nnops/device.h>
 #include <nanobind/nanobind.h>
 
 namespace nb = nanobind;

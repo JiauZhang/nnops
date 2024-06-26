@@ -1,10 +1,10 @@
 #ifndef __TENSOR_H__
 #define __TENSOR_H__
 
-#include <tensor_shape.h>
-#include <data_type.h>
-#include <device.h>
-#include <tensor_buffer.h>
+#include <nnops/tensor_shape.h>
+#include <nnops/data_type.h>
+#include <nnops/device.h>
+#include <nnops/tensor_buffer.h>
 
 using namespace std;
 

@@ -1,5 +1,5 @@
-#include <device.h>
-#include <cpu/device.h>
+#include <nnops/device.h>
+#include <nnops/cpu/device.h>
 #include <cstdlib>
 
 void *CPUDevice::malloc(size_t size) {
