@@ -17,6 +17,10 @@ find_package(nanobind CONFIG REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/nnops)
 
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH $ORIGIN)
+
 nanobind_add_module(
   _C STABLE_ABI
   csrc/data_type.cpp ${CMAKE_SOURCE_DIR}/nnops/tensor_shape.cpp ${CMAKE_SOURCE_DIR}/nnops/tensor.cpp
