@@ -1,4 +1,4 @@
-from nnops.tensor import Tensor, TensorShape
+from nnops.tensor import Tensor
 from nnops import dtype
 
 class TestTensor():
@@ -6,11 +6,6 @@ class TestTensor():
         shape = [1, 2, 3, 4]
         tensor = Tensor(shape=shape)
         assert shape == tensor.shape
-
-    def test_tensor_shape(self):
-        shape = TensorShape(shape=[1, 2, 3, 4])
-        tensor = Tensor(shape=shape)
-        assert shape.get_dims() == tensor.shape
 
     def test_tensor_dtype(self):
         types = [

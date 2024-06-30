@@ -1,24 +1,31 @@
 #include <nnops/data_type.h>
-#include <nnops/tensor_shape.h>
+#include <nnops/tensor_meta.h>
 #include <nnops/tensor.h>
+#include <nnops/device.h>
 
 using namespace std;
 
-Tensor::Tensor(DataType &dtype, TensorShape &shape, string &device) {
-    init_tensor(dtype, shape, device);
-}
-
 Tensor::Tensor(DataType &dtype, vector<int> &dims, string &device) {
-    auto tshape_ = TensorShape(dims);
-    init_tensor(dtype, tshape_, device);
+    meta_.dims_ = dims;
+    meta_.dtype_ = dtype;
+
+    auto &nelems_ = meta_.nelems_;
+    nelems_ = 1;
+    for (auto dim: meta_.get_dims())
+        nelems_ *= dim;
+
+    meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
+    auto &device_ = meta_.device_;
+    device_ = Device::get_device(device);
+
+    if (device_ == nullptr)
+        throw std::runtime_error("get device failed!");
+
+    alloc_buffer(meta_);
 }
 
 Tensor::Tensor(Tensor &other) {
-    dtype_ = other.dtype_;
-    shape_ = other.shape_;
-    device_ = other.device_;
-    nbytes_ = other.nbytes_;
-    nelems_ = other.nelems_;
+    meta_ = other.meta_;
     tensor_buffer_ = other.tensor_buffer_;
     tensor_buffer_->inc_ref();
 }
@@ -27,26 +34,14 @@ Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
         if (tensor_buffer_->is_zero())
-            device_->free(tensor_buffer_->data_ptr_);
+            meta_.device_->free(tensor_buffer_->data_ptr_);
     }
 }
 
-void Tensor::init_tensor(DataType &dtype, TensorShape &shape, std::string &device) {
-    dtype_ = dtype;
-    shape_ = shape;
-    device_ = Device::get_device(device);
-
-    if (device_ == nullptr)
-        throw std::runtime_error("get device failed!");
-
-    nelems_ = 1;
-    for (auto dim: shape_.get_dims())
-        nelems_ *= dim;
-
-    nbytes_ = nelems_ * sizeof_dtype(dtype_);
-
+void Tensor::alloc_buffer(TensorMeta &meta) {
     void *data_ptr_ = nullptr;
-    data_ptr_ = device_->malloc(nbytes_);
+    auto &device_ = meta.device_;
+    data_ptr_ = device_->malloc(meta.nbytes_);
     if (data_ptr_ == nullptr) {
         tensor_buffer_ = nullptr;
         throw std::runtime_error("alloc tensor memory failed!");
@@ -56,9 +51,5 @@ void Tensor::init_tensor(DataType &dtype, TensorShape &shape, std::string &devic
 }
 
 void Tensor::reshape(vector<int> &dims) {
-    shape_.set_dims(dims);
-}
-
-void Tensor::reshape(TensorShape &shape) {
-    shape_.set_dims(shape);
+    meta_.set_dims(dims);
 }

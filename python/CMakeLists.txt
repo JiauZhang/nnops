@@ -21,7 +21,7 @@ set(CMAKE_INSTALL_RPATH $ORIGIN)
 
 nanobind_add_module(
   _C STABLE_ABI
-  csrc/data_type.cpp csrc/tensor_shape.cpp csrc/tensor.cpp
+  csrc/data_type.cpp csrc/tensor_meta.cpp csrc/tensor.cpp
   csrc/device.cpp csrc/python.cpp
 )
 target_link_libraries(_C PRIVATE nnops)
