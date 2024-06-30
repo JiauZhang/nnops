@@ -4,6 +4,7 @@
 #include <vector>
 #include <nnops/data_type.h>
 #include <nnops/device.h>
+#include <string>
 
 using namespace std;
 
@@ -15,6 +16,8 @@ public:
     vector<int> &get_dims();
     void set_dims(vector<int> &dims);
     void reshape(vector<int> &dims);
+
+    string shape_as_string(vector<int> &dims);
 
     size_t nbytes_;
     size_t nelems_;

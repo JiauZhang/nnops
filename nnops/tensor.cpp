@@ -51,5 +51,5 @@ void Tensor::alloc_buffer(TensorMeta &meta) {
 }
 
 void Tensor::reshape(vector<int> &dims) {
-    meta_.set_dims(dims);
+    meta_.reshape(dims);
 }

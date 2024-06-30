@@ -33,3 +33,19 @@ class TestTensor():
     def test_tensor_count(self):
         tensor_a = Tensor(shape=[2, 3, 4, 5])
         assert tensor_a.ref_count == 1
+
+    def test_tensor_reshape(self):
+        runtime_error = False
+        try:
+            tensor = Tensor(shape=[1, 2, 3])
+            tensor.reshape([2, 3, 1])
+        except RuntimeError:
+            runtime_error = True
+        assert runtime_error == False
+
+        try:
+            tensor = Tensor(shape=[1, 2, 3])
+            tensor.reshape([2, 3, 3])
+        except RuntimeError:
+            runtime_error = True
+        assert runtime_error == True
