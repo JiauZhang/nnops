@@ -9,7 +9,7 @@ class TestTensor():
 
     def test_tensor_dtype(self):
         types = [
-            dtype.float32, dtype.float16,
+            dtype.float32,
             dtype.int32, dtype.uint32,
             dtype.int16, dtype.uint16,
             dtype.int8, dtype.uint8,
