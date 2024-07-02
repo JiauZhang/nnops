@@ -33,8 +33,11 @@ Tensor::Tensor(Tensor &other) {
 Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
-        if (tensor_buffer_->is_zero())
+        if (tensor_buffer_->is_zero()) {
             meta_.device_->free(tensor_buffer_->data_ptr_);
+            free(tensor_buffer_);
+            tensor_buffer_ = nullptr;
+        }
     }
 }
 
