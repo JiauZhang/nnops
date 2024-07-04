@@ -49,3 +49,27 @@ class TestTensor():
         except RuntimeError:
             runtime_error = True
         assert runtime_error == True
+
+    def test_tensor_ref_count_1(self):
+        t_a = Tensor(shape=[2, 3, 4])
+        assert t_a.ref_count == 1
+
+        t_b = t_a[1, 1, 1]
+        assert t_a.ref_count == 2 and t_a.ref_count == t_b.ref_count
+
+        del t_a
+        assert t_b.ref_count == 1
+
+    def test_tensor_ref_count_2(self):
+        t_a = Tensor(shape=[2, 3, 4])
+        t_b = t_a
+        assert t_a.ref_count == t_b.ref_count
+
+        t_c = t_a[1, 1, 1]
+        assert (
+            t_a.ref_count == 2 and t_a.ref_count == t_b.ref_count and
+            t_a.ref_count == t_c.ref_count
+        )
+
+        del t_a
+        assert t_b.ref_count == 2 and t_c.ref_count == t_b.ref_count

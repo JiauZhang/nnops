@@ -13,18 +13,21 @@ enum DataType {
     TYPE_UINT8,
 };
 
+#define DATATYPE_GEN_TEMPLATE(GEN)              \
+    GEN(DataType::TYPE_FLOAT32, float)          \
+    GEN(DataType::TYPE_INT32, int)              \
+    GEN(DataType::TYPE_UINT32, unsigned int)    \
+    GEN(DataType::TYPE_INT16, short)            \
+    GEN(DataType::TYPE_UINT16, unsigned short)  \
+    GEN(DataType::TYPE_INT8, char)              \
+    GEN(DataType::TYPE_UINT8, unsigned char)
+
 template<DataType dtype> struct datatype_to_type;
 
 #define DATATYPE_TO_TYPE_ITEM(dtype, type) template<> \
     struct datatype_to_type<dtype> { using Type = type; };
 
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_FLOAT32, float)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_INT32, int)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_UINT32, unsigned int)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_INT16, short)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_UINT16, unsigned short)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_INT8, char)
-DATATYPE_TO_TYPE_ITEM(DataType::TYPE_UINT8, unsigned char)
+DATATYPE_GEN_TEMPLATE(DATATYPE_TO_TYPE_ITEM)
 
 template<DataType dtype>
 auto *reinterpret_dtype(void *ptr) {

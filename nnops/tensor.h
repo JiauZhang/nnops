@@ -9,18 +9,14 @@
 class Tensor {
 public:
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
-    Tensor(Tensor &other);
+    Tensor(const Tensor &other);
+    Tensor(const Tensor &other, std::vector<int> &dims);
     ~Tensor();
 
     void reshape(std::vector<int> &dims);
-    template<DataType dtype>
-    auto at(std::vector<int> &dims) {
-        if (dims.size() != meta_.ndim())
-            throw std::runtime_error("dims must be same!");
+    std::string to_string();
 
-        auto *ptr = reinterpret_dtype<dtype>(tensor_buffer_->data_ptr_);
-        return *ptr;
-    }
+    Tensor operator[](std::vector<int> &dims);
 
     TensorMeta meta_;
     TensorBuffer *tensor_buffer_;

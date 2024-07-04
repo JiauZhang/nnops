@@ -24,8 +24,15 @@ Tensor::Tensor(DataType &dtype, vector<int> &dims, string &device) {
     alloc_buffer(meta_);
 }
 
-Tensor::Tensor(Tensor &other) {
+Tensor::Tensor(const Tensor &other) {
     meta_ = other.meta_;
+    tensor_buffer_ = other.tensor_buffer_;
+    tensor_buffer_->inc_ref();
+}
+
+Tensor::Tensor(const Tensor &other, std::vector<int> &dims) {
+    meta_ = other.meta_;
+    meta_.set_dims(dims);
     tensor_buffer_ = other.tensor_buffer_;
     tensor_buffer_->inc_ref();
 }
@@ -55,4 +62,21 @@ void Tensor::alloc_buffer(TensorMeta &meta) {
 
 void Tensor::reshape(vector<int> &dims) {
     meta_.reshape(dims);
+}
+
+std::string Tensor::to_string() {
+    std::string ret;
+    switch (meta_.dtype_) {
+        case DataType::TYPE_FLOAT32:
+            using T = typename datatype_to_type<DataType::TYPE_FLOAT32>::Type;
+            break;
+        default:
+            break;
+    }
+
+    return ret;
+}
+
+Tensor Tensor::operator[](std::vector<int> &dims) {
+    return Tensor(*this, this->meta_.get_dims());
 }

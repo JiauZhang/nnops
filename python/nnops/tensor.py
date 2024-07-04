@@ -8,6 +8,6 @@ class Tensor(__Tensor):
         super().__init__(dtype, shape, device)
 
     def __getitem__(self, index):
-        ...
+        return self.getitem(index)
 
 del __Tensor
