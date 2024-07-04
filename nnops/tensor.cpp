@@ -64,14 +64,33 @@ void Tensor::reshape(vector<int> &dims) {
     meta_.reshape(dims);
 }
 
+template<typename T>
+std::string to_string_impl(Tensor *tensor) {
+    T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_;
+    std::string ret = "[";
+
+    for (int i=0; i<tensor->meta_.nelems_; i++)
+        ret += std::to_string(data_ptr[i]) + ", ";
+
+    auto len = ret.size();
+    ret.resize(len - 1);
+    ret[len - 2] = ']';
+
+    return ret;
+}
+
+#define TO_STRING_TEMPLATE_GEN(dtype, type)      \
+    case dtype: {                                \
+        ret = to_string_impl<type>(this);        \
+        break;                                   \
+    }
+
 std::string Tensor::to_string() {
     std::string ret;
     switch (meta_.dtype_) {
-        case DataType::TYPE_FLOAT32:
-            using T = typename datatype_to_type<DataType::TYPE_FLOAT32>::Type;
-            break;
+        DATATYPE_GEN_TEMPLATE(TO_STRING_TEMPLATE_GEN)
         default:
-            break;
+            throw std::runtime_error("invalid type");
     }
 
     return ret;
