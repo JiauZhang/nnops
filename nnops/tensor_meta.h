@@ -12,9 +12,6 @@ class TensorMeta {
 public:
     TensorMeta() {}
 
-    int ndim();
-    vector<int> &get_dims();
-    void set_dims(vector<int> &dims);
     void reshape(vector<int> &dims);
 
     string shape_as_string(vector<int> &dims);

@@ -10,15 +10,24 @@ class Tensor {
 public:
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
     Tensor(const Tensor &other);
-    Tensor(const Tensor &other, std::vector<int> &dims);
+    Tensor(const Tensor &other, const std::vector<int> &dims);
     ~Tensor();
 
     void reshape(std::vector<int> &dims);
+
+    DataType dtype() { return this->tensor_meta_.dtype_; }
+    const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
+    void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
+    int ndim() { return this->shape().size(); }
+    int ref_count() { return this->tensor_buffer_->count(); }
+    size_t nelems() { return this->tensor_meta_.nelems_; }
+    size_t nbytes() { return this->tensor_meta_.nbytes_; }
+
     std::string to_string();
 
     Tensor operator[](std::vector<int> &dims);
 
-    TensorMeta meta_;
+    TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
 
 private:

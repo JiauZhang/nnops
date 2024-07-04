@@ -6,33 +6,33 @@
 using namespace std;
 
 Tensor::Tensor(DataType &dtype, vector<int> &dims, string &device) {
-    meta_.dims_ = dims;
-    meta_.dtype_ = dtype;
+    tensor_meta_.dims_ = dims;
+    tensor_meta_.dtype_ = dtype;
 
-    auto &nelems_ = meta_.nelems_;
+    auto &nelems_ = tensor_meta_.nelems_;
     nelems_ = 1;
-    for (auto dim: meta_.get_dims())
+    for (auto dim: this->shape())
         nelems_ *= dim;
 
-    meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
-    auto &device_ = meta_.device_;
+    tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
+    auto &device_ = tensor_meta_.device_;
     device_ = Device::get_device(device);
 
     if (device_ == nullptr)
         throw std::runtime_error("get device failed!");
 
-    alloc_buffer(meta_);
+    alloc_buffer(tensor_meta_);
 }
 
 Tensor::Tensor(const Tensor &other) {
-    meta_ = other.meta_;
+    tensor_meta_ = other.tensor_meta_;
     tensor_buffer_ = other.tensor_buffer_;
     tensor_buffer_->inc_ref();
 }
 
-Tensor::Tensor(const Tensor &other, std::vector<int> &dims) {
-    meta_ = other.meta_;
-    meta_.set_dims(dims);
+Tensor::Tensor(const Tensor &other, const std::vector<int> &dims) {
+    tensor_meta_ = other.tensor_meta_;
+    tensor_meta_.dims_ = dims;
     tensor_buffer_ = other.tensor_buffer_;
     tensor_buffer_->inc_ref();
 }
@@ -41,7 +41,7 @@ Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
         if (tensor_buffer_->is_zero()) {
-            meta_.device_->free(tensor_buffer_->data_ptr_);
+            tensor_meta_.device_->free(tensor_buffer_->data_ptr_);
             free(tensor_buffer_);
             tensor_buffer_ = nullptr;
         }
@@ -61,7 +61,7 @@ void Tensor::alloc_buffer(TensorMeta &meta) {
 }
 
 void Tensor::reshape(vector<int> &dims) {
-    meta_.reshape(dims);
+    tensor_meta_.reshape(dims);
 }
 
 template<typename T>
@@ -69,7 +69,7 @@ std::string to_string_impl(Tensor *tensor) {
     T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_;
     std::string ret = "[";
 
-    for (int i=0; i<tensor->meta_.nelems_; i++)
+    for (int i=0; i<tensor->tensor_meta_.nelems_; i++)
         ret += std::to_string(data_ptr[i]) + ", ";
 
     auto len = ret.size();
@@ -87,7 +87,7 @@ std::string to_string_impl(Tensor *tensor) {
 
 std::string Tensor::to_string() {
     std::string ret;
-    switch (meta_.dtype_) {
+    switch (tensor_meta_.dtype_) {
         DATATYPE_GEN_TEMPLATE(TO_STRING_TEMPLATE_GEN)
         default:
             throw std::runtime_error("invalid type");
@@ -97,5 +97,5 @@ std::string Tensor::to_string() {
 }
 
 Tensor Tensor::operator[](std::vector<int> &dims) {
-    return Tensor(*this, this->meta_.get_dims());
+    return Tensor(*this, this->shape());
 }
