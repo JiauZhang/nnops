@@ -17,6 +17,7 @@ public:
 
     DataType dtype() { return this->tensor_meta_.dtype_; }
     const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
+    const std::vector<int> &stride() { return this->tensor_meta_.strides_; }
     void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
     int ndim() { return this->shape().size(); }
     int ref_count() { return this->tensor_buffer_->count(); }

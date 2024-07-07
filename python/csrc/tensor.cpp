@@ -21,5 +21,6 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def_prop_ro("ndim", [](Tensor &t) { return t.ndim(); })
         .def_prop_ro("nbytes", [](Tensor &t) { return t.nbytes(); })
         .def_prop_ro("nelems", [](Tensor &t) { return t.nelems(); })
+        .def_prop_ro("stride", [](Tensor &t) { return t.stride(); })
         .def_prop_ro("shape", [](Tensor &t) { return t.shape(); });
 }

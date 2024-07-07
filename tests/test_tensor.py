@@ -15,7 +15,7 @@ class TestTensor():
             dtype.int8, dtype.uint8,
         ]
         for tp in types:
-            tensor = Tensor(dtype=tp)
+            tensor = Tensor(shape=[1], dtype=tp)
             assert tp == tensor.dtype
 
     def test_tensor_exception(self):
@@ -73,3 +73,8 @@ class TestTensor():
 
         del t_a
         assert t_b.ref_count == 2 and t_c.ref_count == t_b.ref_count
+
+    def test_tensor_strides(self):
+        tensor = Tensor(shape=[2, 3, 4])
+        stride = tensor.stride
+        assert len(stride) == len(tensor.shape) and stride == [12, 4, 1]
