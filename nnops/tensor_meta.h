@@ -12,10 +12,6 @@ class TensorMeta {
 public:
     TensorMeta() {}
 
-    void reshape(vector<int> &dims);
-
-    string shape_as_string(vector<int> &dims);
-
     size_t nbytes_;
     size_t nelems_;
     vector<int> dims_;

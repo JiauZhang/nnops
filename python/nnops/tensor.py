@@ -22,4 +22,10 @@ class Tensor(__Tensor):
 
         return self.getitem(index)
 
+    def reshape(self, *dims):
+        if not all([isinstance(i, int) for i in dims]):
+            raise IndexError('only integers supported!')
+
+        return super().reshape(dims)
+
 del __Tensor

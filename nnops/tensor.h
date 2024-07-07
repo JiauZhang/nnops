@@ -8,12 +8,14 @@
 
 class Tensor {
 public:
+    Tensor() {}
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
     Tensor(const Tensor &other);
     Tensor(const Tensor &other, const std::vector<int> &dims);
     ~Tensor();
 
-    void reshape(std::vector<int> &dims);
+    Tensor reshape(std::vector<int> &dims);
+    string shape_as_string(const vector<int> &dims);
 
     DataType dtype() { return this->tensor_meta_.dtype_; }
     const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
@@ -24,7 +26,9 @@ public:
     size_t nelems() { return this->tensor_meta_.nelems_; }
     size_t nbytes() { return this->tensor_meta_.nbytes_; }
 
+    void to_string(std::string *prefix, std::string *ret);
     std::string to_string();
+    std::string to_repr();
 
     Tensor operator[](std::vector<int> &dims);
 
@@ -32,7 +36,6 @@ public:
     TensorBuffer *tensor_buffer_;
 
 private:
-    Tensor() {}
     void alloc_buffer(TensorMeta &meta);
 };
 

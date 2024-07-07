@@ -3,9 +3,7 @@
 #include <nnops/tensor.h>
 #include <nnops/device.h>
 
-using namespace std;
-
-Tensor::Tensor(DataType &dtype, vector<int> &dims, string &device) {
+Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
     tensor_meta_.dims_ = dims;
     tensor_meta_.dtype_ = dtype;
 
@@ -70,22 +68,54 @@ void Tensor::alloc_buffer(TensorMeta &meta) {
     }
 }
 
-void Tensor::reshape(vector<int> &dims) {
-    tensor_meta_.reshape(dims);
+Tensor Tensor::reshape(vector<int> &dims) {
+    int nelems = 1;
+    for (auto dim: dims)
+        nelems *= dim;
+
+    if (nelems != this->nelems()) {
+        string info = "Can't reshape tensor from shape "
+            + shape_as_string(this->shape()) + " to " + shape_as_string(dims);
+        throw std::runtime_error(info);
+    }
+
+    Tensor _tensor;
+
+    _tensor.tensor_meta_ = tensor_meta_;
+    _tensor.tensor_buffer_ = tensor_buffer_;
+    _tensor.tensor_buffer_->inc_ref();
+
+    auto &_dims = _tensor.tensor_meta_.dims_;
+    auto &_strides = _tensor.tensor_meta_.strides_;
+
+    _dims = dims;
+    _strides.resize(_dims.size());
+    nelems = 1;
+
+    for (int i=_dims.size()-1; i>=0; i--) {
+        _strides[i] = nelems;
+        nelems *= _dims[i];
+    }
+
+    return _tensor;
 }
 
 template<typename T>
-void to_string_impl(Tensor *tensor, std::string *ret, int dim) {
-    std::string prefix;
-    if (ret->size() && ret->back() == '\n')
+void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int dim, int offset) {
+    std::string cur_prefix;
+
+    if (ret->size() && ret->back() == '\n') {
+        if (prefix)
+            cur_prefix += *prefix;
         for (int i=0; i<dim; i++)
-            prefix += ' ';
-    prefix += '[';
+            cur_prefix += ' ';
+    }
+    cur_prefix += '[';
 
     if (dim < tensor->ndim() - 1) {
-        *ret += prefix;
+        *ret += cur_prefix;
         for (int i=0; i<tensor->shape()[dim]; i++)
-            to_string_impl<T>(tensor, ret, dim+1);
+            to_string_impl<T>(tensor, prefix, ret, dim+1, offset+i*(tensor->stride()[dim]));
         auto len = ret->size();
         (*ret)[len-2] = ']';
 
@@ -98,33 +128,64 @@ void to_string_impl(Tensor *tensor, std::string *ret, int dim) {
         return;
     }
 
-    T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_;
-    *ret += prefix;
+    T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_ + offset;
+    *ret += cur_prefix;
 
     for (int i=0; i<tensor->shape()[dim]; i++)
         *ret += std::to_string(data_ptr[i]) + ", ";
 
     auto len = ret->size();
     (*ret)[len-2] = ']';
-    (*ret)[len-1] = ',';
-    *ret += '\n';
+
+    if (dim == 0) {
+        ret->resize(len-1);
+    } else {
+        (*ret)[len-1] = ',';
+        *ret += '\n';
+    }
 }
 
 #define TO_STRING_TEMPLATE_GEN(dtype, type)      \
     case dtype: {                                \
-        to_string_impl<type>(this, &ret, 0);     \
+        to_string_impl<type>(this, prefix, ret, 0, 0);  \
         break;                                   \
     }
 
-std::string Tensor::to_string() {
-    std::string ret;
+void Tensor::to_string(std::string *prefix, std::string *ret) {
     switch (tensor_meta_.dtype_) {
         DATATYPE_GEN_TEMPLATE(TO_STRING_TEMPLATE_GEN)
         default:
             throw std::runtime_error("invalid type");
     }
+}
+
+std::string Tensor::to_string() {
+    std::string ret;
+    this->to_string(nullptr, &ret);
+    return ret;
+}
+
+std::string Tensor::to_repr() {
+    std::string ret = "Tensor(";
+    std::string prefix(ret.size(), ' ');
+
+    this->to_string(&prefix, &ret);
+    ret += ')';
 
     return ret;
+}
+
+string Tensor::shape_as_string(const vector<int> &dims) {
+    std::string shape_str;
+
+    shape_str += '[';
+    for (auto dim: dims)
+        shape_str += std::to_string(dim) + ", ";
+    auto len = shape_str.size();
+    shape_str.resize(len-1);
+    shape_str[len-2] = ']';
+
+    return shape_str;
 }
 
 Tensor Tensor::operator[](std::vector<int> &dims) {

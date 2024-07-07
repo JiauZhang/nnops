@@ -37,15 +37,16 @@ class TestTensor():
     def test_tensor_reshape(self):
         runtime_error = False
         try:
-            tensor = Tensor(shape=[1, 2, 3])
-            tensor.reshape([2, 3, 1])
+            tensor_a = Tensor(shape=[1, 2, 3])
+            tensor_b = tensor_a.reshape(2, 3, 1)
         except RuntimeError:
             runtime_error = True
         assert runtime_error == False
+        assert tensor_a.ref_count == 2 and tensor_b.ref_count == 2
 
         try:
             tensor = Tensor(shape=[1, 2, 3])
-            tensor.reshape([2, 3, 3])
+            tensor.reshape(2, 3, 3)
         except RuntimeError:
             runtime_error = True
         assert runtime_error == True
