@@ -14,6 +14,7 @@ public:
 
     size_t nbytes_;
     size_t nelems_;
+    int offset_;
     vector<int> dims_;
     vector<int> strides_;
     DataType dtype_;

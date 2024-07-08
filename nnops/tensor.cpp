@@ -4,6 +4,7 @@
 #include <nnops/device.h>
 
 Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
+    tensor_meta_.offset_ = 0;
     tensor_meta_.dims_ = dims;
     tensor_meta_.dtype_ = dtype;
 
@@ -145,10 +146,11 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
     }
 }
 
-#define TO_STRING_TEMPLATE_GEN(dtype, type)      \
-    case dtype: {                                \
-        to_string_impl<type>(this, prefix, ret, 0, 0);  \
-        break;                                   \
+#define TO_STRING_TEMPLATE_GEN(dtype, type)                  \
+    case dtype: {                                            \
+        int offset = this->tensor_meta_.offset_;             \
+        to_string_impl<type>(this, prefix, ret, 0, offset);  \
+        break;                                               \
     }
 
 void Tensor::to_string(std::string *prefix, std::string *ret) {
@@ -189,5 +191,49 @@ string Tensor::shape_as_string(const vector<int> &dims) {
 }
 
 Tensor Tensor::operator[](std::vector<int> &dims) {
-    return Tensor(*this, this->shape());
+    if (dims.size() > this->ndim()) {
+        std::string info = "too many indices for tensor: ";
+        info += "tensor is " + std::to_string(this->ndim()) + "-dimensional, but "
+            + std::to_string(dims.size()) + " were indexed";
+        throw std::runtime_error(info);
+    }
+
+    Tensor _tensor;
+    auto &_tensor_meta = _tensor.tensor_meta_;
+    auto &_offset = _tensor_meta.offset_;
+    auto &strides_ = this->tensor_meta_.strides_;
+    auto &shape_ = this->shape();
+
+    _offset = this->tensor_meta_.offset_;
+    for (int i=0; i<dims.size(); i++) {
+        if (dims[i] >= shape_[i]) {
+            std::string info = "index " + std::to_string(dims[i]) + " is out of bounds for axis "
+                + std::to_string(i) + " with size " + std::to_string(shape_[i]);
+            throw std::runtime_error(info);
+        }
+        _offset += dims[i] * strides_[i];
+    }
+
+    auto &_dims = _tensor_meta.dims_;
+    auto &_strides = _tensor_meta.strides_;
+    auto &_nelems = _tensor_meta.nelems_;
+    auto &_nbytes = _tensor_meta.nbytes_;
+
+    _tensor.tensor_buffer_ = tensor_buffer_;
+    _tensor_meta.dtype_ = tensor_meta_.dtype_;
+    _tensor_meta.device_ = tensor_meta_.device_;
+    _dims.resize(this->ndim() - dims.size());
+    _strides.resize(_dims.size());
+    _nelems = 1;
+
+    for (int i=0; i<_dims.size(); i++) {
+        _dims[i] = shape_[i+dims.size()];
+        _strides[i] = strides_[i+dims.size()];
+        _nelems *= _dims[i];
+    }
+    _nbytes = _nelems * sizeof_dtype(_tensor_meta.dtype_);
+
+    _tensor.tensor_buffer_->inc_ref();
+
+    return _tensor;
 }
