@@ -4,6 +4,7 @@
 #include <nnops/device.h>
 
 Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
+    tensor_buffer_ = nullptr;
     tensor_meta_.offset_ = 0;
     tensor_meta_.dims_ = dims;
     tensor_meta_.dtype_ = dtype;
@@ -81,14 +82,10 @@ Tensor Tensor::reshape(vector<int> &dims) {
     }
 
     Tensor _tensor;
-
-    _tensor.tensor_meta_ = tensor_meta_;
-    _tensor.tensor_buffer_ = tensor_buffer_;
-    _tensor.tensor_buffer_->inc_ref();
-
     auto &_dims = _tensor.tensor_meta_.dims_;
     auto &_strides = _tensor.tensor_meta_.strides_;
 
+    _tensor.tensor_meta_ = tensor_meta_;
     _dims = dims;
     _strides.resize(_dims.size());
     nelems = 1;
@@ -97,6 +94,8 @@ Tensor Tensor::reshape(vector<int> &dims) {
         _strides[i] = nelems;
         nelems *= _dims[i];
     }
+    _tensor.tensor_buffer_ = tensor_buffer_;
+    _tensor.tensor_buffer_->inc_ref();
 
     return _tensor;
 }
@@ -130,8 +129,13 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
     }
 
     T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_ + offset;
-    *ret += cur_prefix;
 
+    if (tensor->ndim() == 0) {
+        *ret += std::to_string(*data_ptr);
+        return;
+    }
+
+    *ret += cur_prefix;
     for (int i=0; i<tensor->shape()[dim]; i++)
         *ret += std::to_string(data_ptr[i]) + ", ";
 
@@ -219,7 +223,6 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
     auto &_nelems = _tensor_meta.nelems_;
     auto &_nbytes = _tensor_meta.nbytes_;
 
-    _tensor.tensor_buffer_ = tensor_buffer_;
     _tensor_meta.dtype_ = tensor_meta_.dtype_;
     _tensor_meta.device_ = tensor_meta_.device_;
     _dims.resize(this->ndim() - dims.size());
@@ -232,7 +235,7 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
         _nelems *= _dims[i];
     }
     _nbytes = _nelems * sizeof_dtype(_tensor_meta.dtype_);
-
+    _tensor.tensor_buffer_ = tensor_buffer_;
     _tensor.tensor_buffer_->inc_ref();
 
     return _tensor;

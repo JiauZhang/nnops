@@ -79,3 +79,15 @@ class TestTensor():
         tensor = Tensor(shape=[2, 3, 4])
         stride = tensor.stride
         assert len(stride) == len(tensor.shape) and stride == [12, 4, 1]
+
+    def test_tensor_slice_1(self):
+        t_a = Tensor(shape=[2, 2, 3])
+        t_b = t_a[0]
+        assert t_a.ref_count == 2 and t_a.ref_count == t_b.ref_count
+        assert t_b.shape == t_a.shape[1:]
+        assert t_b.stride == t_a.stride[1:]
+
+        t_c = t_a[1, 1]
+        assert t_a.ref_count == 3 and t_a.ref_count == t_c.ref_count
+        assert t_c.shape == t_a.shape[-1:]
+        assert t_c.stride == t_a.stride[-1:]

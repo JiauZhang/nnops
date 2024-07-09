@@ -8,7 +8,7 @@
 
 class Tensor {
 public:
-    Tensor() {}
+    Tensor(): tensor_buffer_(nullptr) {}
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
     Tensor(const Tensor &other);
     Tensor(const Tensor &other, const std::vector<int> &dims);
