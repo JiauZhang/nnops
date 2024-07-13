@@ -91,3 +91,6 @@ class TestTensor():
         assert t_a.ref_count == 3 and t_a.ref_count == t_c.ref_count
         assert t_c.shape == t_a.shape[-1:]
         assert t_c.stride == t_a.stride[-1:]
+
+        t_d = t_a[1, 1, 2]
+        assert t_d.nelems == 1 and t_d.ndim == 0
