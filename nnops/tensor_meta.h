@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <nnops/data_type.h>
-#include <nnops/device.h>
 #include <string>
 
 using namespace std;
@@ -18,7 +17,6 @@ public:
     vector<int> dims_;
     vector<int> strides_;
     DataType dtype_;
-    Device *device_;
 };
 
 #endif // __TENSOR_SHAPE_H__

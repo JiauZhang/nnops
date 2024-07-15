@@ -25,13 +25,17 @@ Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
         throw std::runtime_error("invalid shape info!");
 
     tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
-    auto &device_ = tensor_meta_.device_;
-    device_ = Device::get_device(device);
+    Device *device_ = Device::get_device(device);
 
     if (device_ == nullptr)
         throw std::runtime_error("get device failed!");
 
-    alloc_buffer(tensor_meta_);
+    void *data_ptr_ = nullptr;
+    data_ptr_ = device_->malloc(tensor_meta_.nbytes_);
+    if (data_ptr_ == nullptr)
+        throw std::runtime_error("alloc tensor memory failed!");
+    else
+        tensor_buffer_ = new TensorBuffer(data_ptr_, device_);
 }
 
 Tensor::Tensor(const Tensor &other) {
@@ -51,22 +55,9 @@ Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
         if (tensor_buffer_->is_zero()) {
-            tensor_meta_.device_->free(tensor_buffer_->data_ptr_);
-            free(tensor_buffer_);
+            tensor_buffer_->free();
             tensor_buffer_ = nullptr;
         }
-    }
-}
-
-void Tensor::alloc_buffer(TensorMeta &meta) {
-    void *data_ptr_ = nullptr;
-    auto &device_ = meta.device_;
-    data_ptr_ = device_->malloc(meta.nbytes_);
-    if (data_ptr_ == nullptr) {
-        tensor_buffer_ = nullptr;
-        throw std::runtime_error("alloc tensor memory failed!");
-    } else {
-        tensor_buffer_ = new TensorBuffer(data_ptr_);
     }
 }
 
@@ -204,6 +195,7 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
 
     Tensor _tensor;
     auto &_tensor_meta = _tensor.tensor_meta_;
+    auto &_tensor_buffer = _tensor.tensor_buffer_;
     auto &_offset = _tensor_meta.offset_;
     auto &strides_ = this->tensor_meta_.strides_;
     auto &shape_ = this->shape();
@@ -224,7 +216,6 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
     auto &_nbytes = _tensor_meta.nbytes_;
 
     _tensor_meta.dtype_ = tensor_meta_.dtype_;
-    _tensor_meta.device_ = tensor_meta_.device_;
     _dims.resize(this->ndim() - dims.size());
     _strides.resize(_dims.size());
     _nelems = 1;
@@ -235,8 +226,8 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
         _nelems *= _dims[i];
     }
     _nbytes = _nelems * sizeof_dtype(_tensor_meta.dtype_);
-    _tensor.tensor_buffer_ = tensor_buffer_;
-    _tensor.tensor_buffer_->inc_ref();
+    _tensor_buffer = tensor_buffer_;
+    _tensor_buffer->inc_ref();
 
     return _tensor;
 }

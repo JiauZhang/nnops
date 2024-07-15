@@ -34,9 +34,6 @@ public:
 
     TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
-
-private:
-    void alloc_buffer(TensorMeta &meta);
 };
 
 #endif // __TENSOR_H__
