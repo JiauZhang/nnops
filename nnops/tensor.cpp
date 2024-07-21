@@ -3,6 +3,8 @@
 #include <nnops/tensor.h>
 #include <nnops/device.h>
 
+Tensor::Tensor(): tensor_buffer_(nullptr) {}
+
 Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
     tensor_buffer_ = nullptr;
     tensor_meta_.offset_ = 0;
@@ -149,6 +151,9 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
     }
 
 void Tensor::to_string(std::string *prefix, std::string *ret) {
+    if (tensor_meta_.nelems_ == 0)
+        return;
+
     switch (tensor_meta_.dtype_) {
         DATATYPE_GEN_TEMPLATE(TO_STRING_TEMPLATE_GEN)
         default:

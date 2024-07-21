@@ -9,7 +9,7 @@ using namespace std;
 
 class TensorMeta {
 public:
-    TensorMeta() {}
+    TensorMeta(): nbytes_(0), nelems_(0), offset_(0) {}
 
     size_t nbytes_;
     size_t nelems_;
