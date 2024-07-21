@@ -94,3 +94,13 @@ class TestTensor():
 
         t_d = t_a[1, 1, 2]
         assert t_d.nelems == 1 and t_d.ndim == 0
+
+    def test_tensor_slice_2(self):
+        t_a = Tensor(shape=[3, 4, 5])
+        t_b = t_a[0]
+        assert type(t_b) == type(t_a) and isinstance(t_b, Tensor)
+        assert t_b.shape == t_a.shape[1:] and t_b.ref_count == 2 and t_b.ref_count == t_a.ref_count
+
+        t_c = t_b[0]
+        assert type(t_b) == type(t_c) and isinstance(t_c, Tensor) and t_c.shape == t_a.shape[2:]
+        assert t_c.ref_count == 3 and t_b.ref_count == t_a.ref_count and t_b.ref_count == t_c.ref_count
