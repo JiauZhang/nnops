@@ -4,6 +4,8 @@
 #include <map>
 #include <string.h>
 
+namespace nnops {
+
 enum DeviceType {
     CPU,
     CUDA,
@@ -32,5 +34,7 @@ struct __##device_class_register {                                              
 };                                                                                                \
 static __##device_class_register *__registered_##device_class                                     \
     = new __##device_class_register(device_name, device_type, new device_class(device_name));
+
+} // namespace nnops
 
 #endif // __DEVICE_TYPE_H__

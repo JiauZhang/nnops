@@ -5,7 +5,7 @@
 #include <nnops/data_type.h>
 #include <string>
 
-using namespace std;
+namespace nnops {
 
 class TensorMeta {
 public:
@@ -14,9 +14,11 @@ public:
     size_t nbytes_;
     size_t nelems_;
     int offset_;
-    vector<int> dims_;
-    vector<int> strides_;
+    std::vector<int> dims_;
+    std::vector<int> strides_;
     DataType dtype_;
 };
+
+} // namespace nnops
 
 #endif // __TENSOR_SHAPE_H__

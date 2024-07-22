@@ -3,6 +3,8 @@
 #include <nnops/tensor.h>
 #include <nnops/device.h>
 
+namespace nnops {
+
 Tensor::Tensor(): tensor_buffer_(nullptr) {}
 
 Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
@@ -63,13 +65,13 @@ Tensor::~Tensor() {
     }
 }
 
-Tensor Tensor::reshape(vector<int> &dims) {
+Tensor Tensor::reshape(std::vector<int> &dims) {
     int nelems = 1;
     for (auto dim: dims)
         nelems *= dim;
 
     if (nelems != this->nelems()) {
-        string info = "Can't reshape tensor from shape "
+        std::string info = "Can't reshape tensor from shape "
             + shape_as_string(this->shape()) + " to " + shape_as_string(dims);
         throw std::runtime_error(info);
     }
@@ -177,7 +179,7 @@ std::string Tensor::to_repr() {
     return ret;
 }
 
-string Tensor::shape_as_string(const vector<int> &dims) {
+std::string Tensor::shape_as_string(const std::vector<int> &dims) {
     std::string shape_str;
 
     shape_str += '[';
@@ -236,3 +238,5 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
 
     return _tensor;
 }
+
+} // namespace nnops

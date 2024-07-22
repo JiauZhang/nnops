@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+namespace nnops {
+
 enum DataType {
     TYPE_FLOAT32,
     TYPE_INT32,
@@ -42,5 +44,7 @@ size_t sizeof_dtype() {
 }
 
 size_t sizeof_dtype(DataType dtype);
+
+} // namespace nnops
 
 #endif // __DATA_TYPE_H__

@@ -6,6 +6,8 @@
 #include <nnops/tensor_buffer.h>
 #include <string>
 
+namespace nnops {
+
 class Tensor {
 public:
     Tensor();
@@ -15,7 +17,7 @@ public:
     ~Tensor();
 
     Tensor reshape(std::vector<int> &dims);
-    string shape_as_string(const vector<int> &dims);
+    std::string shape_as_string(const std::vector<int> &dims);
 
     DataType dtype() { return this->tensor_meta_.dtype_; }
     const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
@@ -35,5 +37,7 @@ public:
     TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
 };
+
+} // namespace nnops
 
 #endif // __TENSOR_H__

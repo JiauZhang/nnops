@@ -5,6 +5,8 @@
 #include <nnops/device.h>
 #include <cstdlib>
 
+namespace nnops {
+
 class TensorBuffer {
 public:
     TensorBuffer(void *data_ptr, Device *device):
@@ -27,5 +29,7 @@ public:
 private:
     TensorBuffer() {};
 };
+
+} // namespace nnops
 
 #endif // __TENSOR_BUFFER_H__

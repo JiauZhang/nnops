@@ -4,6 +4,8 @@
 #include <nnops/device.h>
 #include <string>
 
+namespace nnops {
+
 class CPUDevice final : public Device {
 public:
     CPUDevice(std::string name): name_(name) {}
@@ -12,5 +14,7 @@ public:
 
     std::string name_;
 };
+
+} // namespace nnops
 
 #endif // __CPU_DEVICE_H__

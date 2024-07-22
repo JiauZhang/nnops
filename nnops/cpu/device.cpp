@@ -2,6 +2,8 @@
 #include <nnops/cpu/device.h>
 #include <cstdlib>
 
+namespace nnops {
+
 void *CPUDevice::malloc(size_t size) {
     return std::malloc(size);
 }
@@ -11,3 +13,5 @@ void CPUDevice::free(void *ptr) {
 }
 
 REGISTER_DEVICE("cpu", DeviceType::CPU, CPUDevice);
+
+} // namespace nnops

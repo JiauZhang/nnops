@@ -1,5 +1,7 @@
 #include <nnops/device.h>
 
+namespace nnops {
+
 std::map<DeviceType, Device *> Device::devices_;
 std::map<std::string, Device *> Device::named_devices_;
 
@@ -21,3 +23,5 @@ Device *Device::get_device(std::string &name) {
     else
         return nullptr;
 }
+
+} // namespace nnops
