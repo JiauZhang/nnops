@@ -58,10 +58,7 @@ Tensor::Tensor(const Tensor &other, const std::vector<int> &dims) {
 Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
-        if (tensor_buffer_->is_zero()) {
-            tensor_buffer_->free();
-            tensor_buffer_ = nullptr;
-        }
+        tensor_buffer_ = nullptr;
     }
 }
 
