@@ -1,5 +1,7 @@
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
+#include <nnops/tensor_indexing.h>
+#include <nnops/tensor_meta.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
@@ -10,25 +12,57 @@ namespace nb = nanobind;
 
 namespace pynnops {
 
+void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
+    PyObject *ob_indices = indices.ptr();
+    nnops::TensorMeta &meta = tensor.tensor_meta_;
+
+    if (nb::isinstance<nb::tuple>(indices)) {
+        Py_ssize_t len = PyTuple_Size(ob_indices);
+        if (len > tensor.ndim()) {
+            std::string info = "too many indices for tensor: ";
+            info += "tensor is " + std::to_string(tensor.ndim()) + "-dimensional, but "
+                + std::to_string(len) + " were indexed";
+            throw std::runtime_error(info);
+        }
+
+        for (int i=0; i<len; i++) {
+            indexing(tensor, indices[i], axis);
+            if (nb::isinstance<nb::slice>(indices[i]))
+                axis += 1;
+        }
+    } else if (nb::isinstance<nb::slice>(indices)) {
+        Py_ssize_t start, stop, step;
+
+        if (PySlice_Unpack(ob_indices, &start, &stop, &step) < 0)
+            throw std::runtime_error("PySlice_Unpack failed!");
+
+        nnops::Slice slice(start, stop, step);
+        nnops::slice_inplace(meta, slice, axis);
+    } else if (nb::isinstance<nb::int_>(indices)) {
+        nnops::index_inplace(meta, nb::cast<int>(indices), axis);
+    }
+}
+
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     nb::class_<nnops::Tensor>(m, "Tensor")
         .def(nb::init<nnops::Tensor &>())
         .def(nb::init<nnops::DataType &, std::vector<int> &, std::string &>())
         .def("__str__", [](nnops::Tensor &self) { return self.to_string(); })
         .def("__repr__", &nnops::Tensor::to_repr)
-        .def("getitem", [](nb::handle h, std::vector<int> &dims) {
+        .def("__getitem__", [](nb::handle h, nb::handle indices) {
             PyObject *ob_self = h.ptr();
             nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
             PyTypeObject *tp_self = ob_self->ob_type;
             PyObject *ob_new = nb::detail::nb_inst_alloc(tp_self);
             nb::handle h_new(ob_new);
+            nnops::Tensor *tensor_new = nb::inst_ptr<nnops::Tensor>(h_new);
+            nnops::TensorMeta &meta = tensor_new->tensor_meta_;
 
             ob_new->ob_refcnt = 0;
-            nnops::Tensor *ptr_new = nb::inst_ptr<nnops::Tensor>(h_new);
-            nnops::Tensor &&sub_tensor = (*self)[dims];
-            ptr_new->tensor_meta_ = sub_tensor.tensor_meta_;
-            ptr_new->tensor_buffer_ = sub_tensor.tensor_buffer_;
-            ptr_new->tensor_buffer_->inc_ref();
+            meta = self->tensor_meta_;
+            indexing(*tensor_new, indices, 0);
+            tensor_new->tensor_buffer_ = self->tensor_buffer_;
+            tensor_new->tensor_buffer_->inc_ref();
             nb::inst_mark_ready(h_new);
 
             return h_new;

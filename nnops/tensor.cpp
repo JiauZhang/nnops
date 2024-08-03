@@ -190,33 +190,4 @@ std::string Tensor::shape_as_string(const std::vector<int> &dims) {
     return shape_str;
 }
 
-Tensor Tensor::operator[](std::vector<int> &dims) {
-    if (dims.size() > this->ndim()) {
-        std::string info = "too many indices for tensor: ";
-        info += "tensor is " + std::to_string(this->ndim()) + "-dimensional, but "
-            + std::to_string(dims.size()) + " were indexed";
-        throw std::runtime_error(info);
-    }
-
-    Tensor _tensor;
-    auto &_tensor_meta = _tensor.tensor_meta_;
-    auto &_tensor_buffer = _tensor.tensor_buffer_;
-    auto &_shape = _tensor.shape();
-
-   _tensor_meta = this->tensor_meta_;
-    for (int i=0; i<dims.size(); i++) {
-        if (dims[i] >= _shape[0] || dims[i] < -_shape[0]) {
-            std::string info = "index " + std::to_string(dims[i]) + " is out of bounds for axis "
-                + std::to_string(i) + " with size " + std::to_string(_shape[0]);
-            throw std::runtime_error(info);
-        }
-        index_inplace(_tensor_meta, dims[i]);
-    }
-
-    _tensor_buffer = tensor_buffer_;
-    _tensor_buffer->inc_ref();
-
-    return _tensor;
-}
-
 } // namespace nnops

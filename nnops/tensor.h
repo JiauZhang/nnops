@@ -32,8 +32,6 @@ public:
     std::string to_string();
     std::string to_repr();
 
-    Tensor operator[](std::vector<int> &dims);
-
     TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
 };
