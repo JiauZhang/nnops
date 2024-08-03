@@ -2,6 +2,7 @@
 #include <nnops/tensor_meta.h>
 #include <nnops/tensor.h>
 #include <nnops/device.h>
+#include <nnops/tensor_indexing.h>
 
 namespace nnops {
 
@@ -200,36 +201,18 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
     Tensor _tensor;
     auto &_tensor_meta = _tensor.tensor_meta_;
     auto &_tensor_buffer = _tensor.tensor_buffer_;
-    auto &_offset = _tensor_meta.offset_;
-    auto &strides_ = this->tensor_meta_.strides_;
-    auto &shape_ = this->shape();
+    auto &_shape = _tensor.shape();
 
-    _offset = this->tensor_meta_.offset_;
+   _tensor_meta = this->tensor_meta_;
     for (int i=0; i<dims.size(); i++) {
-        if (dims[i] >= shape_[i]) {
+        if (dims[i] >= _shape[0]) {
             std::string info = "index " + std::to_string(dims[i]) + " is out of bounds for axis "
-                + std::to_string(i) + " with size " + std::to_string(shape_[i]);
+                + std::to_string(i) + " with size " + std::to_string(_shape[0]);
             throw std::runtime_error(info);
         }
-        _offset += dims[i] * strides_[i];
+        index_inplace(_tensor_meta, dims[i]);
     }
 
-    auto &_dims = _tensor_meta.dims_;
-    auto &_strides = _tensor_meta.strides_;
-    auto &_nelems = _tensor_meta.nelems_;
-    auto &_nbytes = _tensor_meta.nbytes_;
-
-    _tensor_meta.dtype_ = tensor_meta_.dtype_;
-    _dims.resize(this->ndim() - dims.size());
-    _strides.resize(_dims.size());
-    _nelems = 1;
-
-    for (int i=0; i<_dims.size(); i++) {
-        _dims[i] = shape_[i+dims.size()];
-        _strides[i] = strides_[i+dims.size()];
-        _nelems *= _dims[i];
-    }
-    _nbytes = _nelems * sizeof_dtype(_tensor_meta.dtype_);
     _tensor_buffer = tensor_buffer_;
     _tensor_buffer->inc_ref();
 
