@@ -205,7 +205,7 @@ Tensor Tensor::operator[](std::vector<int> &dims) {
 
    _tensor_meta = this->tensor_meta_;
     for (int i=0; i<dims.size(); i++) {
-        if (dims[i] >= _shape[0]) {
+        if (dims[i] >= _shape[0] || dims[i] < -_shape[0]) {
             std::string info = "index " + std::to_string(dims[i]) + " is out of bounds for axis "
                 + std::to_string(i) + " with size " + std::to_string(_shape[0]);
             throw std::runtime_error(info);

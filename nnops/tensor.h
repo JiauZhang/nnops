@@ -19,14 +19,14 @@ public:
     Tensor reshape(std::vector<int> &dims);
     std::string shape_as_string(const std::vector<int> &dims);
 
-    DataType dtype() { return this->tensor_meta_.dtype_; }
-    const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
-    const std::vector<int> &stride() { return this->tensor_meta_.strides_; }
-    void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
-    int ndim() { return this->shape().size(); }
-    int ref_count() { return this->tensor_buffer_->count(); }
-    size_t nelems() { return this->tensor_meta_.nelems_; }
-    size_t nbytes() { return this->tensor_meta_.nbytes_; }
+    inline DataType dtype() { return this->tensor_meta_.dtype_; }
+    inline const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
+    inline const std::vector<int> &stride() { return this->tensor_meta_.strides_; }
+    inline void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
+    inline int ndim() { return this->shape().size(); }
+    inline int ref_count() { return this->tensor_buffer_->count(); }
+    inline size_t nelems() { return this->tensor_meta_.nelems_; }
+    inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
 
     void to_string(std::string *prefix, std::string *ret);
     std::string to_string();

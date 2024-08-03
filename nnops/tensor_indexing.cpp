@@ -13,6 +13,9 @@ void index_inplace(TensorMeta &meta, int dim) {
     auto &nelems_ = meta.nelems_;
     auto &nbytes_ = meta.nbytes_;
 
+    if (dim < 0)
+        dim += shape_[0];
+
     offset_ += dim * strides_[0];
     nelems_ = 1;
 
