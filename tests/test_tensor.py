@@ -86,11 +86,13 @@ class TestTensor():
         assert t_a.ref_count == 2 and t_a.ref_count == t_b.ref_count
         assert t_b.shape == t_a.shape[1:]
         assert t_b.stride == t_a.stride[1:]
+        assert t_b.nelems == 6
 
         t_c = t_a[1, 1]
         assert t_a.ref_count == 3 and t_a.ref_count == t_c.ref_count
         assert t_c.shape == t_a.shape[-1:]
         assert t_c.stride == t_a.stride[-1:]
+        assert t_c.nelems == 3
 
         t_d = t_a[1, 1, 2]
         assert t_d.nelems == 1 and t_d.ndim == 0
@@ -104,3 +106,11 @@ class TestTensor():
         t_c = t_b[0]
         assert type(t_b) == type(t_c) and isinstance(t_c, Tensor) and t_c.shape == t_a.shape[2:]
         assert t_c.ref_count == 3 and t_b.ref_count == t_a.ref_count and t_b.ref_count == t_c.ref_count
+
+    def test_tensor_slice_3(self):
+        t_a = Tensor(shape=[4, 5, 6])
+        t_b = t_a[::2, 1::3, 2:5:]
+        assert t_b.shape == [2, 2, 3] and t_b.nelems == 12
+
+        t_c = t_b[:, :, ::2]
+        assert t_c.shape == [2, 2, 2] and t_c.nelems == 8
