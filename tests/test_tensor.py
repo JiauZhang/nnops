@@ -114,3 +114,24 @@ class TestTensor():
 
         t_c = t_b[:, :, ::2]
         assert t_c.shape == [2, 2, 2] and t_c.nelems == 8
+
+        t_d = t_a[:, 0, :]
+        assert t_d.nelems == 24 and t_d.ref_count == 4
+
+        t_e = t_a[..., 0]
+        t_f = t_a[0, ...]
+        assert t_e.shape == [4, 5] and t_f.shape == [5, 6]
+
+    def test_tensor_slice_4(self):
+        t_a = Tensor(shape=[3, 4, 5, 6, 7])
+        t_b = t_a[1, ..., 3]
+        assert t_b.shape == [4, 5, 6]
+
+        t_c = t_a[1, 2, ...]
+        assert t_c.shape == [5, 6, 7]
+
+        t_d = t_a[-1, 3, ..., 5, 6]
+        assert t_d.shape == [5]
+
+        t_e = t_a[-1, ::2, ..., 5, 6]
+        assert t_e.shape == [2, 5]

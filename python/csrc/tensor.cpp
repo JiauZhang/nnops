@@ -6,6 +6,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 #include <stdio.h>
+#include <list>
 #include <Python.h>
 
 namespace nb = nanobind;
@@ -17,6 +18,7 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     nnops::TensorMeta &meta = tensor.tensor_meta_;
 
     if (nb::isinstance<nb::tuple>(indices)) {
+        // multi-dimensional indexing
         Py_ssize_t len = PyTuple_Size(ob_indices);
         if (len > tensor.ndim()) {
             std::string info = "too many indices for tensor: ";
@@ -25,7 +27,24 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
             throw std::runtime_error(info);
         }
 
+        // check ellipsis
+        int idx = len, count = 0;
         for (int i=0; i<len; i++) {
+            if (nb::isinstance<nb::ellipsis>(indices[i])) {
+                count++;
+                idx = i;
+            }
+        }
+
+        if (count > 1)
+            throw std::runtime_error("an index can only have a single ellipsis ('...')");
+
+        for (int i=0; i<len; i++) {
+            if (i == idx) {
+                axis = tensor.ndim() + i - len + 1;
+                continue;
+            }
+
             indexing(tensor, indices[i], axis);
             if (nb::isinstance<nb::slice>(indices[i]))
                 axis += 1;
@@ -40,6 +59,13 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
         nnops::slice_inplace(tensor, slice, axis);
     } else if (nb::isinstance<nb::int_>(indices)) {
         nnops::index_inplace(tensor, nb::cast<int>(indices), axis);
+    } else if (nb::isinstance<nb::ellipsis>(indices)) {
+        // do nothing
+    } else {
+        std::string info = "not supported indexing type: ";
+        PyTypeObject *tp = ob_indices->ob_type;
+        info += std::string(tp->tp_name);
+        throw std::runtime_error(info);
     }
 }
 

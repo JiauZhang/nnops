@@ -37,12 +37,11 @@ void index_inplace(TensorMeta &meta, int dim, int axis) {
         dim += shape_[axis];
 
     offset_ += dim * strides_[axis];
-    nelems_ = 1;
+    nelems_ /= shape_[axis];
 
     for (int i=axis; i<shape_.size()-1; i++) {
         shape_[i] = shape_[i+1];
         strides_[i] = strides_[i+1];
-        nelems_ *= shape_[i];
     }
     shape_.pop_back();
     strides_.pop_back();
