@@ -122,6 +122,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
     }
 
     T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_ + offset;
+    auto &stride = tensor->stride();
 
     if (tensor->ndim() == 0) {
         *ret += std::to_string(*data_ptr);
@@ -129,8 +130,10 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
     }
 
     *ret += cur_prefix;
-    for (int i=0; i<tensor->shape()[dim]; i++)
-        *ret += std::to_string(data_ptr[i]) + ", ";
+    for (int i=0; i<tensor->shape()[dim]; i++) {
+        *ret += std::to_string(*data_ptr) + ", ";
+        data_ptr += stride[dim];
+    }
 
     auto len = ret->size();
     (*ret)[len-2] = ']';

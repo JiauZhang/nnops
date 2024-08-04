@@ -33,13 +33,13 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     } else if (nb::isinstance<nb::slice>(indices)) {
         Py_ssize_t start, stop, step;
 
-        if (PySlice_Unpack(ob_indices, &start, &stop, &step) < 0)
-            throw std::runtime_error("PySlice_Unpack failed!");
+        if (PySlice_GetIndices(ob_indices, tensor.shape()[axis], &start, &stop, &step) < 0)
+            throw std::runtime_error("PySlice_GetIndices failed!");
 
         nnops::Slice slice(start, stop, step);
-        nnops::slice_inplace(meta, slice, axis);
+        nnops::slice_inplace(tensor, slice, axis);
     } else if (nb::isinstance<nb::int_>(indices)) {
-        nnops::index_inplace(meta, nb::cast<int>(indices), axis);
+        nnops::index_inplace(tensor, nb::cast<int>(indices), axis);
     }
 }
 

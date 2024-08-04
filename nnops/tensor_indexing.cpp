@@ -10,23 +10,6 @@ void slice_inplace(TensorMeta &meta, Slice &slice, int axis) {
     auto &nbytes_ = meta.nbytes_;
     auto &start = slice.start_, &end = slice.end_, &step = slice.step_;
 
-    if (start.has_value()) {
-        if (start.value() < 0)
-            start.value() += shape_[axis];
-    } else {
-        start = 0;
-    }
-
-    if (end.has_value()) {
-        if (end.value() < 0)
-            end.value() += shape_[axis];
-    } else {
-        end = shape_[axis];
-    }
-
-    if (!step.has_value())
-        step = 1;
-
     offset_ += start.value() * strides_[axis];
     nelems_ /= shape_[axis];
     strides_[axis] *= step.value();
@@ -34,12 +17,13 @@ void slice_inplace(TensorMeta &meta, Slice &slice, int axis) {
     if ((start.value() < end.value()) && (step.value() > 0)) {
         shape_[axis] = (end.value() - start.value() - 1) / step.value() + 1;
     } else if ((start.value() > end.value()) && (step.value() < 0)) {
-        shape_[axis] = (start.value() - end.value() - 1) / step.value() + 1;
+        shape_[axis] = (start.value() - end.value() - 1) / (-step.value()) + 1;
     } else {
         shape_[axis] = 0;
     }
 
     nelems_ *= shape_[axis];
+    nbytes_ = nelems_ * sizeof_dtype(meta.dtype_);
 }
 
 void index_inplace(TensorMeta &meta, int dim, int axis) {
@@ -65,7 +49,7 @@ void index_inplace(TensorMeta &meta, int dim, int axis) {
     nbytes_ = nelems_ * sizeof_dtype(meta.dtype_);
 }
 
-inline void slice_inplace(Tensor &tensor, Slice &slice, int axis) {
+void slice_inplace(Tensor &tensor, Slice &slice, int axis) {
     slice_inplace(tensor.tensor_meta_, slice, axis);
 }
 

@@ -19,7 +19,7 @@ public:
 
 void slice_inplace(TensorMeta &meta, Slice &slice, int axis);
 void index_inplace(TensorMeta &meta, int dim, int axis);
-inline void slice_inplace(Tensor &tensor, Slice &slice, int axis);
+void slice_inplace(Tensor &tensor, Slice &slice, int axis);
 void index_inplace(Tensor &tensor, int dim, int axis);
 
 } // namespace nnops
