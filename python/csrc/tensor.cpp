@@ -6,7 +6,6 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 #include <stdio.h>
-#include <list>
 #include <Python.h>
 
 namespace nb = nanobind;

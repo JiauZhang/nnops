@@ -11,10 +11,10 @@ class Slice {
 public:
     Slice() {}
     Slice(int start): start_(start) {}
-    Slice(int start, int end): start_(start), end_(end) {}
-    Slice(int start, int end, int step): start_(start), end_(end), step_(step) {}
+    Slice(int start, int stop): start_(start), stop_(stop) {}
+    Slice(int start, int stop, int step): start_(start), stop_(stop), step_(step) {}
 
-    std::optional<int> start_, end_, step_;
+    std::optional<int> start_, stop_, step_;
 };
 
 void slice_inplace(TensorMeta &meta, Slice &slice, int axis);
