@@ -9,6 +9,22 @@ namespace nnops {
 Tensor::Tensor(): tensor_buffer_(nullptr) {}
 
 Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
+    Device *device_ = Device::get_device(device);
+
+    if (device_ == nullptr)
+        throw std::runtime_error("get device failed!");
+    init_tensor(dtype, dims, device_);
+}
+
+Tensor::Tensor(DataType &dtype, std::vector<int> &dims, DeviceType device) {
+    Device *device_ = Device::get_device(device);
+
+    if (device_ == nullptr)
+        throw std::runtime_error("get device failed!");
+    init_tensor(dtype, dims, device_);
+}
+
+void Tensor::init_tensor(DataType &dtype, std::vector<int> &dims, Device *device) {
     tensor_buffer_ = nullptr;
     tensor_meta_.offset_ = 0;
     tensor_meta_.dims_ = dims;
@@ -30,17 +46,13 @@ Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
         throw std::runtime_error("invalid shape info!");
 
     tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
-    Device *device_ = Device::get_device(device);
-
-    if (device_ == nullptr)
-        throw std::runtime_error("get device failed!");
 
     void *data_ptr_ = nullptr;
-    data_ptr_ = device_->malloc(tensor_meta_.nbytes_);
+    data_ptr_ = device->malloc(tensor_meta_.nbytes_);
     if (data_ptr_ == nullptr)
         throw std::runtime_error("alloc tensor memory failed!");
     else
-        tensor_buffer_ = new TensorBuffer(data_ptr_, device_);
+        tensor_buffer_ = new TensorBuffer(data_ptr_, device);
 }
 
 Tensor::Tensor(const Tensor &other) {

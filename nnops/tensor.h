@@ -4,6 +4,7 @@
 #include <nnops/tensor_meta.h>
 #include <nnops/data_type.h>
 #include <nnops/tensor_buffer.h>
+#include <nnops/device.h>
 #include <string>
 
 namespace nnops {
@@ -12,10 +13,12 @@ class Tensor {
 public:
     Tensor();
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
+    Tensor(DataType &dtype, std::vector<int> &dims, DeviceType device);
     Tensor(const Tensor &other);
     Tensor(const Tensor &other, const std::vector<int> &dims);
     ~Tensor();
 
+    void init_tensor(DataType &dtype, std::vector<int> &dims, Device *device);
     Tensor reshape(std::vector<int> &dims);
     std::string shape_as_string(const std::vector<int> &dims);
 

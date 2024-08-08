@@ -14,3 +14,7 @@ class Tensor(__Tensor):
         return super().reshape(dims)
 
 del __Tensor
+
+__tensor = Tensor(shape=[1])
+__tensor.__init_pytensor_type()
+del __tensor

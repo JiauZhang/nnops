@@ -5,12 +5,26 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/ndarray.h>
 #include <stdio.h>
 #include <Python.h>
 
 namespace nb = nanobind;
 
 namespace pynnops {
+
+static PyTypeObject *pytensor_type = nullptr;
+
+nb::handle pytensor_new() {
+    if (pytensor_type == nullptr)
+        throw std::runtime_error("PyTensorType is not initialized!");
+
+    PyObject *ob_new = nb::detail::nb_inst_alloc(pytensor_type);
+    ob_new->ob_refcnt = 0;
+    nb::handle h(ob_new);
+    nb::inst_mark_ready(h);
+    return h;
+}
 
 void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     PyObject *ob_indices = indices.ptr();
@@ -68,29 +82,59 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     }
 }
 
+nb::handle from_numpy(nb::ndarray<> array) {
+    std::vector<int> shape;
+    nnops::DataType dtype;
+    auto array_dtype = array.dtype();
+    nb::handle pytensor;
+
+    for (int i=0; i<array.ndim(); i++)
+        shape.push_back(array.shape(i));
+
+    if (array_dtype == nb::dtype<char>()) {
+        dtype = nnops::DataType::TYPE_INT8;
+        char *array_data = (char *)array.data();
+        pytensor = pytensor_new();
+        nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
+        new (tensor) nnops::Tensor(dtype, shape, nnops::DeviceType::CPU);
+        char *tensor_data = (char *)(tensor->data_ptr());
+
+        for (int i=0; i<tensor->nelems(); i++)
+            tensor_data[i] = array_data[i];
+
+        return pytensor;
+    } else {
+        throw std::runtime_error("invalid from_numpy dtype!");
+    }
+}
+
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     nb::class_<nnops::Tensor>(m, "Tensor")
         .def(nb::init<nnops::Tensor &>())
         .def(nb::init<nnops::DataType &, std::vector<int> &, std::string &>())
+        .def("__init_pytensor_type", [](nb::handle h) {
+            PyObject *ob_self = h.ptr();
+            pytensor_type = ob_self->ob_type;
+        })
         .def("__str__", [](nnops::Tensor &self) { return self.to_string(); })
         .def("__repr__", &nnops::Tensor::to_repr)
         .def("__getitem__", [](nb::handle h, nb::handle indices) {
             PyObject *ob_self = h.ptr();
             nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
-            PyTypeObject *tp_self = ob_self->ob_type;
-            PyObject *ob_new = nb::detail::nb_inst_alloc(tp_self);
-            nb::handle h_new(ob_new);
+            nb::handle h_new = pytensor_new();
             nnops::Tensor *tensor_new = nb::inst_ptr<nnops::Tensor>(h_new);
             nnops::TensorMeta &meta = tensor_new->tensor_meta_;
 
-            ob_new->ob_refcnt = 0;
             meta = self->tensor_meta_;
             indexing(*tensor_new, indices, 0);
             tensor_new->tensor_buffer_ = self->tensor_buffer_;
             tensor_new->tensor_buffer_->inc_ref();
-            nb::inst_mark_ready(h_new);
 
             return h_new;
+        })
+        .def_static("from_numpy", from_numpy)
+        .def("numpy", [](nnops::Tensor &self) {
+            ;
         })
         .def("reshape", [](nnops::Tensor &self, std::vector<int> &dims) { return self.reshape(dims); })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
