@@ -19,8 +19,7 @@ public:
     ~Tensor();
 
     void init_tensor(DataType &dtype, std::vector<int> &dims, Device *device);
-    Tensor reshape(std::vector<int> &dims);
-    std::string shape_as_string(const std::vector<int> &dims);
+    inline void reshape_inplace(std::vector<int> &dims) { this->tensor_meta_.reshape_inplace(dims); }
 
     inline DataType dtype() { return this->tensor_meta_.dtype_; }
     inline const std::vector<int> &shape() { return this->tensor_meta_.dims_; }

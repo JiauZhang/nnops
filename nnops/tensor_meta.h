@@ -11,6 +11,9 @@ class TensorMeta {
 public:
     TensorMeta(): nbytes_(0), nelems_(0), offset_(0) {}
 
+    static std::string shape_as_string(const std::vector<int> &dims);
+    void reshape_inplace(std::vector<int> &dims);
+
     size_t nbytes_;
     size_t nelems_;
     int offset_;

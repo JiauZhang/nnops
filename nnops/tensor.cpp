@@ -75,36 +75,6 @@ Tensor::~Tensor() {
     }
 }
 
-Tensor Tensor::reshape(std::vector<int> &dims) {
-    int nelems = 1;
-    for (auto dim: dims)
-        nelems *= dim;
-
-    if (nelems != this->nelems()) {
-        std::string info = "Can't reshape tensor from shape "
-            + shape_as_string(this->shape()) + " to " + shape_as_string(dims);
-        throw std::runtime_error(info);
-    }
-
-    Tensor _tensor;
-    auto &_dims = _tensor.tensor_meta_.dims_;
-    auto &_strides = _tensor.tensor_meta_.strides_;
-
-    _tensor.tensor_meta_ = tensor_meta_;
-    _dims = dims;
-    _strides.resize(_dims.size());
-    nelems = 1;
-
-    for (int i=_dims.size()-1; i>=0; i--) {
-        _strides[i] = nelems;
-        nelems *= _dims[i];
-    }
-    _tensor.tensor_buffer_ = tensor_buffer_;
-    _tensor.tensor_buffer_->inc_ref();
-
-    return _tensor;
-}
-
 template<typename T>
 void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int dim, int offset) {
     std::string cur_prefix;
@@ -190,19 +160,6 @@ std::string Tensor::to_repr() {
     ret += ')';
 
     return ret;
-}
-
-std::string Tensor::shape_as_string(const std::vector<int> &dims) {
-    std::string shape_str;
-
-    shape_str += '[';
-    for (auto dim: dims)
-        shape_str += std::to_string(dim) + ", ";
-    auto len = shape_str.size();
-    shape_str.resize(len-1);
-    shape_str[len-2] = ']';
-
-    return shape_str;
 }
 
 } // namespace nnops

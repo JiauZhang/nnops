@@ -5,9 +5,11 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/tuple.h>
 #include <nanobind/ndarray.h>
 #include <stdio.h>
 #include <Python.h>
+#include <stdarg.h>
 
 namespace nb = nanobind;
 
@@ -136,7 +138,31 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("numpy", [](nnops::Tensor &self) {
             ;
         })
-        .def("reshape", [](nnops::Tensor &self, std::vector<int> &dims) { return self.reshape(dims); })
+        .def("reshape", [](nb::handle h, nb::args args) {
+            PyObject *ob_self = h.ptr();
+            nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
+            std::vector<int> indices;
+
+            for (int i=0; i<args.size(); i++) {
+                auto v = args[i];
+                if (nb::isinstance<nb::int_>(v)) {
+                    indices.push_back(nb::cast<int>(v));
+                } else {
+                    throw std::runtime_error("only int index supported!");
+                }
+            }
+
+            nb::handle pytensor = pytensor_new();
+            nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
+            nnops::TensorMeta &meta = tensor->tensor_meta_;
+
+            meta = self->tensor_meta_;
+            meta.reshape_inplace(indices);
+            tensor->tensor_buffer_ = self->tensor_buffer_;
+            tensor->tensor_buffer_->inc_ref();
+
+            return pytensor;
+        })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
         .def_prop_ro("data_ptr", [](nnops::Tensor &t) { return t.data_ptr(); })
         .def_prop_ro("ref_count", [](nnops::Tensor &t) { return t.ref_count(); })
