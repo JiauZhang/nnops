@@ -153,12 +153,9 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
 
             nb::handle pytensor = pytensor_new();
             nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
-            nnops::TensorMeta &meta = tensor->tensor_meta_;
 
-            meta = self->tensor_meta_;
-            meta.reshape_inplace(indices);
-            tensor->tensor_buffer_ = self->tensor_buffer_;
-            tensor->tensor_buffer_->inc_ref();
+            new (tensor) nnops::Tensor(*self);
+            nnops::Tensor::reshape(tensor, indices);
 
             return pytensor;
         })

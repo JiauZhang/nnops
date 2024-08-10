@@ -155,4 +155,10 @@ std::string Tensor::to_repr() {
     return ret;
 }
 
+Tensor Tensor::reshape(std::vector<int> &dims) {
+    Tensor tensor(*this);
+    Tensor::reshape(&tensor, dims);
+    return tensor;
+}
+
 } // namespace nnops

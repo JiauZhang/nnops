@@ -19,6 +19,10 @@ public:
 
     void init_tensor(DataType &dtype, std::vector<int> &dims, Device *device);
     inline void reshape_inplace(std::vector<int> &dims) { this->tensor_meta_.reshape_inplace(dims); }
+    inline Tensor reshape(std::vector<int> &dims);
+    static inline void reshape(Tensor *tensor, std::vector<int> &dims) {
+        tensor->tensor_meta_.reshape_inplace(dims);
+    }
 
     inline DataType dtype() { return this->tensor_meta_.dtype_; }
     inline const std::vector<int> &shape() { return this->tensor_meta_.dims_; }
