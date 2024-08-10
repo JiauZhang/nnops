@@ -135,3 +135,12 @@ class TestTensor():
 
         t_e = t_a[-1, ::2, ..., 5, 6]
         assert t_e.shape == [2, 5]
+
+    def test_tensor_contiguous(self):
+        t_a = Tensor(shape=[4, 5, 9])
+        t_b = t_a[::2, ::2]
+        assert t_a.is_contiguous() == True and t_b.is_contiguous() == False
+
+        t_c = t_b[1, 1]
+        t_d = t_a[..., ::2]
+        assert t_c.is_contiguous() == True and t_d.is_contiguous() == False

@@ -57,4 +57,16 @@ reshape_error:
     }
 }
 
+bool TensorMeta::is_contiguous() {
+    int nelems = 1;
+
+    for (int i=this->dims_.size()-1; i>=0; i--) {
+        if (nelems != this->strides_[i])
+            return false;
+        nelems *= this->dims_[i];
+    }
+
+    return true;
+}
+
 } // namespace nnops

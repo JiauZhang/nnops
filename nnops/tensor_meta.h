@@ -13,6 +13,7 @@ public:
 
     static std::string shape_as_string(const std::vector<int> &dims);
     void reshape_inplace(std::vector<int> &dims);
+    bool is_contiguous();
 
     size_t nbytes_;
     size_t nelems_;

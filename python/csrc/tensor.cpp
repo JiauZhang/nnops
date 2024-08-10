@@ -5,11 +5,9 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
-#include <nanobind/stl/tuple.h>
 #include <nanobind/ndarray.h>
 #include <stdio.h>
 #include <Python.h>
-#include <stdarg.h>
 
 namespace nb = nanobind;
 
@@ -134,6 +132,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
 
             return h_new;
         })
+        .def("is_contiguous", &nnops::Tensor::is_contiguous)
         .def_static("from_numpy", from_numpy)
         .def("numpy", [](nnops::Tensor &self) {
             ;

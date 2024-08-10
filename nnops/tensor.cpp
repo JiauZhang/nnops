@@ -61,13 +61,6 @@ Tensor::Tensor(const Tensor &other) {
     tensor_buffer_->inc_ref();
 }
 
-Tensor::Tensor(const Tensor &other, const std::vector<int> &dims) {
-    tensor_meta_ = other.tensor_meta_;
-    tensor_meta_.dims_ = dims;
-    tensor_buffer_ = other.tensor_buffer_;
-    tensor_buffer_->inc_ref();
-}
-
 Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();

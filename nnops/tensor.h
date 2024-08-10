@@ -15,7 +15,6 @@ public:
     Tensor(DataType &dtype, std::vector<int> &dims, std::string &device);
     Tensor(DataType &dtype, std::vector<int> &dims, DeviceType device);
     Tensor(const Tensor &other);
-    Tensor(const Tensor &other, const std::vector<int> &dims);
     ~Tensor();
 
     void init_tensor(DataType &dtype, std::vector<int> &dims, Device *device);
@@ -29,6 +28,7 @@ public:
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline size_t nelems() { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
+    inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
 
     void to_string(std::string *prefix, std::string *ret);
     std::string to_string();
