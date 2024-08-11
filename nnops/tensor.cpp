@@ -8,7 +8,7 @@ namespace nnops {
 
 Tensor::Tensor(): tensor_buffer_(nullptr) {}
 
-Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
+Tensor::Tensor(DataType dtype, std::vector<int> &dims, std::string &device) {
     Device *device_ = Device::get_device(device);
 
     if (device_ == nullptr)
@@ -16,11 +16,19 @@ Tensor::Tensor(DataType &dtype, std::vector<int> &dims, std::string &device) {
     init_tensor(dtype, dims, device_);
 }
 
-Tensor::Tensor(DataType &dtype, std::vector<int> &dims, DeviceType device) {
+Tensor::Tensor(DataType dtype, std::vector<int> &dims, DeviceType device) {
     Device *device_ = Device::get_device(device);
 
     if (device_ == nullptr)
         throw std::runtime_error("get device failed!");
+    init_tensor(dtype, dims, device_);
+}
+
+Tensor::Tensor(DataType dtype, std::vector<int> &dims, Device *device) {
+    Device *device_ = device;
+
+    if (device_ == nullptr)
+        throw std::runtime_error("device is invalid!");
     init_tensor(dtype, dims, device_);
 }
 
@@ -46,13 +54,7 @@ void Tensor::init_tensor(DataType &dtype, std::vector<int> &dims, Device *device
         throw std::runtime_error("invalid shape info!");
 
     tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
-
-    void *data_ptr_ = nullptr;
-    data_ptr_ = device->malloc(tensor_meta_.nbytes_);
-    if (data_ptr_ == nullptr)
-        throw std::runtime_error("alloc tensor memory failed!");
-    else
-        tensor_buffer_ = new TensorBuffer(data_ptr_, device);
+    tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes_);
 }
 
 Tensor::Tensor(const Tensor &other) {
@@ -96,7 +98,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
         return;
     }
 
-    T *data_ptr = (T *)tensor->tensor_buffer_->data_ptr_ + offset;
+    T *data_ptr = (T *)tensor->data_ptr() + offset;
     auto &stride = tensor->stride();
 
     if (tensor->ndim() == 0) {
@@ -155,9 +157,55 @@ std::string Tensor::to_repr() {
     return ret;
 }
 
+Tensor &Tensor::operator=(Tensor &other) {
+    if (this != &other) {
+        tensor_meta_ = other.tensor_meta_;
+        tensor_buffer_ = other.tensor_buffer_;
+        tensor_buffer_->inc_ref();
+    }
+    return *this;
+}
+
+void tensor_clone_impl(Tensor *src, int src_offset, Tensor *dst, int dst_offset, int axis) {
+    if (axis < src->ndim() - 1) {
+        for (int i=0; i<src->shape()[axis]; i++)
+            tensor_clone_impl(
+                src, src_offset + i * (src->stride()[axis]),
+                dst, dst_offset + i * (dst->stride()[axis]),
+                axis + 1
+            );
+    }
+
+    int itemsize = sizeof_dtype(src->dtype());
+    unsigned char *src_ptr = (unsigned char *)src->data_ptr() + src_offset * itemsize;
+    unsigned char *dst_ptr = (unsigned char *)dst->data_ptr() + dst_offset * itemsize;
+    auto &src_stride = src->stride();
+    auto &dst_stride = dst->stride();
+    for (int i=0; i<src->shape()[axis]; i++) {
+        for (int j=0; j<itemsize; j++)
+            dst_ptr[j] = src_ptr[j];
+        src_ptr += src_stride[axis] * itemsize;
+        dst_ptr += dst_stride[axis] * itemsize;
+    }
+}
+
+Tensor Tensor::clone() {
+    Tensor tensor(this->dtype(), this->shape(), this->device());
+    tensor_clone_impl(this, this->offset(), &tensor, tensor.offset(), 0);
+    return tensor;
+}
+
+Tensor Tensor::contiguous() {
+    if (this->is_contiguous()) {
+        return *this;
+    } else {
+        return this->clone();
+    }
+}
+
 Tensor Tensor::reshape(std::vector<int> &dims) {
-    Tensor tensor(*this);
-    Tensor::reshape(&tensor, dims);
+    Tensor tensor = this->contiguous();
+    tensor.reshape_inplace(dims);
     return tensor;
 }
 

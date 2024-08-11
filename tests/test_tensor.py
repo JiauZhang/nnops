@@ -34,7 +34,7 @@ class TestTensor():
         tensor_a = Tensor(shape=[2, 3, 4, 5])
         assert tensor_a.ref_count == 1
 
-    def test_tensor_reshape(self):
+    def test_tensor_reshape_1(self):
         runtime_error = False
         try:
             tensor_a = Tensor(shape=[1, 2, 3])
@@ -50,6 +50,16 @@ class TestTensor():
         except RuntimeError:
             runtime_error = True
         assert runtime_error == True
+
+    def test_tensor_reshape_2(self):
+        t_a = Tensor(shape=[4, 5, 6])
+        t_b = t_a.reshape(5, 6, 4)
+        t_c = t_b.reshape(-1)
+        assert t_a.ref_count == 3 and t_c.ref_count == t_a.ref_count
+
+        t_d = t_a[::2, :, ::3] # shape: [2, 5, 2]
+        t_e = t_d.reshape(10, 2)
+        assert t_a.ref_count == 4 and t_e.ref_count == 1
 
     def test_tensor_ref_count_1(self):
         t_a = Tensor(shape=[2, 3, 4])
