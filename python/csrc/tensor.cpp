@@ -82,6 +82,28 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     }
 }
 
+void from_numpy_impl(nb::ndarray<> *src, int src_offset, nnops::Tensor *dst, int dst_offset, int axis) {
+    if (axis < src->ndim() - 1) {
+        for (int i=0; i<src->shape(axis); i++)
+            from_numpy_impl(
+                src, src_offset + i * (src->stride(axis)),
+                dst, dst_offset + i * (dst->stride()[axis]),
+                axis + 1
+            );
+    }
+
+    int itemsize = sizeof_dtype(dst->dtype());
+    unsigned char *src_ptr = (unsigned char *)src->data() + src_offset * itemsize;
+    unsigned char *dst_ptr = (unsigned char *)dst->data_ptr() + dst_offset * itemsize;
+    auto &dst_stride = dst->stride();
+    for (int i=0; i<src->shape(axis); i++) {
+        for (int j=0; j<itemsize; j++)
+            dst_ptr[j] = src_ptr[j];
+        src_ptr += src->stride(axis) * itemsize;
+        dst_ptr += dst_stride[axis] * itemsize;
+    }
+}
+
 nb::handle from_numpy(nb::ndarray<> array) {
     std::vector<int> shape;
     nnops::DataType dtype;
@@ -91,21 +113,29 @@ nb::handle from_numpy(nb::ndarray<> array) {
     for (int i=0; i<array.ndim(); i++)
         shape.push_back(array.shape(i));
 
-    if (array_dtype == nb::dtype<char>()) {
+    if (array_dtype == nb::dtype<char>())
         dtype = nnops::DataType::TYPE_INT8;
-        char *array_data = (char *)array.data();
-        pytensor = pytensor_new();
-        nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
-        new (tensor) nnops::Tensor(dtype, shape, nnops::DeviceType::CPU);
-        char *tensor_data = (char *)(tensor->data_ptr());
-
-        for (int i=0; i<tensor->nelems(); i++)
-            tensor_data[i] = array_data[i];
-
-        return pytensor;
-    } else {
+    else if (array_dtype == nb::dtype<unsigned char>())
+        dtype = nnops::DataType::TYPE_UINT8;
+    else if (array_dtype == nb::dtype<unsigned short>())
+        dtype = nnops::DataType::TYPE_UINT16;
+    else if (array_dtype == nb::dtype<short>())
+        dtype = nnops::DataType::TYPE_INT16;
+    else if (array_dtype == nb::dtype<int>())
+        dtype = nnops::DataType::TYPE_INT32;
+    else if (array_dtype == nb::dtype<unsigned int>())
+        dtype = nnops::DataType::TYPE_UINT32;
+    else if (array_dtype == nb::dtype<float>())
+        dtype = nnops::DataType::TYPE_FLOAT32;
+    else
         throw std::runtime_error("invalid from_numpy dtype!");
-    }
+
+    pytensor = pytensor_new();
+    nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
+    new (tensor) nnops::Tensor(dtype, shape, nnops::DeviceType::CPU);
+    from_numpy_impl(&array, 0, tensor, 0, 0);
+
+    return pytensor;
 }
 
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
@@ -153,12 +183,9 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
 
             nb::handle pytensor = pytensor_new();
             nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
-            nnops::Tensor reshaped = self->reshape(indices);
+            nnops::Tensor &&reshaped = self->reshape(indices);
 
-            // new (tensor) nnops::Tensor(*self);
-            // nnops::Tensor::reshape(tensor, indices);
             *tensor = reshaped;
-
             return pytensor;
         })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
