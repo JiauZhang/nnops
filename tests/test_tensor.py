@@ -1,5 +1,6 @@
 from nnops.tensor import Tensor
 from nnops import dtype
+import numpy as np
 
 class TestTensor():
     def test_list_shape(self):
@@ -154,3 +155,26 @@ class TestTensor():
         t_c = t_b[1, 1]
         t_d = t_a[..., ::2]
         assert t_c.is_contiguous() == True and t_d.is_contiguous() == False
+
+    def test_tensor_numpy(self):
+        nnops_np = [
+            [dtype.float32, np.float32],
+            [dtype.int32, np.int32],
+            [dtype.uint32, np.uint32],
+            [dtype.int16, np.int16],
+            [dtype.uint16, np.uint16],
+            [dtype.int8, np.int8],
+            [dtype.uint8, np.uint8],
+        ]
+        for nnops_type, np_type in nnops_np:
+            np_a = (np.random.randn(4, 5, 6) * 9876).astype(np_type)
+            nnops_a = Tensor.from_numpy(np_a)
+            nnops_np = nnops_a.numpy()
+            assert (np_a == nnops_np).all() and nnops_a.dtype == nnops_type
+            assert nnops_a.ref_count == 1 and nnops_a.shape == [4, 5, 6]
+
+            t_b = nnops_a[::2, ::2, ::3]
+            assert t_b.ref_count == 2
+
+            del nnops_a
+            assert t_b.ref_count == 1
