@@ -168,6 +168,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             nnops::Tensor *tensor = new nnops::Tensor();
             nnops::Tensor &&cloned = self.clone();
             std::vector<size_t> shape;
+            nb::dlpack::dtype dtype;
 
             *tensor = cloned;
             nb::capsule deleter(tensor, [](void *p) noexcept {
@@ -177,28 +178,24 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
                 shape.push_back(s);
 
             if (tensor->dtype() == nnops::DataType::TYPE_FLOAT32)
-                return nb::ndarray<nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<float>());
+                dtype = nb::dtype<float>();
             else if (tensor->dtype() == nnops::DataType::TYPE_INT32)
-                return nb::ndarray<nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<int>());
+                dtype = nb::dtype<int>();
             else if (tensor->dtype() == nnops::DataType::TYPE_UINT32)
-                return nb::ndarray<::nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<unsigned int>());
+                dtype = nb::dtype<unsigned int>();
             else if (tensor->dtype() == nnops::DataType::TYPE_INT16)
-                return nb::ndarray<::nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<short>());
+                dtype = nb::dtype<short>();
             else if (tensor->dtype() == nnops::DataType::TYPE_UINT16)
-                return nb::ndarray<::nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<unsigned short>());
+                dtype = nb::dtype<unsigned short>();
             else if (tensor->dtype() == nnops::DataType::TYPE_INT8)
-                return nb::ndarray<::nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<char>());
+                dtype = nb::dtype<char>();
             else if (tensor->dtype() == nnops::DataType::TYPE_UINT8)
-                return nb::ndarray<::nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, nb::dtype<unsigned char>());
+                dtype = nb::dtype<unsigned char>();
             else
                 throw std::runtime_error("numpy() invalid DataType!");
+
+            return nb::ndarray<nb::numpy>(
+                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, dtype);
         })
         .def("reshape", [](nb::handle h, nb::args args) {
             PyObject *ob_self = h.ptr();
