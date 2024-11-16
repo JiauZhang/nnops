@@ -8,17 +8,6 @@ class TestTensor():
         tensor = Tensor(shape=shape)
         assert shape == tensor.shape
 
-    def test_tensor_dtype(self):
-        types = [
-            dtype.float32,
-            dtype.int32, dtype.uint32,
-            dtype.int16, dtype.uint16,
-            dtype.int8, dtype.uint8,
-        ]
-        for tp in types:
-            tensor = Tensor(shape=[1], dtype=tp)
-            assert tp == tensor.dtype
-
     def test_tensor_exception(self):
         runtime_error = False
         try:

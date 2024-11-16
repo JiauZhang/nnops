@@ -142,6 +142,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     nb::class_<nnops::Tensor>(m, "Tensor")
         .def(nb::init<nnops::Tensor &>())
         .def(nb::init<nnops::DataType &, std::vector<int> &, std::string &>())
+        .def(nb::init<nnops::DataType &, std::vector<int> &, nnops::DeviceType &>())
         .def("__init_pytensor_type", [](nb::handle h) {
             PyObject *ob_self = h.ptr();
             pytensor_type = ob_self->ob_type;
@@ -219,6 +220,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             return pytensor;
         })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
+        .def_prop_ro("device", [](nnops::Tensor &t) { return t.device()->get_device_type(); })
         .def_prop_ro("data_ptr", [](nnops::Tensor &t) { return t.data_ptr(); })
         .def_prop_ro("ref_count", [](nnops::Tensor &t) { return t.ref_count(); })
         .def_prop_ro("ndim", [](nnops::Tensor &t) { return t.ndim(); })
