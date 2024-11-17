@@ -3,10 +3,14 @@
 
 #include <nnops/device.h>
 
-class CUDADevice final : public Device {
+namespace nnops::cuda {
+
+class Device final : public nnops::Device {
 public:
     void *malloc(size_t size) { return 0; }
     void free(void *ptr) {}
 };
+
+} // namespace nnops::cuda
 
 #endif // __CUDA_DEVICE_H__

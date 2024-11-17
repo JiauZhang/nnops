@@ -4,14 +4,14 @@
 #include <nnops/device.h>
 #include <string>
 
-namespace nnops {
+namespace nnops::cpu {
 
-class CPUDevice final : public Device {
+class Device final : public nnops::Device {
 public:
     void *malloc(size_t size);
     void free(void *ptr);
 };
 
-} // namespace nnops
+} // namespace nnops::cpu
 
 #endif // __CPU_DEVICE_H__

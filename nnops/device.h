@@ -34,17 +34,18 @@ private:
     DeviceType device_type_;
 };
 
+} // namespace nnops
+
 #define REGISTER_DEVICE(device_name, device_type, device_class)                                   \
-struct __##device_class_register {                                                                \
-    __##device_class_register(std::string dev_name, DeviceType dev_type, Device *device) {        \
-        Device::register_device(dev_name, dev_type, device);                                      \
+struct __local_device_register__ {                                                                \
+    __local_device_register__(                                                                    \
+        std::string dev_name, nnops::DeviceType dev_type, nnops::Device *device) {                \
+        nnops::Device::register_device(dev_name, dev_type, device);                               \
         device->set_device_name(dev_name);                                                        \
         device->set_device_type(dev_type);                                                        \
     }                                                                                             \
 };                                                                                                \
-static __##device_class_register *__registered_##device_class                                     \
-    = new __##device_class_register(device_name, device_type, new device_class());
-
-} // namespace nnops
+static __local_device_register__ *__registered_local_device__                                     \
+    = new __local_device_register__(device_name, device_type, new device_class())
 
 #endif // __DEVICE_TYPE_H__
