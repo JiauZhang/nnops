@@ -209,4 +209,53 @@ Tensor Tensor::reshape(std::vector<int> &dims) {
     return tensor;
 }
 
+bool Tensor::is_broadcastable(std::vector<int> &s1, std::vector<int> &s2) {
+    int dims = std::min(s1.size(), s2.size());
+
+    for (int i=0; i<dims; i++)
+        if (s1[i] != s2[i] && s1[i] != 1 && s2[i] != 1)
+            return false;
+    return true;
+}
+
+std::vector<int> Tensor::broadcast_shape(std::vector<int> &s1, std::vector<int> &s2) {
+    int dims = std::min(s1.size(), s2.size());
+    std::vector<int> shape, *shape_long, *shape_short;
+
+    if (dims == s1.size()) {
+        shape_long = &s2;
+        shape_short = &s1;
+    } else {
+        shape_long = &s1;
+        shape_short = &s2;
+    }
+    dims = shape_long->size();
+    shape.resize(dims);
+    for (int i=0; i<dims; i++)
+        shape[i] = shape_long->data()[i];
+    dims = shape_long->size() - 1;
+    for (int i=shape_short->size()-1; i>=0; i--) {
+        if (shape_short->data()[i] != shape[dims])
+            shape[dims] *= shape_short->data()[i];
+        dims--;
+    }
+
+    return shape;
+}
+
+bool Tensor::is_broadcast() {
+    int dims = this->ndim();
+    auto &strides = this->stride();
+    for (int i=0; i<dims; i++)
+        if (strides[i] == 0)
+            return true;
+    return false;
+}
+
+Tensor Tensor::broadcast_to(Tensor &t, std::vector<int> &shape) {
+    Tensor tb = t;
+
+    return tb;
+}
+
 } // namespace nnops

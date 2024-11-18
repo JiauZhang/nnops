@@ -6,6 +6,7 @@
 #include <nnops/tensor_buffer.h>
 #include <nnops/device.h>
 #include <string>
+#include <optional>
 
 namespace nnops {
 
@@ -22,9 +23,13 @@ public:
     void init_tensor(DataType &dtype, std::vector<int> &dims, Device *device);
     inline void reshape_inplace(std::vector<int> &dims) { this->tensor_meta_.reshape_inplace(dims); }
     Tensor reshape(std::vector<int> &dims);
-    static inline void reshape(Tensor *tensor, std::vector<int> &dims) {
-        tensor->tensor_meta_.reshape_inplace(dims);
-    }
+    inline static bool is_broadcastable(Tensor &t1, Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape()); }
+    static bool is_broadcastable(std::vector<int> &s1, std::vector<int> &s2);
+    inline static std::vector<int> broadcast_shape(Tensor &t1, Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape()); }
+    static std::vector<int> broadcast_shape(std::vector<int> &s1, std::vector<int> &s2);
+    bool is_broadcast();
+    inline Tensor broadcast_to(std::vector<int> &shape) { return Tensor::broadcast_to(*this, shape); }
+    static Tensor broadcast_to(Tensor &t, std::vector<int> &shape);
 
     inline DataType dtype() { return this->tensor_meta_.dtype_; }
     inline std::vector<int> &shape() { return this->tensor_meta_.dims_; }

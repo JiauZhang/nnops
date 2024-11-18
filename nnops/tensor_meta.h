@@ -12,6 +12,7 @@ public:
     TensorMeta(): nbytes_(0), nelems_(0), offset_(0) {}
 
     static std::string shape_as_string(const std::vector<int> &dims);
+    inline std::string shape_as_string() { return TensorMeta::shape_as_string(this->dims_); };
     void reshape_inplace(std::vector<int> &dims);
     bool is_contiguous();
 
