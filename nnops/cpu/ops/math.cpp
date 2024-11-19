@@ -40,4 +40,4 @@ Tensor add(Tensor &self, Tensor &other) {
     return ret;
 }
 
-} // namespace cpu::ops
+} // namespace nnops::cpu::ops

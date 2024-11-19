@@ -170,6 +170,8 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             return h_new;
         })
         .def("is_contiguous", &nnops::Tensor::is_contiguous)
+        .def("contiguous", &nnops::Tensor::contiguous)
+        .def("clone", &nnops::Tensor::clone)
         .def("numpy", [](nnops::Tensor &self) {
             nnops::Tensor *tensor = new nnops::Tensor();
             nnops::Tensor &&cloned = self.clone();

@@ -185,3 +185,16 @@ class TestTensor():
         assert t_d_broadcast.shape == [2, 3, 5, 4]
         assert t_d_broadcast.stride == [0, 4, 0, 1]
         assert (np_broadcast == t_d_broadcast.numpy()).all()
+
+    def test_tensor_contiguous(self):
+        t_a = Tensor(shape=[4, 5, 6])
+        t_b = t_a[::2, ::2, ::2]
+        assert t_b.is_contiguous() == False
+
+        t_c = t_b.contiguous()
+        assert t_c.is_contiguous() == True
+        assert t_c.ref_count == 1 and t_b.ref_count == 2
+
+        t_d = t_b.clone()
+        assert t_d.is_contiguous() == True
+        assert t_d.ref_count == 1 and t_b.ref_count == 2
