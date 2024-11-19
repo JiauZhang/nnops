@@ -176,4 +176,12 @@ class TestTensor():
         assert nnops.tensor.broadcast_shape(t_b, t_a) == [3, 3, 4]
 
         t_c = t_a.broadcast_to((2, 3, 2, 4))
-        assert t_c.shape == [2, 3, 2, 4]
+        assert t_c.shape == [2, 3, 2, 4] and t_c.stride == [0, 4, 0, 1]
+
+        np_tensor = np.random.randn(3, 1, 4).astype(np.float32)
+        t_d = nnops.tensor.from_numpy(np_tensor)
+        np_broadcast = np.broadcast_to(np_tensor, (2, 3, 5, 4))
+        t_d_broadcast = t_d.broadcast_to((2, 3, 5, 4))
+        assert t_d_broadcast.shape == [2, 3, 5, 4]
+        assert t_d_broadcast.stride == [0, 4, 0, 1]
+        assert (np_broadcast == t_d_broadcast.numpy()).all()

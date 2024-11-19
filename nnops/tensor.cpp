@@ -266,13 +266,16 @@ Tensor Tensor::broadcast_to(Tensor &t, std::vector<int> &shape) {
             throw std::runtime_error(info);
 
     Tensor tb = t;
-    auto &strides = tb.stride();
+    std::vector<int> &strides = tb.stride(), &tb_shape = tb.shape();
     int offset = shape.size() - ts.size();
 
-    tb.shape() = shape;
+    for (int i=0; i<=ts_size; i++)
+        if (tb_shape[i] == 1)
+            strides[i] = 0;
+    tb_shape = shape;
     strides.resize(shape.size());
     for (int i=s_size; i>=offset; i--)
-        strides[i] = strides[i-offset] == 1 ? 0 : strides[i-offset];
+        strides[i] = strides[i-offset];
     for (int i=0; i<offset; i++)
         strides[i] = 0;
 

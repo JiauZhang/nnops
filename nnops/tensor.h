@@ -6,7 +6,6 @@
 #include <nnops/tensor_buffer.h>
 #include <nnops/device.h>
 #include <string>
-#include <optional>
 
 namespace nnops {
 
