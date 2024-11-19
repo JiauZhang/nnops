@@ -19,9 +19,4 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH $ORIGIN)
 
-nanobind_add_module(
-  _C STABLE_ABI
-  csrc/data_type.cpp csrc/tensor.cpp
-  csrc/device.cpp csrc/python.cpp
-)
-target_link_libraries(_C PRIVATE nnops)
+add_subdirectory(csrc)

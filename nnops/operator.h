@@ -18,8 +18,6 @@ public:
     static void register_operator(std::string &op_name, DeviceType type, Operator *op);
     static Operator *get_operator(std::string &op_name, DeviceType type);
 
-    virtual void operator()(void) = 0;
-
 private:
     static std::map<std::string, Operator *> operators_[DeviceType::COMPILE_TIME_MAX_DEVICE_TYPES];
     const char *operator_name_ = nullptr;
