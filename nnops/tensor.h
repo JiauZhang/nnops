@@ -33,7 +33,7 @@ public:
 
     inline DataType dtype() { return this->tensor_meta_.dtype_; }
     inline std::vector<int> &shape() { return this->tensor_meta_.dims_; }
-    inline const std::vector<int> &stride() { return this->tensor_meta_.strides_; }
+    inline std::vector<int> &stride() { return this->tensor_meta_.strides_; }
     inline void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
     inline int ndim() { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }

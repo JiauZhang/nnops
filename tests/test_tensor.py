@@ -1,3 +1,4 @@
+import nnops
 from nnops.tensor import Tensor
 from nnops import dtype
 import numpy as np
@@ -157,7 +158,7 @@ class TestTensor():
         ]
         for nnops_type, np_type in nnops_np:
             np_a = (np.random.randn(4, 5, 6) * 9876).astype(np_type)
-            nnops_a = Tensor.from_numpy(np_a)
+            nnops_a = nnops.tensor.from_numpy(np_a)
             nnops_np = nnops_a.numpy()
             assert (np_a == nnops_np).all() and nnops_a.dtype == nnops_type
             assert nnops_a.ref_count == 1 and nnops_a.shape == [4, 5, 6]
@@ -167,3 +168,12 @@ class TestTensor():
 
             del nnops_a
             assert t_b.ref_count == 1
+
+    def test_tensor_broadcast(self):
+        t_a = Tensor(shape=[3, 1, 4])
+        t_b = Tensor(shape=[3, 1])
+        assert nnops.tensor.is_broadcastable(t_a, t_b) == True
+        assert nnops.tensor.broadcast_shape(t_b, t_a) == [3, 3, 4]
+
+        t_c = t_a.broadcast_to((2, 3, 2, 4))
+        assert t_c.shape == [2, 3, 2, 4]

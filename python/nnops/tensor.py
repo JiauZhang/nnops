@@ -1,5 +1,7 @@
 from nnops._C import (
     Tensor as __Tensor,
+    from_numpy,
+    is_broadcastable, broadcast_shape,
 )
 import nnops.dtype as DT_
 

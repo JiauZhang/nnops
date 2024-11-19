@@ -139,6 +139,12 @@ nb::handle from_numpy(nb::ndarray<> array) {
 }
 
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
+    m.def("from_numpy", &from_numpy);
+    m.def("is_broadcastable", [](nnops::Tensor &t1, nnops::Tensor &t2) {
+        return nnops::Tensor::is_broadcastable(t1.shape(), t2.shape()); });
+    m.def("broadcast_shape", [](nnops::Tensor &t1, nnops::Tensor &t2) {
+        return nnops::Tensor::broadcast_shape(t1.shape(), t2.shape()); });
+
     nb::class_<nnops::Tensor>(m, "Tensor")
         .def(nb::init<nnops::Tensor &>())
         .def(nb::init<nnops::DataType &, std::vector<int> &, std::string &>())
@@ -164,7 +170,6 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             return h_new;
         })
         .def("is_contiguous", &nnops::Tensor::is_contiguous)
-        .def_static("from_numpy", from_numpy)
         .def("numpy", [](nnops::Tensor &self) {
             nnops::Tensor *tensor = new nnops::Tensor();
             nnops::Tensor &&cloned = self.clone();
@@ -219,6 +224,8 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             *tensor = reshaped;
             return pytensor;
         })
+        .def("broadcast_to", [](nnops::Tensor &self, std::vector<int> &shape) {
+            return self.broadcast_to(shape); })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](nnops::Tensor &t) { return t.device()->get_device_type(); })
         .def_prop_ro("data_ptr", [](nnops::Tensor &t) { return t.data_ptr(); })

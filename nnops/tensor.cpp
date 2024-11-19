@@ -210,10 +210,10 @@ Tensor Tensor::reshape(std::vector<int> &dims) {
 }
 
 bool Tensor::is_broadcastable(std::vector<int> &s1, std::vector<int> &s2) {
-    int dims = std::min(s1.size(), s2.size());
+    int dims = std::min(s1.size(), s2.size()), s1_size = s1.size() - 1, s2_size = s2.size() - 1;
 
     for (int i=0; i<dims; i++)
-        if (s1[i] != s2[i] && s1[i] != 1 && s2[i] != 1)
+        if (s1[s1_size-i] != s2[s2_size-i] && s1[s1_size-i] != 1 && s2[s2_size-i] != 1)
             return false;
     return true;
 }
@@ -253,7 +253,28 @@ bool Tensor::is_broadcast() {
 }
 
 Tensor Tensor::broadcast_to(Tensor &t, std::vector<int> &shape) {
+    std::vector<int> &ts = t.shape();
+    std::string info = "Can not broadcast Tensor from shape " + TensorMeta::shape_as_string(ts)
+        + " to " + TensorMeta::shape_as_string(shape);
+
+    if (ts.size() > shape.size())
+        throw std::runtime_error(info);
+
+    int dims = std::min(ts.size(), shape.size()), ts_size = ts.size() - 1, s_size = shape.size() - 1;
+    for (int i=0; i<dims; i++)
+        if (shape[s_size-i] != ts[ts_size-i] && ts[ts_size-i] != 1)
+            throw std::runtime_error(info);
+
     Tensor tb = t;
+    auto &strides = tb.stride();
+    int offset = shape.size() - ts.size();
+
+    tb.shape() = shape;
+    strides.resize(shape.size());
+    for (int i=s_size; i>=offset; i--)
+        strides[i] = strides[i-offset] == 1 ? 0 : strides[i-offset];
+    for (int i=0; i<offset; i++)
+        strides[i] = 0;
 
     return tb;
 }
