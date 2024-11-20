@@ -34,8 +34,9 @@ Tensor add(Tensor &self, Tensor &other) {
 
     std::vector<int> shape = Tensor::broadcast_shape(self, other);
     Tensor ret(self.dtype(), shape, self.device());
+    Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
 
-    add_impl(self, 0, other, 0, ret, 0, 0);
+    add_impl(self_br, self_br.offset(), other_br, other_br.offset(), ret, ret.offset(), 0);
 
     return ret;
 }
