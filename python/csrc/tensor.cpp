@@ -105,7 +105,7 @@ void from_numpy_impl(nb::ndarray<> *src, int src_offset, nnops::Tensor *dst, int
 }
 
 nb::handle from_numpy(nb::ndarray<> array) {
-    std::vector<int> shape;
+    nnops::TensorShape shape;
     nnops::DataType dtype;
     auto array_dtype = array.dtype();
     nb::handle pytensor;
@@ -147,8 +147,8 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
 
     nb::class_<nnops::Tensor>(m, "Tensor")
         .def(nb::init<nnops::Tensor &>())
-        .def(nb::init<nnops::DataType &, std::vector<int> &, std::string &>())
-        .def(nb::init<nnops::DataType &, std::vector<int> &, nnops::DeviceType &>())
+        .def(nb::init<nnops::DataType &, nnops::TensorShape &, std::string &>())
+        .def(nb::init<nnops::DataType &, nnops::TensorShape &, nnops::DeviceType &>())
         .def("__init_pytensor_type", [](nb::handle h) {
             PyObject *ob_self = h.ptr();
             pytensor_type = ob_self->ob_type;
@@ -208,7 +208,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("reshape", [](nb::handle h, nb::args args) {
             PyObject *ob_self = h.ptr();
             nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
-            std::vector<int> indices;
+            nnops::TensorShape indices;
 
             for (int i=0; i<args.size(); i++) {
                 auto v = args[i];
@@ -226,7 +226,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
             *tensor = reshaped;
             return pytensor;
         })
-        .def("broadcast_to", [](nnops::Tensor &self, std::vector<int> &shape) {
+        .def("broadcast_to", [](nnops::Tensor &self, nnops::TensorShape &shape) {
             return self.broadcast_to(shape); })
         .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](nnops::Tensor &t) { return t.device()->get_device_type(); })

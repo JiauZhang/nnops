@@ -8,7 +8,7 @@ namespace nnops {
 
 Tensor::Tensor(): tensor_buffer_(nullptr) {}
 
-Tensor::Tensor(DataType dtype, std::vector<int> &dims, std::string &device) {
+Tensor::Tensor(DataType dtype, TensorShape &dims, std::string &device) {
     Device *device_ = Device::get_device(device);
 
     if (device_ == nullptr)
@@ -16,7 +16,7 @@ Tensor::Tensor(DataType dtype, std::vector<int> &dims, std::string &device) {
     init_tensor(dtype, dims, device_);
 }
 
-Tensor::Tensor(DataType dtype, std::vector<int> &dims, DeviceType device) {
+Tensor::Tensor(DataType dtype, TensorShape &dims, DeviceType device) {
     Device *device_ = Device::get_device(device);
 
     if (device_ == nullptr)
@@ -24,7 +24,7 @@ Tensor::Tensor(DataType dtype, std::vector<int> &dims, DeviceType device) {
     init_tensor(dtype, dims, device_);
 }
 
-Tensor::Tensor(DataType dtype, std::vector<int> &dims, Device *device) {
+Tensor::Tensor(DataType dtype, TensorShape &dims, Device *device) {
     Device *device_ = device;
 
     if (device_ == nullptr)
@@ -32,7 +32,7 @@ Tensor::Tensor(DataType dtype, std::vector<int> &dims, Device *device) {
     init_tensor(dtype, dims, device_);
 }
 
-void Tensor::init_tensor(DataType &dtype, std::vector<int> &dims, Device *device) {
+void Tensor::init_tensor(DataType &dtype, TensorShape &dims, Device *device) {
     tensor_buffer_ = nullptr;
     tensor_meta_.offset_ = 0;
     tensor_meta_.dims_ = dims;
@@ -203,13 +203,13 @@ Tensor Tensor::contiguous() {
     }
 }
 
-Tensor Tensor::reshape(std::vector<int> &dims) {
+Tensor Tensor::reshape(TensorShape &dims) {
     Tensor tensor = this->contiguous();
     tensor.reshape_inplace(dims);
     return tensor;
 }
 
-bool Tensor::is_broadcastable(std::vector<int> &s1, std::vector<int> &s2) {
+bool Tensor::is_broadcastable(TensorShape &s1, TensorShape &s2) {
     int dims = std::min(s1.size(), s2.size()), s1_size = s1.size() - 1, s2_size = s2.size() - 1;
 
     for (int i=0; i<dims; i++)
@@ -218,9 +218,9 @@ bool Tensor::is_broadcastable(std::vector<int> &s1, std::vector<int> &s2) {
     return true;
 }
 
-std::vector<int> Tensor::broadcast_shape(std::vector<int> &s1, std::vector<int> &s2) {
+TensorShape Tensor::broadcast_shape(TensorShape &s1, TensorShape &s2) {
     int dims = std::min(s1.size(), s2.size());
-    std::vector<int> shape, *shape_long, *shape_short;
+    TensorShape shape, *shape_long, *shape_short;
 
     if (dims == s1.size()) {
         shape_long = &s2;
@@ -252,8 +252,8 @@ bool Tensor::is_broadcast() {
     return false;
 }
 
-Tensor Tensor::broadcast_to(Tensor &t, std::vector<int> &shape) {
-    std::vector<int> &ts = t.shape();
+Tensor Tensor::broadcast_to(Tensor &t, TensorShape &shape) {
+    TensorShape &ts = t.shape();
     std::string info = "Can not broadcast Tensor from shape " + TensorMeta::shape_as_string(ts)
         + " to " + TensorMeta::shape_as_string(shape);
 
@@ -266,7 +266,7 @@ Tensor Tensor::broadcast_to(Tensor &t, std::vector<int> &shape) {
             throw std::runtime_error(info);
 
     Tensor tb = t;
-    std::vector<int> &strides = tb.stride(), &tb_shape = tb.shape();
+    TensorStride &strides = tb.stride(), &tb_shape = tb.shape();
     int offset = shape.size() - ts.size();
 
     for (int i=0; i<=ts_size; i++)

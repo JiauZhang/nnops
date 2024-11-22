@@ -32,7 +32,7 @@ Tensor add(Tensor &self, Tensor &other) {
         throw std::runtime_error(info);
     }
 
-    std::vector<int> shape = Tensor::broadcast_shape(self, other);
+    TensorShape shape = Tensor::broadcast_shape(self, other);
     Tensor ret(self.dtype(), shape, self.device());
     Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
 

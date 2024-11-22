@@ -4,7 +4,7 @@
 
 namespace nnops {
 
-std::string TensorMeta::shape_as_string(const std::vector<int> &dims) {
+std::string TensorMeta::shape_as_string(const TensorShape &dims) {
     std::string shape_str;
 
     shape_str += '[';
@@ -17,7 +17,7 @@ std::string TensorMeta::shape_as_string(const std::vector<int> &dims) {
     return shape_str;
 }
 
-void TensorMeta::reshape_inplace(std::vector<int> &indices) {
+void TensorMeta::reshape_inplace(TensorShape &indices) {
     int value, idx = indices.size(), count = 0, nelems = 1;
 
     for (int i=0; i<indices.size(); i++) {
