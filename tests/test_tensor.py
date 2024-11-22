@@ -52,6 +52,15 @@ class TestTensor():
         t_e = t_d.reshape(10, 2)
         assert t_a.ref_count == 4 and t_e.ref_count == 1
 
+    def test_tensor_reshape_3(self):
+        np_t = np.random.randn(6, 7, 8).astype(np.float32)
+        np_t_stride = np_t[1::2, 2::3, 3::2] # [3, 2, 3]
+        np_t_reshape = np_t_stride.reshape(2, 9)
+        nop_t = nnops.tensor.from_numpy(np_t)
+        nop_t_stride = nop_t[1::2, 2::3, 3::2]
+        nop_t_reshape = nop_t_stride.reshape(2, 9)
+        assert (nop_t_reshape.numpy() == np_t_reshape).all()
+
     def test_tensor_ref_count_1(self):
         t_a = Tensor(shape=[2, 3, 4])
         assert t_a.ref_count == 1

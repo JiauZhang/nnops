@@ -24,3 +24,9 @@ class TestDeviceType():
         t_a = nnops.tensor.from_numpy(np_a_stride)
         t_b = nnops.tensor.from_numpy(np_b_stride)
         assert (ops.add(t_a, t_b).numpy() == np_a_stride + np_b_stride).all()
+
+        np_c_stride = np_a[1::2, 2::2, :, 4:] # [2, 2, 1, 3]
+        np_d_stride = np_b[2::2, 1::2, 1::2] # [2, 2, 3]
+        t_c = nnops.tensor.from_numpy(np_c_stride)
+        t_d = nnops.tensor.from_numpy(np_d_stride)
+        assert (ops.add(t_c, t_d).numpy() == np_c_stride + np_d_stride).all()
