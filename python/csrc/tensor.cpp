@@ -48,7 +48,7 @@ TensorShape parse_tensor_shape(nb::handle h) {
     return shape;
 }
 
-void indexing(PyTensor &tensor, nb::handle indices, int axis) {
+void indexing(Tensor &tensor, nb::handle indices, int axis) {
     PyObject *ob_indices = indices.ptr();
     TensorMeta &meta = tensor.tensor_meta_;
 
@@ -130,15 +130,9 @@ PyTensor::PyTensor(nb::kwargs &kwargs) {
 }
 
 PyTensor PyTensor::__getitem__(nb::handle indices) {
-    PyTensor tensor_new;
-    TensorMeta &meta = tensor_new.tensor_meta_;
-
-    meta = this->tensor_meta_;
-    indexing(tensor_new, indices, 0);
-    tensor_new.tensor_buffer_ = this->tensor_buffer_;
-    tensor_new.tensor_buffer_->inc_ref();
-
-    return tensor_new;
+    Tensor t = this->tensor();
+    indexing(t, indices, 0);
+    return PyTensor(t);
 }
 
 PyTensor PyTensor::py_reshape(nb::args args) {
@@ -154,9 +148,7 @@ PyTensor PyTensor::py_reshape(nb::args args) {
     }
 
     Tensor &&tensor = this->reshape(indices);
-    PyTensor pytensor;
-    pytensor = tensor;
-    return pytensor;
+    return PyTensor(tensor);
 }
 
 nb::ndarray<nb::numpy> PyTensor::numpy() {

@@ -24,21 +24,25 @@ namespace pynnops {
 class PyTensor : public Tensor {
 public:
     PyTensor(): Tensor() {}
-    PyTensor(Tensor &other): Tensor(other) {}
-    PyTensor(DataType dtype, TensorShape &dims, DeviceType device):
-        Tensor(dtype, dims, device) {}
-    PyTensor(nb::kwargs &kwargs);
-
-    PyTensor &operator=(Tensor &other) {
+    PyTensor(const Tensor &other): Tensor(other) {}
+    PyTensor(const PyTensor &other) {
         tensor_meta_ = other.tensor_meta_;
         tensor_buffer_ = other.tensor_buffer_;
         tensor_buffer_->inc_ref();
-        return *this;
     }
+    PyTensor(DataType dtype, TensorShape &dims, DeviceType device):
+        Tensor(dtype, dims, device) {}
+    PyTensor(nb::kwargs &kwargs);
     PyTensor py_broadcast_to(TensorShape &shape) {
         Tensor t = this->broadcast_to(shape);
         PyTensor tensor(t);
         return tensor;
+    }
+    PyTensor &operator=(const PyTensor &other) {
+        tensor_meta_ = other.tensor_meta_;
+        tensor_buffer_ = other.tensor_buffer_;
+        tensor_buffer_->inc_ref();
+        return *this;
     }
     PyTensor py_contiguous() {
         if (this->is_contiguous()) {

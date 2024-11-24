@@ -9,8 +9,7 @@ namespace pynnops {
 PyTensor add(PyTensor &self, PyTensor &other) {
     Tensor st = self.tensor(), ot = other.tensor();
     Tensor o = nnops::cpu::ops::add(st, ot);
-    PyTensor t(o);
-    return o;
+    return PyTensor(o);
 }
 
 void DEFINE_OPS_MODULE(nb::module_ & (m)) {
