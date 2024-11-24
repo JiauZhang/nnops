@@ -39,9 +39,11 @@ public:
         return tensor;
     }
     PyTensor &operator=(const PyTensor &other) {
-        tensor_meta_ = other.tensor_meta_;
-        tensor_buffer_ = other.tensor_buffer_;
-        tensor_buffer_->inc_ref();
+        if (this != &other) {
+            tensor_meta_ = other.tensor_meta_;
+            tensor_buffer_ = other.tensor_buffer_;
+            tensor_buffer_->inc_ref();
+        }
         return *this;
     }
     PyTensor py_contiguous() {
