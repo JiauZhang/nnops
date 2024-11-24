@@ -1,34 +1,56 @@
-#include <nnops/tensor.h>
-#include <nnops/data_type.h>
-#include <nnops/tensor_indexing.h>
-#include <nnops/tensor_meta.h>
-#include <nanobind/nanobind.h>
-#include <nanobind/stl/string.h>
-#include <nanobind/stl/vector.h>
-#include <nanobind/ndarray.h>
-#include <stdio.h>
-#include <Python.h>
-
-namespace nb = nanobind;
+#include <python/csrc/tensor.h>
 
 namespace pynnops {
 
-static PyTypeObject *pytensor_type = nullptr;
-
-nb::handle pytensor_new() {
-    if (pytensor_type == nullptr)
-        throw std::runtime_error("PyTensorType is not initialized!");
-
-    PyObject *ob_new = nb::detail::nb_inst_alloc(pytensor_type);
-    ob_new->ob_refcnt = 0;
-    nb::handle h(ob_new);
-    nb::inst_mark_ready(h);
-    return h;
+std::string tp_name(nb::handle &h) {
+    PyObject *ob = h.ptr();
+    PyTypeObject *tp = ob->ob_type;
+    return std::string(tp->tp_name);
 }
 
-void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
+DataType parse_data_type(nb::handle h) {
+    if (!nb::isinstance<DataType>(h))
+        throw std::runtime_error("unsupported DataType: " + tp_name(h));
+    return nb::cast<DataType>(h);
+}
+
+Device *parse_device_type(nb::handle h) {
+    if (nb::isinstance<nb::str>(h)) {
+        std::string name = nb::cast<std::string>(h);
+        return Device::get_device(name);
+    } else if (nb::isinstance<DeviceType>(h)) {
+        DeviceType device = nb::cast<DeviceType>(h);
+        return Device::get_device(device);
+    } else {
+        throw std::runtime_error("unsupported DeviceType: " + tp_name(h));
+    }
+}
+
+TensorShape parse_tensor_shape(nb::handle h) {
+    TensorShape shape;
+    Py_ssize_t len;
+    PyObject *ob = h.ptr();
+
+    if (nb::isinstance<nb::tuple>(h)) {
+        len = PyTuple_Size(ob);
+    } else if (nb::isinstance<nb::list>(h)) {
+        len = PyList_Size(ob);
+    } else {
+        throw std::runtime_error("Only list or tuple is supported for TensorShape!");
+    }
+
+    for (int i=0; i<len; i++) {
+        if (!nb::isinstance<nb::int_>(h[i]))
+            throw std::runtime_error("Only int data type is supported for shape dimensions!");
+        shape.push_back(nb::cast<int>(h[i]));
+    }
+
+    return shape;
+}
+
+void indexing(PyTensor &tensor, nb::handle indices, int axis) {
     PyObject *ob_indices = indices.ptr();
-    nnops::TensorMeta &meta = tensor.tensor_meta_;
+    TensorMeta &meta = tensor.tensor_meta_;
 
     if (nb::isinstance<nb::tuple>(indices)) {
         // multi-dimensional indexing
@@ -82,7 +104,95 @@ void indexing(nnops::Tensor &tensor, nb::handle indices, int axis) {
     }
 }
 
-void from_numpy_impl(nb::ndarray<> *src, int src_offset, nnops::Tensor *dst, int dst_offset, int axis) {
+PyTensor::PyTensor(nb::kwargs &kwargs) {
+    DataType dtype = DataType::TYPE_FLOAT32;
+    Device *device = Device::get_device(DeviceType::CPU);
+    TensorShape shape;
+    std::array<std::string, 3> keys_ = {"dtype", "device", "shape"};
+
+    if (kwargs.contains(keys_[0])) {
+        auto val = kwargs[keys_[0].c_str()];
+        dtype = parse_data_type(val);
+        nb::del(val);
+    }
+    if (kwargs.contains(keys_[1])) {
+        auto val = kwargs[keys_[1].c_str()];
+        device = parse_device_type(val);
+        nb::del(val);
+    }
+    if (kwargs.contains(keys_[2])) {
+        auto val = kwargs[keys_[2].c_str()];
+        shape = parse_tensor_shape(val);
+        nb::del(val);
+    }
+
+    init_tensor(dtype, shape, device);
+}
+
+PyTensor PyTensor::__getitem__(nb::handle indices) {
+    PyTensor tensor_new;
+    TensorMeta &meta = tensor_new.tensor_meta_;
+
+    meta = this->tensor_meta_;
+    indexing(tensor_new, indices, 0);
+    tensor_new.tensor_buffer_ = this->tensor_buffer_;
+    tensor_new.tensor_buffer_->inc_ref();
+
+    return tensor_new;
+}
+
+PyTensor PyTensor::py_reshape(nb::args args) {
+    TensorShape indices;
+
+    for (int i=0; i<args.size(); i++) {
+        auto v = args[i];
+        if (nb::isinstance<nb::int_>(v)) {
+            indices.push_back(nb::cast<int>(v));
+        } else {
+            throw std::runtime_error("only int index supported!");
+        }
+    }
+
+    Tensor &&tensor = this->reshape(indices);
+    PyTensor pytensor;
+    pytensor = tensor;
+    return pytensor;
+}
+
+nb::ndarray<nb::numpy> PyTensor::numpy() {
+    Tensor t = this->clone();
+    PyTensor *tensor = new PyTensor(t);
+    std::vector<size_t> shape;
+    nb::dlpack::dtype dtype;
+
+    nb::capsule deleter(tensor, [](void *p) noexcept {
+        delete (PyTensor *)p;
+    });
+    for (auto s: tensor->shape())
+        shape.push_back(s);
+
+    if (tensor->dtype() == DataType::TYPE_FLOAT32)
+        dtype = nb::dtype<float>();
+    else if (tensor->dtype() == DataType::TYPE_INT32)
+        dtype = nb::dtype<int>();
+    else if (tensor->dtype() == DataType::TYPE_UINT32)
+        dtype = nb::dtype<unsigned int>();
+    else if (tensor->dtype() == DataType::TYPE_INT16)
+        dtype = nb::dtype<short>();
+    else if (tensor->dtype() == DataType::TYPE_UINT16)
+        dtype = nb::dtype<unsigned short>();
+    else if (tensor->dtype() == DataType::TYPE_INT8)
+        dtype = nb::dtype<char>();
+    else if (tensor->dtype() == DataType::TYPE_UINT8)
+        dtype = nb::dtype<unsigned char>();
+    else
+        throw std::runtime_error("numpy() invalid DataType!");
+
+    return nb::ndarray<nb::numpy>(
+            tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, dtype);
+}
+
+void from_numpy_impl(nb::ndarray<> *src, int src_offset, PyTensor *dst, int dst_offset, int axis) {
     if (axis < src->ndim() - 1) {
         for (int i=0; i<src->shape(axis); i++)
             from_numpy_impl(
@@ -104,139 +214,64 @@ void from_numpy_impl(nb::ndarray<> *src, int src_offset, nnops::Tensor *dst, int
     }
 }
 
-nb::handle from_numpy(nb::ndarray<> array) {
-    nnops::TensorShape shape;
-    nnops::DataType dtype;
+PyTensor from_numpy(nb::ndarray<> array) {
+    TensorShape shape;
+    DataType dtype;
     auto array_dtype = array.dtype();
-    nb::handle pytensor;
 
     for (int i=0; i<array.ndim(); i++)
         shape.push_back(array.shape(i));
 
     if (array_dtype == nb::dtype<char>())
-        dtype = nnops::DataType::TYPE_INT8;
+        dtype = DataType::TYPE_INT8;
     else if (array_dtype == nb::dtype<unsigned char>())
-        dtype = nnops::DataType::TYPE_UINT8;
+        dtype = DataType::TYPE_UINT8;
     else if (array_dtype == nb::dtype<unsigned short>())
-        dtype = nnops::DataType::TYPE_UINT16;
+        dtype = DataType::TYPE_UINT16;
     else if (array_dtype == nb::dtype<short>())
-        dtype = nnops::DataType::TYPE_INT16;
+        dtype = DataType::TYPE_INT16;
     else if (array_dtype == nb::dtype<int>())
-        dtype = nnops::DataType::TYPE_INT32;
+        dtype = DataType::TYPE_INT32;
     else if (array_dtype == nb::dtype<unsigned int>())
-        dtype = nnops::DataType::TYPE_UINT32;
+        dtype = DataType::TYPE_UINT32;
     else if (array_dtype == nb::dtype<float>())
-        dtype = nnops::DataType::TYPE_FLOAT32;
+        dtype = DataType::TYPE_FLOAT32;
     else
         throw std::runtime_error("invalid from_numpy dtype!");
 
-    pytensor = pytensor_new();
-    nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
-    new (tensor) nnops::Tensor(dtype, shape, nnops::DeviceType::CPU);
-    from_numpy_impl(&array, 0, tensor, 0, 0);
+    PyTensor tensor(dtype, shape, DeviceType::CPU);
+    from_numpy_impl(&array, 0, &tensor, 0, 0);
 
-    return pytensor;
+    return tensor;
 }
 
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     m.def("from_numpy", &from_numpy);
-    m.def("is_broadcastable", [](nnops::Tensor &t1, nnops::Tensor &t2) {
-        return nnops::Tensor::is_broadcastable(t1.shape(), t2.shape()); });
-    m.def("broadcast_shape", [](nnops::Tensor &t1, nnops::Tensor &t2) {
-        return nnops::Tensor::broadcast_shape(t1.shape(), t2.shape()); });
+    m.def("is_broadcastable", [](PyTensor &t1, PyTensor &t2) {
+        return PyTensor::is_broadcastable(t1.shape(), t2.shape()); });
+    m.def("broadcast_shape", [](PyTensor &t1, PyTensor &t2) {
+        return PyTensor::broadcast_shape(t1.shape(), t2.shape()); });
 
-    nb::class_<nnops::Tensor>(m, "Tensor")
-        .def(nb::init<nnops::Tensor &>())
-        .def(nb::init<nnops::DataType &, nnops::TensorShape &, std::string &>())
-        .def(nb::init<nnops::DataType &, nnops::TensorShape &, nnops::DeviceType &>())
-        .def("__init_pytensor_type", [](nb::handle h) {
-            PyObject *ob_self = h.ptr();
-            pytensor_type = ob_self->ob_type;
-        })
-        .def("__str__", [](nnops::Tensor &self) { return self.to_string(); })
-        .def("__repr__", &nnops::Tensor::to_repr)
-        .def("__getitem__", [](nb::handle h, nb::handle indices) {
-            PyObject *ob_self = h.ptr();
-            nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
-            nb::handle h_new = pytensor_new();
-            nnops::Tensor *tensor_new = nb::inst_ptr<nnops::Tensor>(h_new);
-            nnops::TensorMeta &meta = tensor_new->tensor_meta_;
-
-            meta = self->tensor_meta_;
-            indexing(*tensor_new, indices, 0);
-            tensor_new->tensor_buffer_ = self->tensor_buffer_;
-            tensor_new->tensor_buffer_->inc_ref();
-
-            return h_new;
-        })
-        .def("is_contiguous", &nnops::Tensor::is_contiguous)
-        .def("contiguous", &nnops::Tensor::contiguous)
-        .def("clone", &nnops::Tensor::clone)
-        .def("numpy", [](nnops::Tensor &self) {
-            nnops::Tensor *tensor = new nnops::Tensor();
-            nnops::Tensor &&cloned = self.clone();
-            std::vector<size_t> shape;
-            nb::dlpack::dtype dtype;
-
-            *tensor = cloned;
-            nb::capsule deleter(tensor, [](void *p) noexcept {
-                delete (nnops::Tensor *)p;
-            });
-            for (auto s: tensor->shape())
-                shape.push_back(s);
-
-            if (tensor->dtype() == nnops::DataType::TYPE_FLOAT32)
-                dtype = nb::dtype<float>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_INT32)
-                dtype = nb::dtype<int>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_UINT32)
-                dtype = nb::dtype<unsigned int>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_INT16)
-                dtype = nb::dtype<short>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_UINT16)
-                dtype = nb::dtype<unsigned short>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_INT8)
-                dtype = nb::dtype<char>();
-            else if (tensor->dtype() == nnops::DataType::TYPE_UINT8)
-                dtype = nb::dtype<unsigned char>();
-            else
-                throw std::runtime_error("numpy() invalid DataType!");
-
-            return nb::ndarray<nb::numpy>(
-                    tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, dtype);
-        })
-        .def("reshape", [](nb::handle h, nb::args args) {
-            PyObject *ob_self = h.ptr();
-            nnops::Tensor *self = nb::inst_ptr<nnops::Tensor>(ob_self);
-            nnops::TensorShape indices;
-
-            for (int i=0; i<args.size(); i++) {
-                auto v = args[i];
-                if (nb::isinstance<nb::int_>(v)) {
-                    indices.push_back(nb::cast<int>(v));
-                } else {
-                    throw std::runtime_error("only int index supported!");
-                }
-            }
-
-            nb::handle pytensor = pytensor_new();
-            nnops::Tensor *tensor = nb::inst_ptr<nnops::Tensor>(pytensor);
-            nnops::Tensor &&reshaped = self->reshape(indices);
-
-            *tensor = reshaped;
-            return pytensor;
-        })
-        .def("broadcast_to", [](nnops::Tensor &self, nnops::TensorShape &shape) {
-            return self.broadcast_to(shape); })
-        .def_prop_ro("dtype", [](nnops::Tensor &t) { return t.dtype(); })
-        .def_prop_ro("device", [](nnops::Tensor &t) { return t.device()->get_device_type(); })
-        .def_prop_ro("data_ptr", [](nnops::Tensor &t) { return t.data_ptr(); })
-        .def_prop_ro("ref_count", [](nnops::Tensor &t) { return t.ref_count(); })
-        .def_prop_ro("ndim", [](nnops::Tensor &t) { return t.ndim(); })
-        .def_prop_ro("nbytes", [](nnops::Tensor &t) { return t.nbytes(); })
-        .def_prop_ro("nelems", [](nnops::Tensor &t) { return t.nelems(); })
-        .def_prop_ro("stride", [](nnops::Tensor &t) { return t.stride(); })
-        .def_prop_ro("shape", [](nnops::Tensor &t) { return t.shape(); });
+    nb::class_<PyTensor>(m, "PyTensor")
+        .def(nb::init<nb::kwargs &>())
+        .def("__str__", [](PyTensor &self) { return self.to_string(); })
+        .def("__repr__", &PyTensor::to_repr)
+        .def("__getitem__", &PyTensor::__getitem__)
+        .def("is_contiguous", &PyTensor::is_contiguous)
+        .def("contiguous", &PyTensor::py_contiguous)
+        .def("clone", &PyTensor::py_clone)
+        .def("numpy", &PyTensor::numpy)
+        .def("reshape", &PyTensor::py_reshape)
+        .def("broadcast_to", &PyTensor::py_broadcast_to)
+        .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
+        .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })
+        .def_prop_ro("data_ptr", [](PyTensor &t) { return t.data_ptr(); })
+        .def_prop_ro("ref_count", [](PyTensor &t) { return t.ref_count(); })
+        .def_prop_ro("ndim", [](PyTensor &t) { return t.ndim(); })
+        .def_prop_ro("nbytes", [](PyTensor &t) { return t.nbytes(); })
+        .def_prop_ro("nelems", [](PyTensor &t) { return t.nelems(); })
+        .def_prop_ro("stride", [](PyTensor &t) { return t.stride(); })
+        .def_prop_ro("shape", [](PyTensor &t) { return t.shape(); });
 }
 
 } // namespace pynnops

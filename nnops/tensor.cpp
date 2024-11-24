@@ -10,29 +10,22 @@ Tensor::Tensor(): tensor_buffer_(nullptr) {}
 
 Tensor::Tensor(DataType dtype, TensorShape &dims, std::string &device) {
     Device *device_ = Device::get_device(device);
-
-    if (device_ == nullptr)
-        throw std::runtime_error("get device failed!");
     init_tensor(dtype, dims, device_);
 }
 
 Tensor::Tensor(DataType dtype, TensorShape &dims, DeviceType device) {
     Device *device_ = Device::get_device(device);
-
-    if (device_ == nullptr)
-        throw std::runtime_error("get device failed!");
     init_tensor(dtype, dims, device_);
 }
 
 Tensor::Tensor(DataType dtype, TensorShape &dims, Device *device) {
-    Device *device_ = device;
-
-    if (device_ == nullptr)
-        throw std::runtime_error("device is invalid!");
-    init_tensor(dtype, dims, device_);
+    init_tensor(dtype, dims, device);
 }
 
 void Tensor::init_tensor(DataType &dtype, TensorShape &dims, Device *device) {
+    if (device == nullptr)
+        throw std::runtime_error("device is invalid!");
+
     tensor_buffer_ = nullptr;
     tensor_meta_.offset_ = 0;
     tensor_meta_.dims_ = dims;
