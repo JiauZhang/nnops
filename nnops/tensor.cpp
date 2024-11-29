@@ -2,7 +2,6 @@
 #include <nnops/tensor_meta.h>
 #include <nnops/tensor.h>
 #include <nnops/device.h>
-#include <nnops/tensor_indexing.h>
 
 namespace nnops {
 
@@ -273,6 +272,23 @@ Tensor Tensor::broadcast_to(Tensor &t, TensorShape &shape) {
         strides[i] = 0;
 
     return tb;
+}
+
+const TensorMeta &Tensor::meta() const {
+    return tensor_meta_;
+}
+
+void Tensor::set_meta(const TensorMeta &meta) {
+    tensor_meta_ = meta;
+}
+
+TensorBuffer *Tensor::buffer() const {
+    return tensor_buffer_;
+}
+
+void Tensor::set_buffer(TensorBuffer *buf) {
+    tensor_buffer_ = buf;
+    tensor_buffer_->inc_ref();
 }
 
 } // namespace nnops

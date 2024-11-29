@@ -48,6 +48,12 @@ public:
     std::string to_string();
     std::string to_repr();
 
+    const TensorMeta &meta() const;
+    void set_meta(const TensorMeta &meta);
+    TensorBuffer *buffer() const;
+    void set_buffer(TensorBuffer *buf);
+
+private:
     TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
 };

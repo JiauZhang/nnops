@@ -48,16 +48,15 @@ TensorShape parse_tensor_shape(nb::handle h) {
     return shape;
 }
 
-void indexing(Tensor &tensor, nb::handle indices, int axis) {
+void indexing(TensorMeta &meta, nb::handle indices, int axis) {
     PyObject *ob_indices = indices.ptr();
-    TensorMeta &meta = tensor.tensor_meta_;
 
     if (nb::isinstance<nb::tuple>(indices)) {
         // multi-dimensional indexing
         Py_ssize_t len = PyTuple_Size(ob_indices);
-        if (len > tensor.ndim()) {
+        if (len > meta.ndim()) {
             std::string info = "too many indices for tensor: ";
-            info += "tensor is " + std::to_string(tensor.ndim()) + "-dimensional, but "
+            info += "tensor is " + std::to_string(meta.ndim()) + "-dimensional, but "
                 + std::to_string(len) + " were indexed";
             throw std::runtime_error(info);
         }
@@ -76,24 +75,24 @@ void indexing(Tensor &tensor, nb::handle indices, int axis) {
 
         for (int i=0; i<len; i++) {
             if (i == idx) {
-                axis = tensor.ndim() + i - len + 1;
+                axis = meta.ndim() + i - len + 1;
                 continue;
             }
 
-            indexing(tensor, indices[i], axis);
+            indexing(meta, indices[i], axis);
             if (nb::isinstance<nb::slice>(indices[i]))
                 axis += 1;
         }
     } else if (nb::isinstance<nb::slice>(indices)) {
         Py_ssize_t start, stop, step;
 
-        if (PySlice_GetIndices(ob_indices, tensor.shape()[axis], &start, &stop, &step) < 0)
+        if (PySlice_GetIndices(ob_indices, meta.shape()[axis], &start, &stop, &step) < 0)
             throw std::runtime_error("PySlice_GetIndices failed!");
 
         nnops::Slice slice(start, stop, step);
-        nnops::slice_inplace(tensor, slice, axis);
+        meta.slice_inplace(slice, axis);
     } else if (nb::isinstance<nb::int_>(indices)) {
-        nnops::index_inplace(tensor, nb::cast<int>(indices), axis);
+        meta.index_inplace(nb::cast<int>(indices), axis);
     } else if (nb::isinstance<nb::ellipsis>(indices)) {
         // do nothing
     } else {
@@ -130,9 +129,9 @@ PyTensor::PyTensor(nb::kwargs &kwargs) {
 }
 
 PyTensor PyTensor::__getitem__(nb::handle indices) {
-    Tensor t = this->tensor();
-    indexing(t, indices, 0);
-    return PyTensor(t);
+    TensorMeta meta = this->meta();
+    indexing(meta, indices, 0);
+    return PyTensor(meta, this->buffer());
 }
 
 PyTensor PyTensor::py_reshape(nb::args args) {

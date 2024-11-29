@@ -3,8 +3,8 @@
 
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
-#include <nnops/tensor_indexing.h>
 #include <nnops/tensor_meta.h>
+#include <nnops/tensor_buffer.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
@@ -16,7 +16,7 @@
 #include <iostream>
 
 namespace nb = nanobind;
-using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape;
+using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape, nnops::TensorBuffer;
 using nnops::DataType, nnops::DeviceType, nnops::Device;
 
 namespace pynnops {
@@ -26,9 +26,12 @@ public:
     PyTensor(): Tensor() {}
     PyTensor(const Tensor &other): Tensor(other) {}
     PyTensor(const PyTensor &other) {
-        tensor_meta_ = other.tensor_meta_;
-        tensor_buffer_ = other.tensor_buffer_;
-        tensor_buffer_->inc_ref();
+        set_meta(other.meta());
+        set_buffer(other.buffer());
+    }
+    PyTensor(const TensorMeta &meta, TensorBuffer *buffer) {
+        set_meta(meta);
+        set_buffer(buffer);
     }
     PyTensor(DataType dtype, TensorShape &dims, DeviceType device):
         Tensor(dtype, dims, device) {}
@@ -40,9 +43,8 @@ public:
     }
     PyTensor &operator=(const PyTensor &other) {
         if (this != &other) {
-            tensor_meta_ = other.tensor_meta_;
-            tensor_buffer_ = other.tensor_buffer_;
-            tensor_buffer_->inc_ref();
+            set_meta(other.meta());
+            set_buffer(other.buffer());
         }
         return *this;
     }
@@ -63,9 +65,8 @@ public:
     PyTensor __getitem__(nb::handle indices);
     Tensor tensor() {
         Tensor t;
-        t.tensor_meta_ = tensor_meta_;
-        t.tensor_buffer_ = tensor_buffer_;
-        t.tensor_buffer_->inc_ref();
+        t.set_meta(this->meta());
+        t.set_buffer(this->buffer());
         return t;
     }
 };

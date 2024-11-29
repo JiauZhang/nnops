@@ -57,6 +57,50 @@ reshape_error:
     }
 }
 
+void TensorMeta::index_inplace(int index, int axis) {
+    TensorShape &shape = dims_;
+
+    if (index >= shape[axis] || index < -shape[axis]) {
+        std::string info = "index_inplace " + std::to_string(index) + " is out of bounds for axis "
+            + std::to_string(axis) + " with size " + std::to_string(shape[axis]);
+        throw std::runtime_error(info);
+    }
+
+    if (index < 0)
+        index += shape[axis];
+
+    offset_ += index * strides_[axis];
+    nelems_ /= shape[axis];
+
+    for (int i=axis; i<shape.size()-1; i++) {
+        shape[i] = shape[i+1];
+        strides_[i] = strides_[i+1];
+    }
+    shape.pop_back();
+    strides_.pop_back();
+    nbytes_ = nelems_ * sizeof_dtype(dtype_);
+}
+
+void TensorMeta::slice_inplace(Slice &slice, int axis) {
+    auto &shape_ = dims_;
+    auto &start = slice.start_, &stop = slice.stop_, &step = slice.step_;
+
+    offset_ += start.value() * strides_[axis];
+    nelems_ /= shape_[axis];
+    strides_[axis] *= step.value();
+
+    if ((start.value() < stop.value()) && (step.value() > 0)) {
+        shape_[axis] = (stop.value() - start.value() - 1) / step.value() + 1;
+    } else if ((start.value() > stop.value()) && (step.value() < 0)) {
+        shape_[axis] = (start.value() - stop.value() - 1) / (-step.value()) + 1;
+    } else {
+        shape_[axis] = 0;
+    }
+
+    nelems_ *= shape_[axis];
+    nbytes_ = nelems_ * sizeof_dtype(dtype_);
+}
+
 bool TensorMeta::is_contiguous() {
     int nelems = 1;
 
