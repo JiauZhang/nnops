@@ -50,9 +50,8 @@ void Tensor::init_tensor(DataType &dtype, TensorShape &dims, Device *device) {
 }
 
 Tensor::Tensor(const Tensor &other) {
-    tensor_meta_ = other.tensor_meta_;
-    tensor_buffer_ = other.tensor_buffer_;
-    tensor_buffer_->inc_ref();
+    set_meta(other.meta());
+    set_buffer(other.buffer());
 }
 
 Tensor::~Tensor() {
@@ -151,9 +150,8 @@ std::string Tensor::to_repr() {
 
 Tensor &Tensor::operator=(Tensor &other) {
     if (this != &other) {
-        tensor_meta_ = other.tensor_meta_;
-        tensor_buffer_ = other.tensor_buffer_;
-        tensor_buffer_->inc_ref();
+        set_meta(other.meta());
+        set_buffer(other.buffer());
     }
     return *this;
 }

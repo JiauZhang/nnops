@@ -3,10 +3,11 @@
 
 #include <map>
 #include <string.h>
+#include <cstdint>
 
 namespace nnops {
 
-enum DeviceType: unsigned char {
+enum DeviceType : uint8_t {
     CPU = 0,
     CUDA,
     NPU,
