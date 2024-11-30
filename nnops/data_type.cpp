@@ -47,7 +47,7 @@ constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> index2dtyp
 
 template<typename FromType, typename ToType>
 void type_cast(void *src, void *dst) {
-    *((ToType *)dst) = *((FromType *)src);
+    *reinterpret_cast<ToType *>(dst) = *reinterpret_cast<FromType *>(src);
 }
 
 #define DATATYPE_GEN_LOOPx1(GEN, type1)     \
@@ -71,7 +71,7 @@ void type_cast(void *src, void *dst) {
 #define GEN_ITEM(type1, type2) template void type_cast<type1, type2>(void *src, void *dst);
 DATATYPE_GEN_LOOPx2(GEN_ITEM)
 
-#define GEN_ITEM_INST(type1, type2) &type_cast<type1, type2>,
+#define GEN_ITEM_INST(type1, type2) type_cast<type1, type2>,
 static std::array<
     std::array<std::function<void(void *, void *)>, index2dtype.size()>,
     index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_LOOPx2(GEN_ITEM_INST) };

@@ -251,6 +251,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("is_contiguous", &PyTensor::is_contiguous)
         .def("contiguous", &PyTensor::py_contiguous)
         .def("clone", &PyTensor::py_clone)
+        .def("astype", &PyTensor::astype)
         .def("numpy", &PyTensor::numpy)
         .def("reshape", &PyTensor::py_reshape)
         .def("broadcast_to", &PyTensor::py_broadcast_to)

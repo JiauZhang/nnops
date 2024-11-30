@@ -11,6 +11,7 @@ void add_impl(Tensor &self, int offset_self, Tensor &other, int offset_other, Te
             add_impl(
                 self, offset_self + i * self.stride()[dim], other, offset_other + i * other.stride()[dim],
                 ret, offset_ret + i * ret.stride()[dim], dim+1);
+        return;
     }
 
     float *self_ptr = (float *)self.data_ptr() + offset_self;

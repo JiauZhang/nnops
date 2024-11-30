@@ -43,6 +43,7 @@ public:
     inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
     Tensor clone();
     Tensor contiguous();
+    Tensor astype(DataType dtype);
 
     void to_string(std::string *prefix, std::string *ret);
     std::string to_string();

@@ -164,18 +164,20 @@ void tensor_clone_impl(Tensor *src, int src_offset, Tensor *dst, int dst_offset,
                 dst, dst_offset + i * (dst->stride()[axis]),
                 axis + 1
             );
+        return;
     }
 
-    int itemsize = sizeof_dtype(src->dtype());
-    unsigned char *src_ptr = (unsigned char *)src->data_ptr() + src_offset * itemsize;
-    unsigned char *dst_ptr = (unsigned char *)dst->data_ptr() + dst_offset * itemsize;
+    auto cast_op = get_cast_op(src->dtype(), dst->dtype());
+    int src_itemsize = sizeof_dtype(src->dtype());
+    int dst_itemsize = sizeof_dtype(dst->dtype());
+    unsigned char *src_ptr = (unsigned char *)src->data_ptr() + src_offset * src_itemsize;
+    unsigned char *dst_ptr = (unsigned char *)dst->data_ptr() + dst_offset * dst_itemsize;
     auto &src_stride = src->stride();
     auto &dst_stride = dst->stride();
     for (int i=0; i<src->shape()[axis]; i++) {
-        for (int j=0; j<itemsize; j++)
-            dst_ptr[j] = src_ptr[j];
-        src_ptr += src_stride[axis] * itemsize;
-        dst_ptr += dst_stride[axis] * itemsize;
+        cast_op(src_ptr, dst_ptr);
+        src_ptr += src_stride[axis] * src_itemsize;
+        dst_ptr += dst_stride[axis] * dst_itemsize;
     }
 }
 
@@ -270,6 +272,12 @@ Tensor Tensor::broadcast_to(Tensor &t, TensorShape &shape) {
         strides[i] = 0;
 
     return tb;
+}
+
+Tensor Tensor::astype(DataType dtype) {
+    Tensor tensor(dtype, this->shape(), this->device());
+    tensor_clone_impl(this, this->offset(), &tensor, tensor.offset(), 0);
+    return tensor;
 }
 
 const TensorMeta &Tensor::meta() const {

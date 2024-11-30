@@ -69,6 +69,10 @@ public:
         t.set_buffer(this->buffer());
         return t;
     }
+    PyTensor astype(DataType dtype) {
+        Tensor t = Tensor::astype(dtype);
+        return PyTensor(t);
+    }
 };
 
 } // namespace pynnops
