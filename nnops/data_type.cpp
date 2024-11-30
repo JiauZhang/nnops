@@ -17,20 +17,13 @@ constexpr size_t sizeof_dtype() {
     return sizeof(T);
 }
 
-#define DTYPE_SIZE_ITEM(dtype) { dtype, sizeof_dtype<dtype>() }
-
-static std::unordered_map<DataType, size_t> dtype_size = {
-    DTYPE_SIZE_ITEM(DataType::TYPE_FLOAT32),
-    DTYPE_SIZE_ITEM(DataType::TYPE_INT32),
-    DTYPE_SIZE_ITEM(DataType::TYPE_UINT32),
-    DTYPE_SIZE_ITEM(DataType::TYPE_INT16),
-    DTYPE_SIZE_ITEM(DataType::TYPE_UINT16),
-    DTYPE_SIZE_ITEM(DataType::TYPE_INT8),
-    DTYPE_SIZE_ITEM(DataType::TYPE_UINT8),
+#define GEN_DTYPE_SIZE(dtype, type) sizeof_dtype<dtype>(),
+static constexpr std::array<size_t, DataType::COMPILE_TIME_MAX_DATA_TYPES> __dtype_size__ = {
+    DATATYPE_GEN_TEMPLATE(GEN_DTYPE_SIZE)
 };
 
 size_t sizeof_dtype(DataType dtype) {
-    return dtype_size[dtype];
+    return __dtype_size__[dtype];
 }
 
 constexpr auto u1 = DataType::TYPE_UINT8;
@@ -39,10 +32,13 @@ constexpr auto u2 = DataType::TYPE_UINT16;
 constexpr auto i2 = DataType::TYPE_INT16;
 constexpr auto u4 = DataType::TYPE_UINT32;
 constexpr auto i4 = DataType::TYPE_INT32;
+constexpr auto u8 = DataType::TYPE_UINT64;
+constexpr auto i8 = DataType::TYPE_INT64;
 constexpr auto f4 = DataType::TYPE_FLOAT32;
+constexpr auto f8 = DataType::TYPE_FLOAT64;
 
 constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> index2dtype = {
-    u1, i2, u2, i2, u4, i4, f4,
+    u1, i2, u2, i2, u4, i4, u8, i8, f4, f8,
 };
 
 template<typename FromType, typename ToType>
@@ -51,7 +47,10 @@ void type_cast(void *src, void *dst) {
 }
 
 #define DATATYPE_GEN_LOOPx1(GEN, type1)     \
+    GEN(type1, double)                      \
     GEN(type1, float)                       \
+    GEN(type1, int64_t)                     \
+    GEN(type1, uint64_t)                    \
     GEN(type1, int32_t)                     \
     GEN(type1, uint32_t)                    \
     GEN(type1, int16_t)                     \
@@ -60,7 +59,10 @@ void type_cast(void *src, void *dst) {
     GEN(type1, uint8_t)
 
 #define DATATYPE_GEN_LOOPx2(GEN)            \
+    DATATYPE_GEN_LOOPx1(GEN, double)        \
     DATATYPE_GEN_LOOPx1(GEN, float)         \
+    DATATYPE_GEN_LOOPx1(GEN, int64_t)       \
+    DATATYPE_GEN_LOOPx1(GEN, uint64_t)      \
     DATATYPE_GEN_LOOPx1(GEN, int32_t)       \
     DATATYPE_GEN_LOOPx1(GEN, uint32_t)      \
     DATATYPE_GEN_LOOPx1(GEN, int16_t)       \
@@ -93,5 +95,28 @@ std::function<void(void *, void *)> get_cast_op(DataType from, DataType to) {
     auto from_idx = dtype2index[from], to_idx = dtype2index[to];
     return __dtype_cast_ops__[from][to];
 }
+
+static constexpr std::array<std::array<DataType, index2dtype.size()>, index2dtype.size()>
+    __promote_types__ = {
+    /* align to numpy */
+    /*       u1  i1  u2  i2  u4  i4  u8  i8  f4* f8*/
+    /* u1 */ u1, i2, u2, i2, u4, i4, u8, i8, f4, f8,
+    /* i1 */ i2, i1, i4, i2, i8, i4, f8, i8, f4, f8,
+    /* u2 */ u2, i4, u2, i4, u4, i4, u8, i8, f4, f8,
+    /* i2 */ i2, i2, i4, i2, i8, i4, f8, i8, f4, f8,
+    /* u4 */ u4, i8, u4, i8, u4, i8, u8, i8, f8, f8,
+    /* i4 */ i4, i4, i4, i4, i8, i4, f8, i8, f8, f8,
+    /* u8 */ u8, f8, u8, f8, u8, f8, u8, f8, f8, f8,
+    /* i8 */ i8, i8, i8, i8, i8, i8, f8, i8, f8, f8,
+    /* f4 */ f4, f4, f4, f4, f8, f8, f8, f8, f4, f8,
+    /* f8 */ f8, f8, f8, f8, f8, f8, f8, f8, f8, f8,
+};
+
+template<typename ReturnType, typename LeftType, typename RightType>
+void math_op(void *ret, void *lvalue, void *rvalue) {
+    *reinterpret_cast<ReturnType *>(ret) =
+        *reinterpret_cast<LeftType *>(lvalue) + *reinterpret_cast<RightType *>(rvalue);
+}
+
 
 } // namespace nnops

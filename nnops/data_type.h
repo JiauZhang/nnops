@@ -8,7 +8,10 @@
 namespace nnops {
 
 enum DataType: uint8_t {
-    TYPE_FLOAT32 = 0,
+    TYPE_FLOAT64 = 0,
+    TYPE_FLOAT32,
+    TYPE_INT64,
+    TYPE_UINT64,
     TYPE_INT32,
     TYPE_UINT32,
     TYPE_INT16,
@@ -19,7 +22,10 @@ enum DataType: uint8_t {
 };
 
 #define DATATYPE_GEN_TEMPLATE(GEN)              \
+    GEN(DataType::TYPE_FLOAT64, double)         \
     GEN(DataType::TYPE_FLOAT32, float)          \
+    GEN(DataType::TYPE_INT64, int64_t)          \
+    GEN(DataType::TYPE_UINT64, uint64_t)        \
     GEN(DataType::TYPE_INT32, int32_t)          \
     GEN(DataType::TYPE_UINT32, uint32_t)        \
     GEN(DataType::TYPE_INT16, int16_t)          \

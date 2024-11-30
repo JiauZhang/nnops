@@ -5,7 +5,10 @@ import numpy as np
 
 class TestDataType():
     types = [
+        [dtype.float64, np.float64],
         [dtype.float32, np.float32],
+        [dtype.int64, np.int64], 
+        [dtype.uint64, np.uint64],
         [dtype.int32, np.int32], 
         [dtype.uint32, np.uint32],
         [dtype.int16, np.int16],

@@ -1,4 +1,5 @@
 #include <python/csrc/tensor.h>
+#include <cstdint>
 
 namespace pynnops {
 
@@ -162,20 +163,26 @@ nb::ndarray<nb::numpy> PyTensor::numpy() {
     for (auto s: tensor->shape())
         shape.push_back(s);
 
-    if (tensor->dtype() == DataType::TYPE_FLOAT32)
+    if (tensor->dtype() == DataType::TYPE_FLOAT64)
+        dtype = nb::dtype<double>();
+    else if (tensor->dtype() == DataType::TYPE_FLOAT32)
         dtype = nb::dtype<float>();
+    else if (tensor->dtype() == DataType::TYPE_INT64)
+        dtype = nb::dtype<int64_t>();
+    else if (tensor->dtype() == DataType::TYPE_UINT64)
+        dtype = nb::dtype<uint64_t>();
     else if (tensor->dtype() == DataType::TYPE_INT32)
-        dtype = nb::dtype<int>();
+        dtype = nb::dtype<int32_t>();
     else if (tensor->dtype() == DataType::TYPE_UINT32)
-        dtype = nb::dtype<unsigned int>();
+        dtype = nb::dtype<uint32_t>();
     else if (tensor->dtype() == DataType::TYPE_INT16)
-        dtype = nb::dtype<short>();
+        dtype = nb::dtype<int16_t>();
     else if (tensor->dtype() == DataType::TYPE_UINT16)
-        dtype = nb::dtype<unsigned short>();
+        dtype = nb::dtype<uint16_t>();
     else if (tensor->dtype() == DataType::TYPE_INT8)
-        dtype = nb::dtype<char>();
+        dtype = nb::dtype<int8_t>();
     else if (tensor->dtype() == DataType::TYPE_UINT8)
-        dtype = nb::dtype<unsigned char>();
+        dtype = nb::dtype<uint8_t>();
     else
         throw std::runtime_error("numpy() invalid DataType!");
 
@@ -213,20 +220,26 @@ PyTensor from_numpy(nb::ndarray<> array) {
     for (int i=0; i<array.ndim(); i++)
         shape.push_back(array.shape(i));
 
-    if (array_dtype == nb::dtype<char>())
+    if (array_dtype == nb::dtype<int8_t>())
         dtype = DataType::TYPE_INT8;
-    else if (array_dtype == nb::dtype<unsigned char>())
+    else if (array_dtype == nb::dtype<uint8_t>())
         dtype = DataType::TYPE_UINT8;
-    else if (array_dtype == nb::dtype<unsigned short>())
+    else if (array_dtype == nb::dtype<uint16_t>())
         dtype = DataType::TYPE_UINT16;
-    else if (array_dtype == nb::dtype<short>())
+    else if (array_dtype == nb::dtype<int16_t>())
         dtype = DataType::TYPE_INT16;
-    else if (array_dtype == nb::dtype<int>())
+    else if (array_dtype == nb::dtype<int32_t>())
         dtype = DataType::TYPE_INT32;
-    else if (array_dtype == nb::dtype<unsigned int>())
+    else if (array_dtype == nb::dtype<uint32_t>())
         dtype = DataType::TYPE_UINT32;
+    else if (array_dtype == nb::dtype<int64_t>())
+        dtype = DataType::TYPE_INT64;
+    else if (array_dtype == nb::dtype<uint64_t>())
+        dtype = DataType::TYPE_UINT64;
     else if (array_dtype == nb::dtype<float>())
         dtype = DataType::TYPE_FLOAT32;
+    else if (array_dtype == nb::dtype<double>())
+        dtype = DataType::TYPE_FLOAT64;
     else
         throw std::runtime_error("invalid from_numpy dtype!");
 
