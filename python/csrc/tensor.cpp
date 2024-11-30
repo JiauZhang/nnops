@@ -1,5 +1,6 @@
 #include <python/csrc/tensor.h>
 #include <cstdint>
+#include <array>
 
 namespace pynnops {
 
@@ -151,11 +152,34 @@ PyTensor PyTensor::py_reshape(nb::args args) {
     return PyTensor(tensor);
 }
 
+static constexpr std::array<
+    nb::dlpack::dtype, DataType::COMPILE_TIME_MAX_DATA_TYPES> __nptypes__ = {
+    nb::dtype<double>(), nb::dtype<float>(),
+    nb::dtype<uint64_t>(), nb::dtype<int64_t>(),
+    nb::dtype<uint32_t>(), nb::dtype<int32_t>(),
+    nb::dtype<uint16_t>(), nb::dtype<int16_t>(),
+    nb::dtype<uint8_t>(), nb::dtype<int8_t>(),
+};
+static constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> __types__ = {
+    DataType::TYPE_FLOAT64, DataType::TYPE_FLOAT32,
+    DataType::TYPE_UINT64, DataType::TYPE_INT64,
+    DataType::TYPE_UINT32, DataType::TYPE_INT32,
+    DataType::TYPE_UINT16, DataType::TYPE_INT16,
+    DataType::TYPE_UINT8, DataType::TYPE_INT8,
+};
+
+template<typename T>
+static int match_dtype(const std::array<T, __types__.size()> &types, T &type) {
+    for (int i=0; i<types.size(); i++)
+        if (types[i] == type)
+            return i;
+    throw std::runtime_error("match_dtype failed!");
+}
+
 nb::ndarray<nb::numpy> PyTensor::numpy() {
     Tensor t = this->clone();
     PyTensor *tensor = new PyTensor(t);
     std::vector<size_t> shape;
-    nb::dlpack::dtype dtype;
 
     nb::capsule deleter(tensor, [](void *p) noexcept {
         delete (PyTensor *)p;
@@ -163,28 +187,9 @@ nb::ndarray<nb::numpy> PyTensor::numpy() {
     for (auto s: tensor->shape())
         shape.push_back(s);
 
-    if (tensor->dtype() == DataType::TYPE_FLOAT64)
-        dtype = nb::dtype<double>();
-    else if (tensor->dtype() == DataType::TYPE_FLOAT32)
-        dtype = nb::dtype<float>();
-    else if (tensor->dtype() == DataType::TYPE_INT64)
-        dtype = nb::dtype<int64_t>();
-    else if (tensor->dtype() == DataType::TYPE_UINT64)
-        dtype = nb::dtype<uint64_t>();
-    else if (tensor->dtype() == DataType::TYPE_INT32)
-        dtype = nb::dtype<int32_t>();
-    else if (tensor->dtype() == DataType::TYPE_UINT32)
-        dtype = nb::dtype<uint32_t>();
-    else if (tensor->dtype() == DataType::TYPE_INT16)
-        dtype = nb::dtype<int16_t>();
-    else if (tensor->dtype() == DataType::TYPE_UINT16)
-        dtype = nb::dtype<uint16_t>();
-    else if (tensor->dtype() == DataType::TYPE_INT8)
-        dtype = nb::dtype<int8_t>();
-    else if (tensor->dtype() == DataType::TYPE_UINT8)
-        dtype = nb::dtype<uint8_t>();
-    else
-        throw std::runtime_error("numpy() invalid DataType!");
+    DataType tensor_dtype = tensor->dtype();
+    int idx = match_dtype<DataType>(__types__, tensor_dtype);
+    nb::dlpack::dtype dtype = __nptypes__[idx];
 
     return nb::ndarray<nb::numpy>(
             tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, dtype);
@@ -214,36 +219,15 @@ void from_numpy_impl(nb::ndarray<> *src, int src_offset, PyTensor *dst, int dst_
 
 PyTensor from_numpy(nb::ndarray<> array) {
     TensorShape shape;
-    DataType dtype;
-    auto array_dtype = array.dtype();
 
     for (int i=0; i<array.ndim(); i++)
         shape.push_back(array.shape(i));
 
-    if (array_dtype == nb::dtype<int8_t>())
-        dtype = DataType::TYPE_INT8;
-    else if (array_dtype == nb::dtype<uint8_t>())
-        dtype = DataType::TYPE_UINT8;
-    else if (array_dtype == nb::dtype<uint16_t>())
-        dtype = DataType::TYPE_UINT16;
-    else if (array_dtype == nb::dtype<int16_t>())
-        dtype = DataType::TYPE_INT16;
-    else if (array_dtype == nb::dtype<int32_t>())
-        dtype = DataType::TYPE_INT32;
-    else if (array_dtype == nb::dtype<uint32_t>())
-        dtype = DataType::TYPE_UINT32;
-    else if (array_dtype == nb::dtype<int64_t>())
-        dtype = DataType::TYPE_INT64;
-    else if (array_dtype == nb::dtype<uint64_t>())
-        dtype = DataType::TYPE_UINT64;
-    else if (array_dtype == nb::dtype<float>())
-        dtype = DataType::TYPE_FLOAT32;
-    else if (array_dtype == nb::dtype<double>())
-        dtype = DataType::TYPE_FLOAT64;
-    else
-        throw std::runtime_error("invalid from_numpy dtype!");
-
+    nb::dlpack::dtype array_dtype = array.dtype();
+    int idx = match_dtype<nb::dlpack::dtype>(__nptypes__, array_dtype);
+    DataType dtype = __types__[idx];
     PyTensor tensor(dtype, shape, DeviceType::CPU);
+
     from_numpy_impl(&array, 0, &tensor, 0, 0);
 
     return tensor;
