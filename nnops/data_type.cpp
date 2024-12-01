@@ -26,16 +26,27 @@ size_t sizeof_dtype(DataType dtype) {
     return __dtype_size__[dtype];
 }
 
-constexpr auto u1 = DataType::TYPE_UINT8;
-constexpr auto i1 = DataType::TYPE_INT8;
-constexpr auto u2 = DataType::TYPE_UINT16;
-constexpr auto i2 = DataType::TYPE_INT16;
-constexpr auto u4 = DataType::TYPE_UINT32;
-constexpr auto i4 = DataType::TYPE_INT32;
-constexpr auto u8 = DataType::TYPE_UINT64;
-constexpr auto i8 = DataType::TYPE_INT64;
-constexpr auto f4 = DataType::TYPE_FLOAT32;
-constexpr auto f8 = DataType::TYPE_FLOAT64;
+#define u1 DataType::TYPE_UINT8
+#define i1 DataType::TYPE_INT8
+#define u2 DataType::TYPE_UINT16
+#define i2 DataType::TYPE_INT16
+#define u4 DataType::TYPE_UINT32
+#define i4 DataType::TYPE_INT32
+#define u8 DataType::TYPE_UINT64
+#define i8 DataType::TYPE_INT64
+#define f4 DataType::TYPE_FLOAT32
+#define f8 DataType::TYPE_FLOAT64
+
+#define U1 uint8_t
+#define I1 int8_t
+#define U2 uint16_t
+#define I2 int16_t
+#define U4 uint32_t
+#define I4 int32_t
+#define U8 uint64_t
+#define I8 int64
+#define F4 float
+#define F8 double
 
 constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> index2dtype = {
     u1, i2, u2, i2, u4, i4, u8, i8, f4, f8,
@@ -47,28 +58,28 @@ void type_cast(void *src, void *dst) {
 }
 
 #define DATATYPE_GEN_LOOPx1(GEN, type1)     \
-    GEN(type1, double)                      \
-    GEN(type1, float)                       \
-    GEN(type1, int64_t)                     \
-    GEN(type1, uint64_t)                    \
-    GEN(type1, int32_t)                     \
-    GEN(type1, uint32_t)                    \
-    GEN(type1, int16_t)                     \
-    GEN(type1, uint16_t)                    \
+    GEN(type1, uint8_t)                     \
     GEN(type1, int8_t)                      \
-    GEN(type1, uint8_t)
+    GEN(type1, uint16_t)                    \
+    GEN(type1, int16_t)                     \
+    GEN(type1, uint32_t)                    \
+    GEN(type1, int32_t)                     \
+    GEN(type1, uint64_t)                    \
+    GEN(type1, int64_t)                     \
+    GEN(type1, float)                       \
+    GEN(type1, double)
 
 #define DATATYPE_GEN_LOOPx2(GEN)            \
-    DATATYPE_GEN_LOOPx1(GEN, double)        \
-    DATATYPE_GEN_LOOPx1(GEN, float)         \
-    DATATYPE_GEN_LOOPx1(GEN, int64_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, uint64_t)      \
-    DATATYPE_GEN_LOOPx1(GEN, int32_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, uint32_t)      \
-    DATATYPE_GEN_LOOPx1(GEN, int16_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, uint16_t)      \
+    DATATYPE_GEN_LOOPx1(GEN, uint8_t)       \
     DATATYPE_GEN_LOOPx1(GEN, int8_t)        \
-    DATATYPE_GEN_LOOPx1(GEN, uint8_t)
+    DATATYPE_GEN_LOOPx1(GEN, uint16_t)      \
+    DATATYPE_GEN_LOOPx1(GEN, int16_t)       \
+    DATATYPE_GEN_LOOPx1(GEN, uint32_t)      \
+    DATATYPE_GEN_LOOPx1(GEN, int32_t)       \
+    DATATYPE_GEN_LOOPx1(GEN, uint64_t)      \
+    DATATYPE_GEN_LOOPx1(GEN, int64_t)       \
+    DATATYPE_GEN_LOOPx1(GEN, float)         \
+    DATATYPE_GEN_LOOPx1(GEN, double)
 
 #define GEN_ITEM(type1, type2) template void type_cast<type1, type2>(void *src, void *dst);
 DATATYPE_GEN_LOOPx2(GEN_ITEM)
@@ -111,6 +122,11 @@ static constexpr std::array<std::array<DataType, index2dtype.size()>, index2dtyp
     /* f4 */ f4, f4, f4, f4, f8, f8, f8, f8, f4, f8,
     /* f8 */ f8, f8, f8, f8, f8, f8, f8, f8, f8, f8,
 };
+
+inline DataType get_promote_type(DataType ltype, DataType rtype) {
+    auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
+    return __promote_types__[lindex][rindex];
+}
 
 template<typename ReturnType, typename LeftType, typename RightType>
 void math_op(void *ret, void *lvalue, void *rvalue) {

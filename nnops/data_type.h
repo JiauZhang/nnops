@@ -8,33 +8,34 @@
 namespace nnops {
 
 enum DataType: uint8_t {
-    TYPE_FLOAT64 = 0,
-    TYPE_FLOAT32,
-    TYPE_INT64,
-    TYPE_UINT64,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_INT16,
-    TYPE_UINT16,
+    TYPE_UINT8 = 0,
     TYPE_INT8,
-    TYPE_UINT8,
+    TYPE_UINT16,
+    TYPE_INT16,
+    TYPE_UINT32,
+    TYPE_INT32,
+    TYPE_UINT64,
+    TYPE_INT64,
+    TYPE_FLOAT32,
+    TYPE_FLOAT64,
     COMPILE_TIME_MAX_DATA_TYPES,
 };
 
 #define DATATYPE_GEN_TEMPLATE(GEN)              \
-    GEN(DataType::TYPE_FLOAT64, double)         \
-    GEN(DataType::TYPE_FLOAT32, float)          \
-    GEN(DataType::TYPE_INT64, int64_t)          \
-    GEN(DataType::TYPE_UINT64, uint64_t)        \
-    GEN(DataType::TYPE_INT32, int32_t)          \
-    GEN(DataType::TYPE_UINT32, uint32_t)        \
-    GEN(DataType::TYPE_INT16, int16_t)          \
-    GEN(DataType::TYPE_UINT16, uint16_t)        \
+    GEN(DataType::TYPE_UINT8, uint8_t)          \
     GEN(DataType::TYPE_INT8, int8_t)            \
-    GEN(DataType::TYPE_UINT8, uint8_t)
+    GEN(DataType::TYPE_UINT16, uint16_t)        \
+    GEN(DataType::TYPE_INT16, int16_t)          \
+    GEN(DataType::TYPE_UINT32, uint32_t)        \
+    GEN(DataType::TYPE_INT32, int32_t)          \
+    GEN(DataType::TYPE_UINT64, uint64_t)        \
+    GEN(DataType::TYPE_INT64, int64_t)          \
+    GEN(DataType::TYPE_FLOAT32, float)          \
+    GEN(DataType::TYPE_FLOAT64, double)
 
 size_t sizeof_dtype(DataType dtype);
 std::function<void(void *, void *)> get_cast_op(DataType from, DataType to);
+DataType get_promote_type(DataType ltype, DataType rtype);
 
 } // namespace nnops
 
