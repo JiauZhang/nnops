@@ -5,7 +5,7 @@
 
 namespace nnops {
 
-Tensor::Tensor(): tensor_buffer_(nullptr) {}
+Tensor::Tensor() : tensor_buffer_(nullptr) {}
 
 Tensor::Tensor(DataType dtype, const TensorShape &dims, std::string &device) {
     Device *device_ = Device::get_device(device);
@@ -49,7 +49,7 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
     tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes_);
 }
 
-Tensor::Tensor(const Tensor &other) {
+Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
     set_meta(other.meta());
     set_buffer(other.buffer());
 }
@@ -296,8 +296,12 @@ TensorBuffer *Tensor::buffer() const {
 }
 
 void Tensor::set_buffer(TensorBuffer *buf) {
-    tensor_buffer_ = buf;
-    tensor_buffer_->inc_ref();
+    if (tensor_buffer_ != buf) {
+        if (tensor_buffer_)
+            tensor_buffer_->dec_ref();
+        tensor_buffer_ = buf;
+        tensor_buffer_->inc_ref();
+    }
 }
 
 } // namespace nnops
