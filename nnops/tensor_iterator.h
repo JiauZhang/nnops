@@ -5,13 +5,26 @@
 
 namespace nnops {
 
+class Tensor;
+
 class TensorIterator {
 public:
     TensorIterator(const Tensor &tensor);
 
+    TensorIterator &operator++();
+    bool operator!=(const TensorIterator &other);
+    void *operator*();
+
+    inline int offset() const { return offset_; }
+    inline const TensorShape &index() const { return index_; }
+    inline const Tensor &tensor() const { return tensor_; }
+    inline void set_offset(int offset) { offset_ = offset; }
+    inline void end() { offset_ = -1; }
+
 private:
-    TensorShape shape_, offset_;
-    TensorStride stride_;
+    const Tensor &tensor_;
+    TensorShape index_;
+    int offset_;
 };
 
 } // namespace nnops

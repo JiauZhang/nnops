@@ -6,8 +6,11 @@
 #include <nnops/tensor_buffer.h>
 #include <nnops/device.h>
 #include <string>
+#include <nnops/tensor_iterator.h>
 
 namespace nnops {
+
+class TensorIterator;
 
 class Tensor {
 public:
@@ -18,6 +21,7 @@ public:
     Tensor(const Tensor &other);
     ~Tensor();
 
+    inline const Tensor &operator*() { return *this; }
     Tensor &operator=(Tensor &other);
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
@@ -30,8 +34,8 @@ public:
     inline Tensor broadcast_to(const TensorShape &shape) { return Tensor::broadcast_to(*this, shape); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape);
 
-    inline DataType dtype() { return this->tensor_meta_.dtype_; }
-    inline void *data_ptr() { return this->tensor_buffer_->data_ptr_; }
+    inline DataType dtype() const { return this->tensor_meta_.dtype_; }
+    inline void *data_ptr() const { return this->tensor_buffer_->data_ptr_; }
     inline int ndim() { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() { return this->tensor_buffer_->device_; }
@@ -55,6 +59,9 @@ public:
     void set_meta(const TensorMeta &meta);
     TensorBuffer *buffer() const;
     void set_buffer(TensorBuffer *buf);
+
+    TensorIterator begin();
+    TensorIterator end();
 
 private:
     TensorMeta tensor_meta_;

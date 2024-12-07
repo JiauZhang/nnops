@@ -36,6 +36,7 @@ public:
     inline TensorShape &shape() { return this->dims_; }
     inline TensorStride &stride() { return this->strides_; }
     inline int ndim() { return this->shape().size(); }
+    inline int offset() const { return this->offset_; }
 
     size_t nbytes_;
     size_t nelems_;

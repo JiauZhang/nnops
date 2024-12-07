@@ -5,6 +5,8 @@
 
 namespace nnops {
 
+class TensorIterator;
+
 Tensor::Tensor() : tensor_buffer_(nullptr) {}
 
 Tensor::Tensor(DataType dtype, const TensorShape &dims, std::string &device) {
@@ -156,34 +158,17 @@ Tensor &Tensor::operator=(Tensor &other) {
     return *this;
 }
 
-void tensor_clone_impl(Tensor *src, int src_offset, Tensor *dst, int dst_offset, int axis) {
-    if (axis < src->ndim() - 1) {
-        for (int i=0; i<src->shape()[axis]; i++)
-            tensor_clone_impl(
-                src, src_offset + i * (src->stride()[axis]),
-                dst, dst_offset + i * (dst->stride()[axis]),
-                axis + 1
-            );
-        return;
-    }
+void tensor_clone_impl(Tensor &src, Tensor &dst) {
+    auto cast_op = get_cast_op(src.dtype(), dst.dtype());
+    auto src_iter = src.begin(), dst_iter = dst.begin();
 
-    auto cast_op = get_cast_op(src->dtype(), dst->dtype());
-    int src_itemsize = sizeof_dtype(src->dtype());
-    int dst_itemsize = sizeof_dtype(dst->dtype());
-    unsigned char *src_ptr = (unsigned char *)src->data_ptr() + src_offset * src_itemsize;
-    unsigned char *dst_ptr = (unsigned char *)dst->data_ptr() + dst_offset * dst_itemsize;
-    auto &src_stride = src->stride();
-    auto &dst_stride = dst->stride();
-    for (int i=0; i<src->shape()[axis]; i++) {
-        cast_op(src_ptr, dst_ptr);
-        src_ptr += src_stride[axis] * src_itemsize;
-        dst_ptr += dst_stride[axis] * dst_itemsize;
-    }
+    for (; src_iter != src.end(); ++src_iter, ++dst_iter)
+        cast_op(*src_iter, *dst_iter);
 }
 
 Tensor Tensor::clone() {
     Tensor tensor(this->dtype(), this->shape(), this->device());
-    tensor_clone_impl(this, this->offset(), &tensor, tensor.offset(), 0);
+    tensor_clone_impl(*this, tensor);
     return tensor;
 }
 
@@ -279,7 +264,7 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape) {
 
 Tensor Tensor::astype(DataType dtype) {
     Tensor tensor(dtype, this->shape(), this->device());
-    tensor_clone_impl(this, this->offset(), &tensor, tensor.offset(), 0);
+    tensor_clone_impl(*this, tensor);
     return tensor;
 }
 
@@ -302,6 +287,17 @@ void Tensor::set_buffer(TensorBuffer *buf) {
         tensor_buffer_ = buf;
         tensor_buffer_->inc_ref();
     }
+}
+
+TensorIterator Tensor::begin() {
+    TensorIterator iter(*this);
+    return iter;
+}
+
+TensorIterator Tensor::end() {
+    TensorIterator iter(*this);
+    iter.end();
+    return iter;
 }
 
 } // namespace nnops
