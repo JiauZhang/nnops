@@ -9,7 +9,7 @@ template<DataType dtype> struct datatype_to_type;
 #define DATATYPE_TO_TYPE_ITEM(dtype, type) template<> \
     struct datatype_to_type<dtype> { using Type = type; };
 
-DATATYPE_GEN_TEMPLATE(DATATYPE_TO_TYPE_ITEM)
+DATATYPE_GEN_TEMPLATE_LOOPx1(DATATYPE_TO_TYPE_ITEM)
 
 template<DataType dtype>
 constexpr size_t sizeof_dtype() {
@@ -19,7 +19,7 @@ constexpr size_t sizeof_dtype() {
 
 #define GEN_DTYPE_SIZE(dtype, type) sizeof_dtype<dtype>(),
 static constexpr std::array<size_t, DataType::COMPILE_TIME_MAX_DATA_TYPES> __dtype_size__ = {
-    DATATYPE_GEN_TEMPLATE(GEN_DTYPE_SIZE)
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_DTYPE_SIZE)
 };
 
 size_t sizeof_dtype(DataType dtype) {
@@ -57,37 +57,13 @@ void type_cast(void *src, void *dst) {
     *reinterpret_cast<ToType *>(dst) = *reinterpret_cast<FromType *>(src);
 }
 
-#define DATATYPE_GEN_LOOPx1(GEN, type1)     \
-    GEN(type1, uint8_t)                     \
-    GEN(type1, int8_t)                      \
-    GEN(type1, uint16_t)                    \
-    GEN(type1, int16_t)                     \
-    GEN(type1, uint32_t)                    \
-    GEN(type1, int32_t)                     \
-    GEN(type1, uint64_t)                    \
-    GEN(type1, int64_t)                     \
-    GEN(type1, float)                       \
-    GEN(type1, double)
+#define GEN_ITEM(dtype, type2, type1) template void type_cast<type1, type2>(void *src, void *dst);
+DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM)
 
-#define DATATYPE_GEN_LOOPx2(GEN)            \
-    DATATYPE_GEN_LOOPx1(GEN, uint8_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, int8_t)        \
-    DATATYPE_GEN_LOOPx1(GEN, uint16_t)      \
-    DATATYPE_GEN_LOOPx1(GEN, int16_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, uint32_t)      \
-    DATATYPE_GEN_LOOPx1(GEN, int32_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, uint64_t)      \
-    DATATYPE_GEN_LOOPx1(GEN, int64_t)       \
-    DATATYPE_GEN_LOOPx1(GEN, float)         \
-    DATATYPE_GEN_LOOPx1(GEN, double)
-
-#define GEN_ITEM(type1, type2) template void type_cast<type1, type2>(void *src, void *dst);
-DATATYPE_GEN_LOOPx2(GEN_ITEM)
-
-#define GEN_ITEM_INST(type1, type2) type_cast<type1, type2>,
+#define GEN_ITEM_INST(dtype, type2, type1) type_cast<type1, type2>,
 static std::array<
     std::array<std::function<void(void *, void *)>, index2dtype.size()>,
-    index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_LOOPx2(GEN_ITEM_INST) };
+    index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM_INST) };
 
 constexpr std::array<int, index2dtype.size()> calculate_dtype2index() {
   std::array<int, index2dtype.size()> dtype2index = {};

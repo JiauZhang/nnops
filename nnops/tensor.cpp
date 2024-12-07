@@ -128,7 +128,7 @@ void Tensor::to_string(std::string *prefix, std::string *ret) {
         return;
 
     switch (tensor_meta_.dtype_) {
-        DATATYPE_GEN_TEMPLATE(TO_STRING_TEMPLATE_GEN)
+        DATATYPE_GEN_TEMPLATE_LOOPx1(TO_STRING_TEMPLATE_GEN)
         default:
             throw std::runtime_error("invalid type");
     }

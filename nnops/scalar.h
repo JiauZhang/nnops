@@ -9,7 +9,7 @@ class Scalar {
 public:
     Scalar(): data_(nullptr) {}
 #define GEN_SCALAR_CONSTRUCTOR(dtype, type) Scalar(type data);
-    DATATYPE_GEN_TEMPLATE(GEN_SCALAR_CONSTRUCTOR)
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_SCALAR_CONSTRUCTOR)
 #undef GEN_SCALAR_CONSTRUCTOR
     Scalar(const Scalar &other);
     ~Scalar();

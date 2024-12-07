@@ -8,7 +8,7 @@ namespace nnops {
     dtype_ = dtype;                                                     \
 }
 
-DATATYPE_GEN_TEMPLATE(GEN_SCALAR_CONSTRUCTOR)
+DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_SCALAR_CONSTRUCTOR)
 
 Scalar::Scalar(const Scalar &other) {
     dtype_ = other.dtype();
