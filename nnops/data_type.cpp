@@ -4,20 +4,7 @@
 
 namespace nnops {
 
-template<DataType dtype> struct datatype_to_type;
-
-#define DATATYPE_TO_TYPE_ITEM(dtype, type) template<> \
-    struct datatype_to_type<dtype> { using Type = type; };
-
-DATATYPE_GEN_TEMPLATE_LOOPx1(DATATYPE_TO_TYPE_ITEM)
-
-template<DataType dtype>
-constexpr size_t sizeof_dtype() {
-    using T = typename datatype_to_type<dtype>::Type;
-    return sizeof(T);
-}
-
-#define GEN_DTYPE_SIZE(dtype, type) sizeof_dtype<dtype>(),
+#define GEN_DTYPE_SIZE(dtype, type) sizeof(type),
 static constexpr std::array<size_t, DataType::COMPILE_TIME_MAX_DATA_TYPES> __dtype_size__ = {
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_DTYPE_SIZE)
 };
