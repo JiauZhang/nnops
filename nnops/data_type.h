@@ -21,7 +21,7 @@ enum DataType: uint8_t {
     COMPILE_TIME_MAX_DATA_TYPES,
 };
 
-#define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, args...)             \
+#define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, args...)      \
     GEN(DataType::TYPE_UINT8, uint8_t, ##args)          \
     GEN(DataType::TYPE_INT8, int8_t, ##args)            \
     GEN(DataType::TYPE_UINT16, uint16_t, ##args)        \
