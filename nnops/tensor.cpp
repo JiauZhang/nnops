@@ -262,6 +262,36 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape) {
     return tb;
 }
 
+Tensor Tensor::permute(TensorShape &index) {
+    if (index.size() != this->shape().size())
+        throw std::runtime_error("axes size don't match!");
+    int len = index.size();
+    TensorShape count(len, 0);
+    for (int i = 0; i < len; i++) {
+        auto &idx = index[i];
+        if (idx < -len || idx >= len) {
+            std::string info = "axis " + std::to_string(idx) + " is out of bounds for tensor of dimension "
+                + std::to_string(len);
+            throw std::runtime_error(info);
+        }
+        if (idx < 0)
+            idx += len;
+        ++count[idx];
+        if (count[idx] > 1)
+            throw std::runtime_error("repeated axis in permute");
+    }
+
+    Tensor t;
+    TensorMeta meta = this->meta();
+    for (int i = 0; i < meta.shape().size(); i++) {
+        meta.dims_[i] = this->meta().shape()[index[i]];
+        meta.strides_[i] = this->meta().stride()[index[i]];
+    }
+    t.set_meta(meta);
+    t.set_buffer(this->buffer());
+    return t;
+}
+
 Tensor Tensor::astype(DataType dtype) {
     Tensor tensor(dtype, this->shape(), this->device());
     tensor_clone_impl(*this, tensor);

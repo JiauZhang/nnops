@@ -62,6 +62,7 @@ public:
     }
     nb::ndarray<nb::numpy> numpy();
     PyTensor py_reshape(nb::args args);
+    PyTensor py_permute(nb::args args);
     PyTensor __getitem__(nb::handle indices);
     Tensor tensor() {
         Tensor t;

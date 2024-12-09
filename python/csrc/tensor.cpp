@@ -136,9 +136,7 @@ PyTensor PyTensor::__getitem__(nb::handle indices) {
     return PyTensor(meta, this->buffer());
 }
 
-PyTensor PyTensor::py_reshape(nb::args args) {
-    TensorShape indices;
-
+void parse_int_args(nb::args &args, TensorShape &indices) {
     for (int i=0; i<args.size(); i++) {
         auto v = args[i];
         if (nb::isinstance<nb::int_>(v)) {
@@ -147,8 +145,19 @@ PyTensor PyTensor::py_reshape(nb::args args) {
             throw std::runtime_error("only int index supported!");
         }
     }
+}
 
+PyTensor PyTensor::py_reshape(nb::args args) {
+    TensorShape indices;
+    parse_int_args(args, indices);
     Tensor &&tensor = this->reshape(indices);
+    return PyTensor(tensor);
+}
+
+PyTensor PyTensor::py_permute(nb::args args) {
+    TensorShape indices;
+    parse_int_args(args, indices);
+    Tensor &&tensor = this->permute(indices);
     return PyTensor(tensor);
 }
 
@@ -251,6 +260,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("astype", &PyTensor::astype)
         .def("numpy", &PyTensor::numpy)
         .def("reshape", &PyTensor::py_reshape)
+        .def("permute", &PyTensor::py_permute)
         .def("broadcast_to", &PyTensor::py_broadcast_to)
         .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })

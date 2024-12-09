@@ -24,6 +24,7 @@ public:
     inline const Tensor &operator*() { return *this; }
     Tensor &operator=(Tensor &other);
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
+
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
     Tensor reshape(TensorShape &dims);
     inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape()); }
@@ -33,6 +34,7 @@ public:
     bool is_broadcast();
     inline Tensor broadcast_to(const TensorShape &shape) { return Tensor::broadcast_to(*this, shape); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape);
+    Tensor permute(TensorShape &index);
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
     inline void *data_ptr() const { return this->tensor_buffer_->data_ptr_; }

@@ -2,6 +2,7 @@ import nnops
 from nnops.tensor import Tensor
 from nnops import dtype
 import numpy as np
+import random
 
 class TestTensor():
     types = [
@@ -212,3 +213,23 @@ class TestTensor():
         assert t_d.is_contiguous() == True
         assert t_d.ref_count == 1 and t_b.ref_count == 2
         assert (t_d.numpy() == t_b.numpy()).all()
+
+    def test_tensor_permute(self):
+        np_a = np.random.randn(4, 5, 6, 7)
+        nnops_a = nnops.tensor.from_numpy(np_a)
+        permute_index = [0, 3, 1, 2]
+        random.shuffle(permute_index)
+        nnops_permute = nnops_a.permute(*tuple(permute_index))
+        np_permute = np.transpose(np_a, permute_index)
+        assert nnops_permute.ref_count == 2
+        assert tuple(nnops_permute.shape) == np_permute.shape
+        assert (nnops_permute.numpy() == np_permute).all()
+
+        np_b = np_a[1::2, 1::2, 1::2, 2::3]
+        nnops_b = nnops_a[1::2, 1::2, 1::2, 2::3]
+        random.shuffle(permute_index)
+        nnops_permutex2 = nnops_b.permute(*tuple(permute_index))
+        np_permutex2 = np.transpose(np_b, permute_index)
+        assert nnops_permutex2.ref_count == 4
+        assert tuple(nnops_permutex2.shape) == np_permutex2.shape
+        assert (nnops_permutex2.numpy() == np_permutex2).all()

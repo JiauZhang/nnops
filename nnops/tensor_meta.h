@@ -33,8 +33,8 @@ public:
     void index_inplace(int index, int axis);
     void slice_inplace(Slice &slice, int axis);
 
-    inline TensorShape &shape() { return this->dims_; }
-    inline TensorStride &stride() { return this->strides_; }
+    inline const TensorShape &shape() const { return this->dims_; }
+    inline const TensorStride &stride() const { return this->strides_; }
     inline int ndim() { return this->shape().size(); }
     inline int offset() const { return this->offset_; }
 
