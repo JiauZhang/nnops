@@ -18,7 +18,7 @@ TensorIterator &TensorIterator::operator++() {
         if (index_[ax] < shape[ax] - 1) {
             index_[ax]++;
             offset_ += stride[ax];
-            break;
+            return *this;
         } else {
             offset_ -= index_[ax] * stride[ax];
             index_[ax] = 0;
@@ -27,7 +27,7 @@ TensorIterator &TensorIterator::operator++() {
     }
 
     if (ax < 0)
-        offset_ = -1;
+        this->end();
 
     return *this;
 }
