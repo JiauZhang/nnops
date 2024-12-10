@@ -56,6 +56,11 @@ Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
     set_buffer(other.buffer());
 }
 
+Tensor::Tensor(const TensorMeta &meta, TensorBuffer *buf) : tensor_buffer_(nullptr){
+    set_meta(meta);
+    set_buffer(buf);
+}
+
 Tensor::~Tensor() {
     if (tensor_buffer_) {
         tensor_buffer_->dec_ref();
@@ -281,15 +286,12 @@ Tensor Tensor::permute(TensorShape &index) {
             throw std::runtime_error("repeated axis in permute");
     }
 
-    Tensor t;
     TensorMeta meta = this->meta();
     for (int i = 0; i < meta.shape().size(); i++) {
         meta.dims_[i] = this->meta().shape()[index[i]];
         meta.strides_[i] = this->meta().stride()[index[i]];
     }
-    t.set_meta(meta);
-    t.set_buffer(this->buffer());
-    return t;
+    return Tensor(meta, this->buffer());
 }
 
 Tensor Tensor::astype(DataType dtype) {

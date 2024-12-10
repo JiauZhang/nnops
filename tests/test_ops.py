@@ -2,7 +2,7 @@ import nnops.ops as ops
 import nnops.tensor
 import numpy as np
 
-class TestDeviceType():
+class TestOperators():
     def test_add(self):
         np_a = np.random.randn(3, 1, 4).astype(np.float32)
         np_b = np.random.randn(2, 1).astype(np.float32)

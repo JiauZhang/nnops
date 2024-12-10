@@ -26,8 +26,7 @@ TensorIterator &TensorIterator::operator++() {
         }
     }
 
-    if (ax < 0)
-        this->end();
+    this->end();
 
     return *this;
 }

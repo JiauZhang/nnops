@@ -19,6 +19,7 @@ public:
     Tensor(DataType dtype, const TensorShape &dims, DeviceType device);
     Tensor(DataType dtype, const TensorShape &dims, Device *device);
     Tensor(const Tensor &other);
+    Tensor(const TensorMeta &meta, TensorBuffer *buf);
     ~Tensor();
 
     inline const Tensor &operator*() { return *this; }
