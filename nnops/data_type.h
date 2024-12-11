@@ -7,7 +7,7 @@
 
 namespace nnops {
 
-enum DataType: uint8_t {
+enum DataType : uint8_t {
     TYPE_UINT8 = 0,
     TYPE_INT8,
     TYPE_UINT16,
@@ -19,6 +19,14 @@ enum DataType: uint8_t {
     TYPE_FLOAT32,
     TYPE_FLOAT64,
     COMPILE_TIME_MAX_DATA_TYPES,
+};
+
+enum ScalarBinaryOpType : uint8_t {
+    ADD = 0,
+    SUB,
+    MUL,
+    DIV,
+    COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES,
 };
 
 #define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, args...)      \
@@ -46,9 +54,13 @@ enum DataType: uint8_t {
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, double)
 
 size_t sizeof_dtype(DataType dtype);
-using dtype_cast_op_t = void (*)(void *, void *);
+
+using dtype_cast_op_t = void (*)(void *from, void *to);
 dtype_cast_op_t get_cast_op(DataType from, DataType to);
+
+using scalar_binary_op_t = void (*)(void *ret, void *lvalue, void *rvalue);
 DataType get_promote_type(DataType ltype, DataType rtype);
+scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType ltype, DataType rtype);
 
 } // namespace nnops
 

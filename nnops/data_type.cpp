@@ -86,16 +86,45 @@ static constexpr std::array<std::array<DataType, index2dtype.size()>, index2dtyp
     /* f8 */ f8, f8, f8, f8, f8, f8, f8, f8, f8, f8,
 };
 
-inline DataType get_promote_type(DataType ltype, DataType rtype) {
+DataType get_promote_type(DataType ltype, DataType rtype) {
     auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
     return __promote_types__[lindex][rindex];
 }
 
 template<typename ReturnType, typename LeftType, typename RightType>
-void math_op(void *ret, void *lvalue, void *rvalue) {
+void scalar_binary_op(void *ret, void *lvalue, void *rvalue) {
     *reinterpret_cast<ReturnType *>(ret) =
         *reinterpret_cast<LeftType *>(lvalue) + *reinterpret_cast<RightType *>(rvalue);
 }
 
+constexpr DataType constexpr_get_promote_type(DataType ltype, DataType rtype) {
+    auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
+    return __promote_types__[lindex][rindex];
+}
+
+constexpr std::array<std::array<std::array<
+    scalar_binary_op_t, ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>,
+    index2dtype.size()>, index2dtype.size()> initialize_scalar_binary_op() {
+    std::array<std::array<std::array<
+        scalar_binary_op_t, ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>,
+        index2dtype.size()>, index2dtype.size()> scalar_binary_ops = {};
+
+    for (int i = 0; i < index2dtype.size(); i++)
+        for (int j = 0; j < index2dtype.size(); j++)
+            for (int k = 0; k < index2dtype.size(); k++)
+                if (index2dtype[k] == constexpr_get_promote_type(index2dtype[i], index2dtype[j]))
+                    scalar_binary_ops[i][j][0] = scalar_binary_op<F4, F4, F4>;
+
+    return scalar_binary_ops;
+}
+
+constexpr std::array<std::array<std::array<
+    scalar_binary_op_t, ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>,
+    index2dtype.size()>, index2dtype.size()> __scalar_binary_ops__ = initialize_scalar_binary_op();
+
+scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType ltype, DataType rtype) {
+    auto left_idx = dtype2index[ltype], right_idx = dtype2index[rtype];
+    return __scalar_binary_ops__[left_idx][right_idx][0];
+}
 
 } // namespace nnops
