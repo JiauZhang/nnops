@@ -25,14 +25,8 @@ class PyTensor : public Tensor {
 public:
     PyTensor(): Tensor() {}
     PyTensor(const Tensor &other): Tensor(other) {}
-    PyTensor(const PyTensor &other) {
-        set_meta(other.meta());
-        set_buffer(other.buffer());
-    }
-    PyTensor(const TensorMeta &meta, TensorBuffer *buffer) {
-        set_meta(meta);
-        set_buffer(buffer);
-    }
+    PyTensor(const PyTensor &other) : Tensor(other.meta(), other.buffer()) {}
+    PyTensor(const TensorMeta &meta, TensorBuffer *buffer) : Tensor(meta, buffer) {}
     PyTensor(DataType dtype, TensorShape &dims, DeviceType device):
         Tensor(dtype, dims, device) {}
     PyTensor(nb::kwargs &kwargs);
@@ -64,12 +58,7 @@ public:
     PyTensor py_reshape(nb::args args);
     PyTensor py_permute(nb::args args);
     PyTensor __getitem__(nb::handle indices);
-    Tensor tensor() {
-        Tensor t;
-        t.set_meta(this->meta());
-        t.set_buffer(this->buffer());
-        return t;
-    }
+    Tensor tensor() { return Tensor(this->meta(), this->buffer()); }
     PyTensor astype(DataType dtype) {
         Tensor t = Tensor::astype(dtype);
         return PyTensor(t);

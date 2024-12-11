@@ -127,7 +127,7 @@ PyTensor::PyTensor(nb::kwargs &kwargs) {
         nb::del(val);
     }
 
-    init_tensor(dtype, shape, device);
+    Tensor::init_tensor(dtype, shape, device);
 }
 
 PyTensor PyTensor::__getitem__(nb::handle indices) {

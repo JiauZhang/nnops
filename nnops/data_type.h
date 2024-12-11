@@ -46,7 +46,8 @@ enum DataType: uint8_t {
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, double)
 
 size_t sizeof_dtype(DataType dtype);
-std::function<void(void *, void *)> get_cast_op(DataType from, DataType to);
+using dtype_cast_op_t = void (*)(void *, void *);
+dtype_cast_op_t get_cast_op(DataType from, DataType to);
 DataType get_promote_type(DataType ltype, DataType rtype);
 
 } // namespace nnops

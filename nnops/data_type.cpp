@@ -49,7 +49,7 @@ DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM)
 
 #define GEN_ITEM_INST(dtype, type2, type1) type_cast<type1, type2>,
 static std::array<
-    std::array<std::function<void(void *, void *)>, index2dtype.size()>,
+    std::array<dtype_cast_op_t, index2dtype.size()>,
     index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM_INST) };
 
 constexpr std::array<int, index2dtype.size()> calculate_dtype2index() {
@@ -65,7 +65,7 @@ constexpr std::array<int, index2dtype.size()> calculate_dtype2index() {
 
 constexpr auto dtype2index = calculate_dtype2index();
 
-std::function<void(void *, void *)> get_cast_op(DataType from, DataType to) {
+dtype_cast_op_t get_cast_op(DataType from, DataType to) {
     auto from_idx = dtype2index[from], to_idx = dtype2index[to];
     return __dtype_cast_ops__[from][to];
 }
