@@ -53,6 +53,12 @@ enum ScalarBinaryOpType : uint8_t {
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, float)         \
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, double)
 
+#define SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(GEN, args...)  \
+    GEN(ScalarBinaryOpType::ADD, add, +, ##args)            \
+    GEN(ScalarBinaryOpType::SUB, sub, -, ##args)            \
+    GEN(ScalarBinaryOpType::MUL, mul, *, ##args)            \
+    GEN(ScalarBinaryOpType::DIV, div, /, ##args)            \
+
 size_t sizeof_dtype(DataType dtype);
 
 using dtype_cast_op_t = void (*)(void *from, void *to);

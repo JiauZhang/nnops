@@ -91,11 +91,14 @@ DataType get_promote_type(DataType ltype, DataType rtype) {
     return __promote_types__[lindex][rindex];
 }
 
-template<typename ReturnType, typename LeftType, typename RightType>
-void scalar_binary_op(void *ret, void *lvalue, void *rvalue) {
-    *reinterpret_cast<ReturnType *>(ret) =
-        *reinterpret_cast<LeftType *>(lvalue) + *reinterpret_cast<RightType *>(rvalue);
+#define scalar_binary_op_template(op_type, op_name, op)                                  \
+template<typename ReturnType, typename LeftType, typename RightType>                     \
+void scalar_binary_op_##op_name(void *ret, void *lvalue, void *rvalue) {                 \
+    *reinterpret_cast<ReturnType *>(ret) =                                               \
+        *reinterpret_cast<LeftType *>(lvalue) op *reinterpret_cast<RightType *>(rvalue); \
 }
+
+SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(scalar_binary_op_template)
 
 constexpr DataType constexpr_get_promote_type(DataType ltype, DataType rtype) {
     auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
@@ -113,7 +116,7 @@ constexpr std::array<std::array<std::array<
         for (int j = 0; j < index2dtype.size(); j++)
             for (int k = 0; k < index2dtype.size(); k++)
                 if (index2dtype[k] == constexpr_get_promote_type(index2dtype[i], index2dtype[j]))
-                    scalar_binary_ops[i][j][0] = scalar_binary_op<F4, F4, F4>;
+                    scalar_binary_ops[i][j][0] = scalar_binary_op_add<F4, F4, F4>;
 
     return scalar_binary_ops;
 }
