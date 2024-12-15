@@ -35,8 +35,9 @@ size_t sizeof_dtype(DataType dtype) {
 #define F4 float
 #define F8 double
 
+#define GEN_INDEX2DTYPE_ITEM(dtype, type) dtype,
 constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> index2dtype = {
-    u1, i2, u2, i2, u4, i4, u8, i8, f4, f8,
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_INDEX2DTYPE_ITEM)
 };
 
 template<typename FromType, typename ToType>
@@ -44,10 +45,10 @@ void type_cast(void *src, void *dst) {
     *reinterpret_cast<ToType *>(dst) = *reinterpret_cast<FromType *>(src);
 }
 
-#define GEN_ITEM(dtype, type2, type1) template void type_cast<type1, type2>(void *src, void *dst);
+#define GEN_ITEM(dtype2, type2, dtype1, type1) template void type_cast<type1, type2>(void *src, void *dst);
 DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM)
 
-#define GEN_ITEM_INST(dtype, type2, type1) type_cast<type1, type2>,
+#define GEN_ITEM_INST(dtype2, type2, dtype1, type1) type_cast<type1, type2>,
 static std::array<
     std::array<dtype_cast_op_t, index2dtype.size()>,
     index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM_INST) };
@@ -105,6 +106,20 @@ constexpr DataType constexpr_get_promote_type(DataType ltype, DataType rtype) {
     return __promote_types__[lindex][rindex];
 }
 
+template<typename type1, typename type2, typename type3>
+constexpr scalar_binary_op_t dt2t(DataType dt1, DataType dt2, DataType dt3) {
+    if (dt3 == constexpr_get_promote_type(dt1, dt2))
+        return scalar_binary_op_add<type3, type2, type1>;
+    else
+        return nullptr;
+}
+
+#define GEN_OPS_ITEM(dtype3, type3, dtype2, type2, dtype1, type1) dt2t<type3, type2, type1>(dtype3, dtype2, dtype1),
+constexpr std::array<std::array<std::array<scalar_binary_op_t,
+    index2dtype.size()>, index2dtype.size()>, index2dtype.size()> __ops__ = {
+    DATATYPE_GEN_TEMPLATE_LOOPx3(GEN_OPS_ITEM)
+};
+
 constexpr std::array<std::array<std::array<
     scalar_binary_op_t, ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>,
     index2dtype.size()>, index2dtype.size()> initialize_scalar_binary_op() {
@@ -116,7 +131,7 @@ constexpr std::array<std::array<std::array<
         for (int j = 0; j < index2dtype.size(); j++)
             for (int k = 0; k < index2dtype.size(); k++)
                 if (index2dtype[k] == constexpr_get_promote_type(index2dtype[i], index2dtype[j]))
-                    scalar_binary_ops[i][j][0] = scalar_binary_op_add<F4, F4, F4>;
+                    scalar_binary_ops[i][j][0] = __ops__[i][j][k];
 
     return scalar_binary_ops;
 }
