@@ -1,5 +1,4 @@
 #include <nnops/data_type.h>
-#include <unordered_map>
 #include <array>
 
 namespace nnops {
@@ -88,27 +87,22 @@ static constexpr std::array<std::array<DataType, index2dtype.size()>, index2dtyp
 };
 
 DataType get_promote_type(DataType ltype, DataType rtype) {
-    auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
-    return __promote_types__[lindex][rindex];
+    return __promote_types__[ltype][rtype];
 }
 
 #define scalar_binary_op_template(op_type, op_name, op)                                  \
 template<typename ReturnType, typename LeftType, typename RightType>                     \
 void scalar_binary_op_##op_name(void *ret, void *lvalue, void *rvalue) {                 \
-    *reinterpret_cast<ReturnType *>(ret) =                                               \
-        *reinterpret_cast<LeftType *>(lvalue) op *reinterpret_cast<RightType *>(rvalue); \
+    *reinterpret_cast<ReturnType *>(ret) = \
+        static_cast<ReturnType>(*reinterpret_cast<LeftType *>(lvalue)) op \
+        static_cast<ReturnType>(*reinterpret_cast<RightType *>(rvalue)); \
 }
 
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(scalar_binary_op_template)
 
-constexpr DataType constexpr_get_promote_type(DataType ltype, DataType rtype) {
-    auto lindex = dtype2index[ltype], rindex = dtype2index[rtype];
-    return __promote_types__[lindex][rindex];
-}
-
-template<typename type1, typename type2, typename type3>
-constexpr scalar_binary_op_t dt2t(DataType dt1, DataType dt2, DataType dt3) {
-    if (dt3 == constexpr_get_promote_type(dt1, dt2))
+template<typename type3, typename type2, typename type1>
+constexpr scalar_binary_op_t dt2t(DataType dt3, DataType dt2, DataType dt1) {
+    if (dt3 == __promote_types__[dt2][dt1])
         return scalar_binary_op_add<type3, type2, type1>;
     else
         return nullptr;
@@ -130,7 +124,7 @@ constexpr std::array<std::array<std::array<
     for (int i = 0; i < index2dtype.size(); i++)
         for (int j = 0; j < index2dtype.size(); j++)
             for (int k = 0; k < index2dtype.size(); k++)
-                if (index2dtype[k] == constexpr_get_promote_type(index2dtype[i], index2dtype[j]))
+                if (index2dtype[k] == __promote_types__[index2dtype[i]][index2dtype[j]])
                     scalar_binary_ops[i][j][0] = __ops__[i][j][k];
 
     return scalar_binary_ops;
@@ -142,7 +136,7 @@ constexpr std::array<std::array<std::array<
 
 scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType ltype, DataType rtype) {
     auto left_idx = dtype2index[ltype], right_idx = dtype2index[rtype];
-    return __scalar_binary_ops__[left_idx][right_idx][0];
+    return __scalar_binary_ops__[right_idx][left_idx][0];
 }
 
 } // namespace nnops
