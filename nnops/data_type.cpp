@@ -53,14 +53,14 @@ static std::array<
     index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM_INST) };
 
 constexpr std::array<int, index2dtype.size()> calculate_dtype2index() {
-  std::array<int, index2dtype.size()> dtype2index = {};
-  for (int i = 0; i < dtype2index.size(); i++) {
-    dtype2index[i] = -1;
-  }
-  for (int i = 0; i < index2dtype.size(); i++) {
-    dtype2index[index2dtype[i]] = i;
-  }
-  return dtype2index;
+    std::array<int, index2dtype.size()> dtype2index = {};
+    for (int i = 0; i < dtype2index.size(); i++) {
+        dtype2index[i] = -1;
+    }
+    for (int i = 0; i < index2dtype.size(); i++) {
+        dtype2index[index2dtype[i]] = i;
+    }
+    return dtype2index;
 }
 
 constexpr auto dtype2index = calculate_dtype2index();
@@ -90,30 +90,22 @@ DataType get_promote_type(DataType ltype, DataType rtype) {
     return __promote_types__[ltype][rtype];
 }
 
-#define scalar_binary_op_template(op_type, op_name, op)                                  \
-template<typename ReturnType, typename LeftType, typename RightType>                     \
-void scalar_binary_op_##op_name(void *ret, void *lvalue, void *rvalue) {                 \
-    *reinterpret_cast<ReturnType *>(ret) = \
-        static_cast<ReturnType>(*reinterpret_cast<LeftType *>(lvalue)) op \
-        static_cast<ReturnType>(*reinterpret_cast<RightType *>(rvalue)); \
-}
-
-SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(scalar_binary_op_template)
-
-template<typename type3, typename type2, typename type1>
-constexpr scalar_binary_op_t dt2t(DataType dt3, DataType dt2, DataType dt1) {
-    if (dt3 == __promote_types__[dt2][dt1])
-        return scalar_binary_op_add<type3, type2, type1>;
-    else
-        return nullptr;
-}
-
-#define GEN_OPS_ITEM(dtype3, type3, dtype2, type2, dtype1, type1) dt2t<type3, type2, type1>(dtype3, dtype2, dtype1),
-constexpr std::array<std::array<std::array<scalar_binary_op_t,
-    index2dtype.size()>, index2dtype.size()>, index2dtype.size()> __ops__ = {
-    DATATYPE_GEN_TEMPLATE_LOOPx3(GEN_OPS_ITEM)
+#define GEN_SCALAR_BINARY_OP_FUNCTOR(dtype3, type3, dtype2, type2, dtype1, type1, op_functor) op_functor<type3, type2, type1>,
+#define MAKE_SCALAR_BINARY_OP_TEMPLATE(op_type, op_name, op)                \
+template<typename ReturnType, typename LeftType, typename RightType>        \
+void scalar_binary_op_##op_name(void *ret, void *lvalue, void *rvalue) {    \
+    *reinterpret_cast<ReturnType *>(ret) =                                  \
+        static_cast<ReturnType>(*reinterpret_cast<LeftType *>(lvalue)) op   \
+        static_cast<ReturnType>(*reinterpret_cast<RightType *>(rvalue));    \
+}                                                                           \
+constexpr std::array<std::array<std::array<scalar_binary_op_t,              \
+    index2dtype.size()>, index2dtype.size()>, index2dtype.size()> __functors_##op_name = { \
+    DATATYPE_GEN_TEMPLATE_LOOPx3(GEN_SCALAR_BINARY_OP_FUNCTOR, scalar_binary_op_##op_name) \
 };
 
+SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_SCALAR_BINARY_OP_TEMPLATE)
+
+#define SELECT_SCALAR_BINARY_OP_FUNCTOR(op_type, op_name, op) scalar_binary_ops[i][j][op_type] = __functors_##op_name[i][j][k];
 constexpr std::array<std::array<std::array<
     scalar_binary_op_t, ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>,
     index2dtype.size()>, index2dtype.size()> initialize_scalar_binary_op() {
@@ -124,8 +116,9 @@ constexpr std::array<std::array<std::array<
     for (int i = 0; i < index2dtype.size(); i++)
         for (int j = 0; j < index2dtype.size(); j++)
             for (int k = 0; k < index2dtype.size(); k++)
-                if (index2dtype[k] == __promote_types__[index2dtype[i]][index2dtype[j]])
-                    scalar_binary_ops[i][j][0] = __ops__[i][j][k];
+                if (index2dtype[k] == __promote_types__[index2dtype[i]][index2dtype[j]]) {
+                    SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(SELECT_SCALAR_BINARY_OP_FUNCTOR)
+                }
 
     return scalar_binary_ops;
 }
@@ -136,7 +129,7 @@ constexpr std::array<std::array<std::array<
 
 scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType ltype, DataType rtype) {
     auto left_idx = dtype2index[ltype], right_idx = dtype2index[rtype];
-    return __scalar_binary_ops__[right_idx][left_idx][0];
+    return __scalar_binary_ops__[right_idx][left_idx][op_type];
 }
 
 } // namespace nnops

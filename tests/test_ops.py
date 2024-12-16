@@ -52,10 +52,21 @@ class TestOperators():
                 np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
                 np_add = np_a + np_b
                 nps_a = nnops.tensor.from_numpy(np_a)
-                assert nps_a.dtype == nps_type1
                 nps_b = nnops.tensor.from_numpy(np_b)
-                assert nps_b.dtype == nps_type2
                 nps_add = nnops.ops.add(nps_a, nps_b)
                 np_nps_add = nps_add.numpy()
                 assert np_nps_add.dtype == np_add.dtype
                 assert (np_nps_add == np_add).all()
+
+    def test_mul_different_dtype(self):
+        for nps_type1, np_type1 in self.types:
+            for nps_type2, np_type2 in self.types:
+                np_a = (np.random.randn(2, 3, 4) * 123).astype(np_type1)
+                np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
+                np_mul = np_a * np_b
+                nps_a = nnops.tensor.from_numpy(np_a)
+                nps_b = nnops.tensor.from_numpy(np_b)
+                nps_mul = nnops.ops.mul(nps_a, nps_b)
+                np_nps_mul = nps_mul.numpy()
+                assert np_nps_mul.dtype == np_mul.dtype
+                assert (np_nps_mul == np_mul).all()
