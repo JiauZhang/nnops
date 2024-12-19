@@ -2,7 +2,7 @@
 #define __DEVICE_TYPE_H__
 
 #include <map>
-#include <string.h>
+#include <string>
 #include <cstdint>
 
 namespace nnops {

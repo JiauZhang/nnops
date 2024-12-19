@@ -1,4 +1,5 @@
 #include <nnops/tensor_buffer.h>
+#include <stdexcept>
 
 namespace nnops {
 

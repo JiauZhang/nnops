@@ -1,4 +1,5 @@
 #include <nnops/operator.h>
+#include <stdexcept>
 
 namespace nnops {
 

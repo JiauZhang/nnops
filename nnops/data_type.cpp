@@ -86,7 +86,13 @@ static constexpr std::array<std::array<DataType, index2dtype.size()>, index2dtyp
     /* f8 */ f8, f8, f8, f8, f8, f8, f8, f8, f8, f8,
 };
 
-DataType get_promote_type(DataType ltype, DataType rtype) {
+DataType get_promote_type(ScalarBinaryOpType op_type, DataType ltype, DataType rtype) {
+    if (
+        op_type == ScalarBinaryOpType::DIV
+        && ltype != DataType::TYPE_FLOAT32 && ltype != DataType::TYPE_FLOAT64
+        && rtype != DataType::TYPE_FLOAT32 && rtype != DataType::TYPE_FLOAT64
+    )
+        return DataType::TYPE_FLOAT64;
     return __promote_types__[ltype][rtype];
 }
 
@@ -118,6 +124,11 @@ constexpr std::array<std::array<std::array<
             for (int k = 0; k < index2dtype.size(); k++)
                 if (index2dtype[k] == __promote_types__[index2dtype[i]][index2dtype[j]]) {
                     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(SELECT_SCALAR_BINARY_OP_FUNCTOR)
+                    if (
+                        index2dtype[i] != DataType::TYPE_FLOAT32 && index2dtype[i] != DataType::TYPE_FLOAT64
+                        && index2dtype[j] != DataType::TYPE_FLOAT32 && index2dtype[j] != DataType::TYPE_FLOAT64
+                    )
+                        scalar_binary_ops[i][j][ScalarBinaryOpType::DIV] = __functors_div[i][j][DataType::TYPE_FLOAT64];
                 }
 
     return scalar_binary_ops;

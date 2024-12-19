@@ -15,58 +15,76 @@ class TestOperators():
         [dtype.int8, np.int8],
         [dtype.uint8, np.uint8],
     ]
-    def test_add(self):
-        for nps_type, np_type in self.types:
-            np_a = (np.random.randn(3, 1, 4) * 123).astype(np_type)
-            np_b = (np.random.randn(2, 1) * 45).astype(np_type)
-            np_c = (np.random.randn(5, 4) * 234).astype(np_type)
-            np_d = (np.random.randn(2, 3, 5, 1) * 78).astype(np_type)
-            t_a = nnops.tensor.from_numpy(np_a)
-            t_b = nnops.tensor.from_numpy(np_b)
-            t_c = nnops.tensor.from_numpy(np_c)
-            t_d = nnops.tensor.from_numpy(np_d)
-            assert (ops.add(t_a, t_b).numpy() == np_a + np_b).all()
-            assert (ops.add(t_a, t_c).numpy() == np_a + np_c).all()
-            assert (ops.add(t_a, t_d).numpy() == np_a + np_d).all()
 
-    def test_add_not_contiguous(self):
-        for nps_type, np_type in self.types:
-            np_a = (np.random.randn(4, 5, 1, 7) * 23).astype(np_type)
-            np_b = (np.random.randn(5, 5, 7) * 45).astype(np_type)
-            np_a_stride = np_a[::2, ::2, :, ::3] # [2, 3, 1, 3]
-            np_b_stride = np_b[::2, ::2, ::3] # [3, 2, 3]
-            t_a = nnops.tensor.from_numpy(np_a_stride)
-            t_b = nnops.tensor.from_numpy(np_b_stride)
-            assert (ops.add(t_a, t_b).numpy() == np_a_stride + np_b_stride).all()
-
-            np_c_stride = np_a[1::2, 2::2, :, 4:] # [2, 2, 1, 3]
-            np_d_stride = np_b[2::2, 1::2, 1::2] # [2, 2, 3]
-            t_c = nnops.tensor.from_numpy(np_c_stride)
-            t_d = nnops.tensor.from_numpy(np_d_stride)
-            assert (ops.add(t_c, t_d).numpy() == np_c_stride + np_d_stride).all()
-
-    def test_add_different_dtype(self):
+    def cross_dtype_loop(self, op_functor, np_op_functor):
         for nps_type1, np_type1 in self.types:
             for nps_type2, np_type2 in self.types:
                 np_a = (np.random.randn(2, 3, 4) * 123).astype(np_type1)
                 np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
-                np_add = np_a + np_b
+                if op_functor is ops.div:
+                    np_b[np.abs(np_b) < 1e-5] = 1
+                np_ret = np_op_functor(np_a, np_b)
                 nps_a = nnops.tensor.from_numpy(np_a)
                 nps_b = nnops.tensor.from_numpy(np_b)
-                nps_add = nnops.ops.add(nps_a, nps_b)
-                np_nps_add = nps_add.numpy()
-                assert np_nps_add.dtype == np_add.dtype
-                assert (np_nps_add == np_add).all()
+                nps_ret = op_functor(nps_a, nps_b)
+                np_nps_ret = nps_ret.numpy()
+                assert np_nps_ret.dtype == np_ret.dtype
+                assert (np_nps_ret == np_ret).all()
 
-    def test_mul_different_dtype(self):
-        for nps_type1, np_type1 in self.types:
-            for nps_type2, np_type2 in self.types:
-                np_a = (np.random.randn(2, 3, 4) * 123).astype(np_type1)
-                np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
-                np_mul = np_a * np_b
-                nps_a = nnops.tensor.from_numpy(np_a)
-                nps_b = nnops.tensor.from_numpy(np_b)
-                nps_mul = nnops.ops.mul(nps_a, nps_b)
-                np_nps_mul = nps_mul.numpy()
-                assert np_nps_mul.dtype == np_mul.dtype
-                assert (np_nps_mul == np_mul).all()
+                # broadcast
+                np_a = (np.random.randn(3, 1, 4) * 123).astype(np_type1)
+                if op_functor is ops.div:
+                    np_a[np.abs(np_a) < 1e-5] = 1
+                np_b = (np.random.randn(2, 1) * 45).astype(np_type2)
+                np_c = (np.random.randn(5, 4) * 234).astype(np_type1)
+                np_d = (np.random.randn(2, 3, 5, 1) * 78).astype(np_type2)
+                t_a = nnops.tensor.from_numpy(np_a)
+                t_b = nnops.tensor.from_numpy(np_b)
+                t_c = nnops.tensor.from_numpy(np_c)
+                t_d = nnops.tensor.from_numpy(np_d)
+                assert (op_functor(t_b, t_a).numpy() == np_op_functor(np_b, np_a)).all()
+                assert (op_functor(t_c, t_a).numpy() == np_op_functor(np_c, np_a)).all()
+                assert (op_functor(t_d, t_a).numpy() == np_op_functor(np_d, np_a)).all()
+
+                # broadcast with not contiguous tensor
+                np_a = (np.random.randn(4, 5, 1, 7) * 23).astype(np_type1)
+                np_b = (np.random.randn(5, 5, 7) * 45).astype(np_type2)
+                if op_functor is ops.div:
+                    np_b[np.abs(np_b) < 1e-5] = 1
+                np_a_stride = np_a[::2, ::2, :, ::3] # [2, 3, 1, 3]
+                np_b_stride = np_b[::2, ::2, ::3] # [3, 2, 3]
+                t_a = nnops.tensor.from_numpy(np_a)[::2, ::2, :, ::3]
+                t_b = nnops.tensor.from_numpy(np_b)[::2, ::2, ::3]
+                assert t_a.is_contiguous() == False and t_b.is_contiguous() == False
+                assert (op_functor(t_a, t_b).numpy() == np_op_functor(np_a_stride, np_b_stride)).all()
+
+                np_c_stride = np_a[1::2, 2::2, :, 4:] # [2, 2, 1, 3]
+                np_d_stride = np_b[2::2, 1::2, 1::2] # [2, 2, 3]
+                t_c = nnops.tensor.from_numpy(np_a)[1::2, 2::2, :, 4:]
+                t_d = nnops.tensor.from_numpy(np_b)[2::2, 1::2, 1::2]
+                assert t_c.is_contiguous() == False and t_d.is_contiguous() == False
+                assert (op_functor(t_c, t_d).numpy() == np_op_functor(np_c_stride, np_d_stride)).all()
+
+    def test_add_op(self):
+        op_functor = ops.add
+        def np_op_functor(a, b):
+            return a + b
+        self.cross_dtype_loop(op_functor, np_op_functor)
+
+    def test_sub_op(self):
+        op_functor = ops.sub
+        def np_op_functor(a, b):
+            return a - b
+        self.cross_dtype_loop(op_functor, np_op_functor)
+
+    def test_mul_op(self):
+        op_functor = ops.mul
+        def np_op_functor(a, b):
+            return a * b
+        self.cross_dtype_loop(op_functor, np_op_functor)
+
+    def test_div_op(self):
+        op_functor = ops.div
+        def np_op_functor(a, b):
+            return a / b
+        self.cross_dtype_loop(op_functor, np_op_functor)

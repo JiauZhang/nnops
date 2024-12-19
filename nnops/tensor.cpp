@@ -2,6 +2,7 @@
 #include <nnops/tensor_meta.h>
 #include <nnops/tensor.h>
 #include <nnops/device.h>
+#include <stdexcept>
 
 namespace nnops {
 

@@ -1,6 +1,7 @@
 #include <nnops/cpu/ops/math.h>
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
+#include <stdexcept>
 
 using nnops::Tensor, nnops::TensorMeta;
 
@@ -16,7 +17,7 @@ static Tensor binary_op_template(Tensor &self, Tensor &other) {
     }
 
     TensorShape shape = Tensor::broadcast_shape(self, other);
-    Tensor ret(get_promote_type(self.dtype(), other.dtype()), shape, self.device());
+    Tensor ret(get_promote_type(op_type, self.dtype(), other.dtype()), shape, self.device());
     Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
     auto scalar_binary_op = get_scalar_binary_op(op_type, self.dtype(), other.dtype());
 

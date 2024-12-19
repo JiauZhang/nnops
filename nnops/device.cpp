@@ -1,4 +1,5 @@
 #include <nnops/device.h>
+#include <stdexcept>
 
 namespace nnops {
 
