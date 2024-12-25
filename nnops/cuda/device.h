@@ -7,8 +7,8 @@ namespace nnops::cuda {
 
 class Device final : public nnops::Device {
 public:
-    void *malloc(size_t size) { return 0; }
-    void free(void *ptr) {}
+    void *malloc(size_t size);
+    void free(void *ptr);
 };
 
 } // namespace nnops::cuda
