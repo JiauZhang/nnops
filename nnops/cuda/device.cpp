@@ -14,6 +14,14 @@ void Device::free(void *ptr) {
     cudaFree(ptr);
 }
 
+void Device::copy_to_cpu(void *src, void *dst, size_t size) {
+    cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
+}
+
+void Device::copy_from_cpu(void *src, void *dst, size_t size) {
+    cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
+}
+
 } // namespace nnops::cuda
 
 REGISTER_DEVICE("cuda", nnops::DeviceType::CUDA, nnops::cuda::Device);

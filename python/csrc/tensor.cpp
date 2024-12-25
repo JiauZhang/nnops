@@ -258,6 +258,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("contiguous", &PyTensor::py_contiguous)
         .def("clone", &PyTensor::py_clone)
         .def("astype", &PyTensor::astype)
+        .def("to", &PyTensor::to)
         .def("numpy", &PyTensor::numpy)
         .def("reshape", &PyTensor::py_reshape)
         .def("permute", &PyTensor::py_permute)

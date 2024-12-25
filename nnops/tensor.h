@@ -49,6 +49,7 @@ public:
     Tensor clone();
     Tensor contiguous();
     Tensor astype(DataType dtype);
+    Tensor to(DeviceType device);
 
     void to_string(std::string *prefix, std::string *ret);
     std::string to_string();

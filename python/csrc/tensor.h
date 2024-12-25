@@ -63,6 +63,10 @@ public:
         Tensor t = Tensor::astype(dtype);
         return PyTensor(t);
     }
+    PyTensor to(DeviceType device) {
+        Tensor t = Tensor::to(device);
+        return PyTensor(t);
+    }
 };
 
 } // namespace pynnops

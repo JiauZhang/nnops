@@ -27,6 +27,8 @@ public:
 
     virtual void *malloc(size_t size) = 0;
     virtual void free(void *ptr) = 0;
+    virtual void copy_to_cpu(void *src, void *dst, size_t size) = 0;
+    virtual void copy_from_cpu(void *src, void *dst, size_t size) = 0;
 
 private:
     static Device *devices_[DeviceType::COMPILE_TIME_MAX_DEVICE_TYPES];

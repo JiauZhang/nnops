@@ -301,6 +301,22 @@ Tensor Tensor::astype(DataType dtype) {
     return tensor;
 }
 
+Tensor Tensor::to(DeviceType device) {
+    if (device == this->device()->get_device_type())
+        return *this;
+    Device *dev = Device::get_device(device);
+    if (dev == nullptr)
+        throw std::runtime_error("device is invalid!");
+    Tensor tensor(this->dtype(), this->shape(), dev);
+    if (this->is_contiguous()) {
+        dev->copy_from_cpu(this->data_ptr(), tensor.data_ptr(), this->nbytes());
+    } else {
+        Tensor t_ = this->clone();
+        dev->copy_from_cpu(t_.data_ptr(), tensor.data_ptr(), t_.nbytes());
+    }
+    return tensor;
+}
+
 const TensorMeta &Tensor::meta() const {
     return tensor_meta_;
 }
