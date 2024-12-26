@@ -307,14 +307,14 @@ Tensor Tensor::to(DeviceType device) {
     Device *dev = Device::get_device(device);
     if (dev == nullptr)
         throw std::runtime_error("device is invalid!");
-    Tensor tensor(this->dtype(), this->shape(), dev);
-    if (this->is_contiguous()) {
-        dev->copy_from_cpu(this->data_ptr(), tensor.data_ptr(), this->nbytes());
+    Tensor dst(this->dtype(), this->shape(), dev), src = this->contiguous();
+    if (src.device()->get_device_type() == DeviceType::CPU) {
+        dev->copy_from_cpu(src.data_ptr(), dst.data_ptr(), src.nbytes());
     } else {
-        Tensor t_ = this->clone();
-        dev->copy_from_cpu(t_.data_ptr(), tensor.data_ptr(), t_.nbytes());
+        dev = src.device();
+        dev->copy_to_cpu(src.data_ptr(), dst.data_ptr(), src.nbytes());
     }
-    return tensor;
+    return dst;
 }
 
 const TensorMeta &Tensor::meta() const {
