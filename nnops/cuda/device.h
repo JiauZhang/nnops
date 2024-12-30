@@ -7,10 +7,15 @@ namespace nnops::cuda {
 
 class Device final : public nnops::Device {
 public:
+    Device();
+
     void *malloc(size_t size);
     void free(void *ptr);
     void copy_to_cpu(void *src, void *dst, size_t size);
     void copy_from_cpu(void *src, void *dst, size_t size);
+
+private:
+    static int device_count_;
 };
 
 } // namespace nnops::cuda

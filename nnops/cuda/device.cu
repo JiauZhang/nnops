@@ -4,6 +4,14 @@
 
 namespace nnops::cuda {
 
+int Device::device_count_ = -1;
+
+Device::Device() {
+    if (device_count_ >= 0)
+        return;
+    cudaGetDeviceCount(&device_count_);
+}
+
 void *Device::malloc(size_t size) {
     void *cuda_mem_ptr = nullptr;
     cudaMalloc(&cuda_mem_ptr, size);
