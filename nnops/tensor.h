@@ -44,7 +44,7 @@ public:
     inline Device *device() { return this->tensor_buffer_->device_; }
     inline size_t nelems() { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
-    inline int offset() { return this->tensor_meta_.offset_; }
+    inline index_t offset() { return this->tensor_meta_.offset_; }
     inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
     Tensor clone();
     Tensor contiguous();

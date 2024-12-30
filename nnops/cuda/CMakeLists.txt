@@ -8,7 +8,7 @@ target_sources(
 
 add_library(
     nnops_cuda SHARED
-    device.cu
+    device.cu copy.cu
 )
 
 target_include_directories(nnops_cuda PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})

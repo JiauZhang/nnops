@@ -8,8 +8,9 @@
 
 namespace nnops {
 
-typedef std::vector<int> TensorShape;
-typedef std::vector<int> TensorStride;
+typedef int index_t;
+typedef std::vector<index_t> TensorShape;
+typedef std::vector<index_t> TensorStride;
 
 class Slice {
 public:
@@ -40,7 +41,7 @@ public:
 
     size_t nbytes_;
     size_t nelems_;
-    int offset_;
+    index_t offset_;
     TensorShape dims_;
     TensorStride strides_;
     DataType dtype_;

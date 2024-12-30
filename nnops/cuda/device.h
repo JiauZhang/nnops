@@ -16,6 +16,10 @@ public:
 
 private:
     static int device_count_;
+    static int warp_size_;
+    static int max_threads_per_block_;
+    static int max_threads_dim_[3];
+    static int max_grid_size_[3];
 };
 
 } // namespace nnops::cuda
