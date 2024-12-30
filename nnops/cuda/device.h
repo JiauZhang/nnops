@@ -9,6 +9,7 @@ class Device final : public nnops::Device {
 public:
     Device();
 
+    void info();
     void *malloc(size_t size);
     void free(void *ptr);
     void copy_to_cpu(void *src, void *dst, size_t size);
@@ -16,6 +17,8 @@ public:
 
 private:
     static int device_count_;
+    static int multiprocessor_count_;
+    static int max_threads_per_multiprocessor_;
     static int warp_size_;
     static int max_threads_per_block_;
     static int max_threads_dim_[3];

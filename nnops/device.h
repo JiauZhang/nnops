@@ -25,6 +25,7 @@ public:
     static Device *get_device(DeviceType type);
     static Device *get_device(std::string &name);
 
+    virtual void info() {}
     virtual void *malloc(size_t size) = 0;
     virtual void free(void *ptr) = 0;
     virtual void copy_to_cpu(void *src, void *dst, size_t size) = 0;
