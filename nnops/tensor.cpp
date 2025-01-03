@@ -349,4 +349,22 @@ TensorIterator Tensor::end() {
     return iter;
 }
 
+TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
+    TensorShape indices(shape.size()), strides_contig(shape.size());
+    strides_contig[strides_contig.size() - 1] = 1;
+    for (int i = strides_contig.size()-2; i >= 0; i--)
+        strides_contig[i] = strides_contig[i + 1] * shape[i + 1];
+    index_t nelems = strides_contig[0] * shape[0];
+
+    if (idx > nelems) {
+        std::string info = "index " + std::to_string(idx) + "is out of bounds for TensorShape with size"
+            + std::to_string(nelems);
+        throw std::runtime_error(info);
+    }
+
+    for (int i = 0; i < indices.size(); i++)
+        indices[i] = idx / strides_contig[i];
+    return indices;
+}
+
 } // namespace nnops
