@@ -45,6 +45,5 @@ version = {attr = "nnops.__version__"}
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
+norecursedirs = ["tests/cpp"]

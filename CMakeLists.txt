@@ -8,3 +8,4 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(nnops)
 add_subdirectory(python)
+add_subdirectory(tests/cpp)
