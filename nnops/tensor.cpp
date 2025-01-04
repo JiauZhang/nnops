@@ -362,8 +362,10 @@ TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
         throw std::runtime_error(info);
     }
 
-    for (int i = 0; i < indices.size(); i++)
+    for (int i = 0; i < indices.size(); i++) {
         indices[i] = idx / strides_contig[i];
+        idx -= indices[i] * strides_contig[i];
+    }
     return indices;
 }
 
