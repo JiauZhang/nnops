@@ -369,4 +369,26 @@ TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
     return indices;
 }
 
+index_t Tensor::ravel_index(const TensorShape &indices, const TensorShape &shape) {
+    if (indices.size() != shape.size()) {
+        std::string info = "parameter indices must be a sequence of length " + std::to_string(shape.size());
+        throw std::runtime_error(info);
+    }
+    TensorShape strides_contig(shape.size());
+    index_t idx = 0;
+    strides_contig[shape.size() - 1] = 1;
+    for (int i = shape.size() - 2; i >= 0; i--)
+        strides_contig[i] = strides_contig[i + 1] * shape[i + 1];
+    for (int i = 0; i < shape.size(); i++) {
+        if (indices[i] >= shape[i]) {
+            std::string info = "indices[" + std::to_string(i) + "]: " + std::to_string(indices[i])
+                + "is out of bounds for shape[" + std::to_string(i) + "]: " + std::to_string(shape[i]);
+            throw std::runtime_error(info);
+        }
+    }
+    for (int i = 0; i < shape.size(); i++)
+        idx += indices[i] * strides_contig[i];
+    return idx;
+}
+
 } // namespace nnops

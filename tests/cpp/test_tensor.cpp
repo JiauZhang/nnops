@@ -38,3 +38,14 @@ TEST_F(TensorTest, UnravelIndex) {
             EXPECT_EQ(out[j], outputs[i * shape.size() + j]);
     }
 }
+
+TEST_F(TensorTest, RavelIndex) {
+    EXPECT_EQ(shape.size() * indices.size(), outputs.size());
+    for (int i = 0; i < indices.size(); i++) {
+        TensorShape dims(shape.size());
+        for (int j = 0; j < shape.size(); j++)
+            dims[j] = outputs[i * shape.size() + j];
+        index_t out = Tensor::ravel_index(dims, shape);
+        EXPECT_EQ(out, indices[i]);
+    }
+}

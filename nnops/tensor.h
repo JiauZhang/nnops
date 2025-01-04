@@ -68,6 +68,8 @@ public:
     TensorIterator end();
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);
     inline TensorShape unravel_index(index_t idx) const { return unravel_index(idx, this->shape()); }
+    static index_t ravel_index(const TensorShape &dims, const TensorShape &shape);
+    inline index_t ravel_index(const TensorShape &dims) const { return ravel_index(dims, this->shape()); }
 
 private:
     TensorMeta tensor_meta_;
