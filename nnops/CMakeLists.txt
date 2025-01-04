@@ -1,7 +1,8 @@
 add_library(
     nnops SHARED
-    data_type.cpp tensor_meta.cpp tensor.cpp tensor_iterator.cpp scalar.cpp operator.cpp
-    tensor_buffer.cpp device.cpp
+    data_type.cpp tensor_meta.cpp tensor.cpp tensor_buffer.cpp device.cpp scalar.cpp
+    tensor_iterator.cpp tensor_accessor.cpp
+    operator.cpp
 )
 
 add_subdirectory(cpu)

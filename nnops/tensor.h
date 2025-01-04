@@ -7,10 +7,12 @@
 #include <nnops/device.h>
 #include <string>
 #include <nnops/tensor_iterator.h>
+#include <nnops/tensor_accessor.h>
 
 namespace nnops {
 
 class TensorIterator;
+class TensorAccessor;
 
 class Tensor {
 public:
@@ -44,7 +46,8 @@ public:
     inline Device *device() { return this->tensor_buffer_->device_; }
     inline size_t nelems() { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
-    inline index_t offset() { return this->tensor_meta_.offset_; }
+    inline size_t itemsize() const { return sizeof_dtype(this->dtype()); }
+    inline index_t offset() const { return this->tensor_meta_.offset_; }
     inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
     Tensor clone();
     Tensor contiguous();
@@ -66,6 +69,8 @@ public:
 
     TensorIterator begin();
     TensorIterator end();
+    TensorAccessor accessor();
+
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);
     inline TensorShape unravel_index(index_t idx) const { return unravel_index(idx, this->shape()); }
     static index_t ravel_index(const TensorShape &dims, const TensorShape &shape);

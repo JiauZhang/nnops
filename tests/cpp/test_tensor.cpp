@@ -3,10 +3,13 @@
 #include <nnops/data_type.h>
 #include <nnops/tensor_meta.h>
 #include <nnops/tensor.h>
+#include <nnops/tensor_iterator.h>
+#include <nnops/tensor_accessor.h>
 #include <array>
 
 using nnops::DataType, nnops::DeviceType;
 using nnops::Tensor, nnops::TensorShape, nnops::index_t;
+using nnops::TensorIterator, nnops::TensorAccessor;
 
 class TensorTest : public testing::Test {
 protected:
@@ -47,5 +50,38 @@ TEST_F(TensorTest, RavelIndex) {
             dims[j] = outputs[i * shape.size() + j];
         index_t out = Tensor::ravel_index(dims, shape);
         EXPECT_EQ(out, indices[i]);
+    }
+}
+
+TEST_F(TensorTest, TensorIteratorAndAccessor) {
+    TensorShape s = {2, 2, 3};
+    Tensor t(DataType::TYPE_FLOAT32, s, DeviceType::CPU);
+    float *ptr = (float *)t.data_ptr();
+    int i;
+    for (i = 0; i < t.nelems(); i++)
+        ptr[i] = i + 1.12345;
+
+    TensorIterator iter = t.begin(), iter_end = t.end();
+    i = 0;
+    for (; iter != iter_end; ++iter, ++i)
+        EXPECT_EQ(*iter, (void *)(ptr + i));
+
+    TensorAccessor acc = t.accessor();
+    TensorShape anchor_0 = {0, 0, 0}, anchor_1 = {1, 1, 2}, anchor_2 = {0, 1, 1};
+    float *ptr_0 = (float *)acc.data_ptr_unsafe(anchor_0);
+    EXPECT_EQ(ptr_0, ptr);
+    float *ptr_1 = (float *)acc.data_ptr_unsafe(anchor_1);
+    EXPECT_EQ(ptr_1, ptr + 11);
+    float *ptr_2 = (float *)acc.data_ptr_unsafe(anchor_2);
+    EXPECT_EQ(ptr_2, ptr + 4);
+
+    for (i = 0; i < s[1]; i++) {
+        for (int j = 0; j < s[2]; j++) {
+            TensorShape anchor_ij = {0, i, j};
+            float *ptr_ij = (float *)acc.data_ptr_unsafe(anchor_ij);
+            EXPECT_EQ(*ptr_ij, *(ptr + i * 3 + j));
+            float *ptr_ij_next = (float *)acc.data_ptr_unsafe((void *)ptr_ij, 1, 0);
+            EXPECT_EQ(*ptr_ij_next, *(ptr + 6 + i * 3 + j));
+        }
     }
 }

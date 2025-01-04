@@ -17,14 +17,14 @@ public:
 
     inline int offset() const { return offset_; }
     inline const TensorShape &index() const { return index_; }
-    inline const Tensor &tensor() const { return tensor_; }
+    inline const Tensor *tensor() const { return tensor_; }
     inline void set_offset(int offset) { offset_ = offset; }
     inline void end() { offset_ = -1; }
 
 private:
-    const Tensor &tensor_;
+    const Tensor *tensor_;
     TensorShape index_;
-    int offset_;
+    index_t offset_;
 };
 
 } // namespace nnops
