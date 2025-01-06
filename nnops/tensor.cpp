@@ -166,9 +166,9 @@ Tensor &Tensor::operator=(Tensor &other) {
 
 void tensor_clone_impl(Tensor &src, Tensor &dst) {
     auto cast_op = get_cast_op(src.dtype(), dst.dtype());
-    auto src_iter = src.begin(), dst_iter = dst.begin();
+    auto src_iter = src.iterator(), dst_iter = dst.iterator();
 
-    for (; src_iter != src.end(); ++src_iter, ++dst_iter)
+    for (; !src_iter.is_end(); ++src_iter, ++dst_iter)
         cast_op(*src_iter, *dst_iter);
 }
 
@@ -338,14 +338,8 @@ void Tensor::set_buffer(TensorBuffer *buf) {
     }
 }
 
-TensorIterator Tensor::begin() {
+TensorIterator Tensor::iterator() {
     TensorIterator iter(*this);
-    return iter;
-}
-
-TensorIterator Tensor::end() {
-    TensorIterator iter(*this);
-    iter.end();
     return iter;
 }
 

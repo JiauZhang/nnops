@@ -21,8 +21,8 @@ static Tensor binary_op_template(Tensor &self, Tensor &other) {
     Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
     auto scalar_binary_op = get_scalar_binary_op(op_type, self.dtype(), other.dtype());
 
-    auto self_iter = self_br.begin(), other_iter = other_br.begin(), ret_iter = ret.begin();
-    for (; self_iter != self_br.end(); ++self_iter, ++other_iter, ++ret_iter)
+    auto self_iter = self_br.iterator(), other_iter = other_br.iterator(), ret_iter = ret.iterator();
+    for (; !self_iter.is_end(); ++self_iter, ++other_iter, ++ret_iter)
         scalar_binary_op(*ret_iter, *self_iter, *other_iter);
 
     return ret;

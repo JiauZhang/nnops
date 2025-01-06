@@ -31,12 +31,8 @@ TensorIterator &TensorIterator::operator++() {
     return *this;
 }
 
-bool TensorIterator::operator!=(const TensorIterator &other) {
-    return offset_ != other.offset();
-}
-
 void *TensorIterator::operator*() {
-    char *data_ptr = reinterpret_cast<char *>(tensor_->data_ptr()) + offset_ * sizeof_dtype(tensor_->dtype());
+    char *data_ptr = reinterpret_cast<char *>(tensor_->data_ptr()) + offset_ * tensor_->itemsize();
     return reinterpret_cast<void *>(data_ptr);
 }
 

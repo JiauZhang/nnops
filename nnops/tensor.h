@@ -67,8 +67,7 @@ public:
     TensorBuffer *buffer() const;
     void set_buffer(TensorBuffer *buf);
 
-    TensorIterator begin();
-    TensorIterator end();
+    TensorIterator iterator();
     TensorAccessor accessor();
 
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);

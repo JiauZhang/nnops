@@ -61,9 +61,9 @@ TEST_F(TensorTest, TensorIteratorAndAccessor) {
     for (i = 0; i < t.nelems(); i++)
         ptr[i] = i + 1.12345;
 
-    TensorIterator iter = t.begin(), iter_end = t.end();
+    TensorIterator iter = t.iterator();
     i = 0;
-    for (; iter != iter_end; ++iter, ++i)
+    for (; !iter.is_end(); ++iter, ++i)
         ASSERT_EQ(*iter, (void *)(ptr + i));
 
     TensorAccessor acc = t.accessor();
