@@ -12,6 +12,7 @@
 namespace nnops {
 
 class TensorIterator;
+class TensorPartialIterator;
 class TensorAccessor;
 
 class Tensor {
@@ -41,7 +42,7 @@ public:
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
     inline void *data_ptr() const { return this->tensor_buffer_->data_ptr_; }
-    inline int ndim() { return this->shape().size(); }
+    inline int ndim() const { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() { return this->tensor_buffer_->device_; }
     inline size_t nelems() { return this->tensor_meta_.nelems_; }
@@ -68,6 +69,7 @@ public:
     void set_buffer(TensorBuffer *buf);
 
     TensorIterator iterator();
+    TensorPartialIterator partial_iterator(index_t start, index_t stop);
     TensorAccessor accessor();
 
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);

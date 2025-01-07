@@ -9,7 +9,7 @@
 
 using nnops::DataType, nnops::DeviceType;
 using nnops::Tensor, nnops::TensorShape, nnops::index_t;
-using nnops::TensorIterator, nnops::TensorAccessor;
+using nnops::TensorIterator, nnops::TensorAccessor, nnops::TensorPartialIterator;
 
 class TensorTest : public testing::Test {
 protected:
@@ -82,6 +82,26 @@ TEST_F(TensorTest, TensorIteratorAndAccessor) {
             ASSERT_EQ(*ptr_ij, *(ptr + i * 3 + j));
             float *ptr_ij_next = (float *)acc.data_ptr_unsafe((void *)ptr_ij, 1, 0);
             ASSERT_EQ(*ptr_ij_next, *(ptr + 6 + i * 3 + j));
+        }
+    }
+}
+
+TEST_F(TensorTest, TensorPartialIterator) {
+    TensorShape s = {2, 2, 3, 2, 3};
+    Tensor t(DataType::TYPE_FLOAT32, s, DeviceType::CPU);
+    float *data_ptr = (float *)t.data_ptr();
+    for (int i = 0; i < t.nelems(); i++)
+        data_ptr[i] = (float)i;
+    // make a 3-d sub tensor iterator
+    TensorPartialIterator iter(t, 0, s.size() - 3);
+    int iter_count = 0;
+    for (; !iter.is_end(); ++iter, ++iter_count) {
+        int sub_iter_count = 0;
+        Tensor sub_t = iter.tensor();
+        TensorIterator sub_iter = sub_t.iterator();
+        for (; !sub_iter.is_end(); ++sub_iter, ++sub_iter_count) {
+            float *sub_ptr = (float *)(*sub_iter);
+            ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + sub_iter_count));
         }
     }
 }

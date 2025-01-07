@@ -343,6 +343,11 @@ TensorIterator Tensor::iterator() {
     return iter;
 }
 
+TensorPartialIterator Tensor::partial_iterator(index_t start, index_t stop) {
+    TensorPartialIterator iter(*this, start, stop);
+    return iter;
+}
+
 TensorAccessor Tensor::accessor() {
     TensorAccessor acc(*this);
     return acc;
