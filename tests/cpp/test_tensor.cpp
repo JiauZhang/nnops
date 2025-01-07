@@ -86,7 +86,7 @@ TEST_F(TensorTest, TensorIteratorAndAccessor) {
     }
 }
 
-TEST_F(TensorTest, TensorPartialIterator) {
+TEST_F(TensorTest, TensorPartialIteratorAndAccessor) {
     TensorShape s = {2, 2, 3, 2, 3};
     Tensor t(DataType::TYPE_FLOAT32, s, DeviceType::CPU);
     float *data_ptr = (float *)t.data_ptr();
@@ -98,10 +98,32 @@ TEST_F(TensorTest, TensorPartialIterator) {
     for (; !iter.is_end(); ++iter, ++iter_count) {
         int sub_iter_count = 0;
         Tensor sub_t = iter.tensor();
+        ASSERT_EQ(sub_t.ndim(), 3);
+        ASSERT_EQ(sub_t.nelems(), 18);
+        ASSERT_EQ(sub_t.ref_count(), 2);
         TensorIterator sub_iter = sub_t.iterator();
         for (; !sub_iter.is_end(); ++sub_iter, ++sub_iter_count) {
             float *sub_ptr = (float *)(*sub_iter);
             ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + sub_iter_count));
+        }
+
+        TensorShape ijk(3, 0);
+        TensorAccessor acc_ijk = sub_t.accessor();
+        void *anchor_ptr = acc_ijk.data_ptr_unsafe(ijk);
+        for (int i = 0; i < sub_t.shape()[0]; i++) {
+            ijk[0] = i;
+            void *anchor_ptr_i = acc_ijk.data_ptr_unsafe(anchor_ptr, i, 0);
+            for (int j = 0; j < sub_t.shape()[1]; j++) {
+                ijk[1] = j;
+                void *anchor_ptr_ij = acc_ijk.data_ptr_unsafe(anchor_ptr_i, j, 1);
+                for (int k = 0; k < sub_t.shape()[2]; k++) {
+                    ijk[2] = k;
+                    void *anchor_ptr_ijk = acc_ijk.data_ptr_unsafe(anchor_ptr_ij, k, 2);
+                    float *sub_ptr = (float *)acc_ijk.data_ptr_unsafe(ijk);
+                    ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + i * 6 + j * 3 + k));
+                    ASSERT_EQ((void *)sub_ptr, anchor_ptr_ijk);
+                }
+            }
         }
     }
 }
