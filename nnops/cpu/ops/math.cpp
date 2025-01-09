@@ -25,9 +25,9 @@ void do_binary_op_impl(Tensor &self, Tensor &other, Tensor &out, int axis, scala
     }
 
     const int loop = self.shape()[axis];
-    void *self_ptr = (void *)((char *)self.data_ptr() + self.offset() * self.itemsize());
-    void *other_ptr = (void *)((char *)other.data_ptr() + other.offset() * other.itemsize());
-    void *ret_ptr = (void *)((char *)out.data_ptr() + out.offset() * out.itemsize());
+    void *self_ptr = self.data_ptr();
+    void *other_ptr = other.data_ptr();
+    void *ret_ptr = out.data_ptr();
     for (int i = 0; i < loop; i++) {
         op(ret_ptr, self_ptr, other_ptr);
         self_ptr = (void *)((char *)self_ptr + self.stride()[axis] * self.itemsize());

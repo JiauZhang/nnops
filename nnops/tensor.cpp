@@ -97,7 +97,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
         return;
     }
 
-    T *data_ptr = (T *)tensor->data_ptr() + offset;
+    T *data_ptr = (T *)tensor->data_ptr();
     auto &stride = tensor->stride();
 
     if (tensor->ndim() == 0) {

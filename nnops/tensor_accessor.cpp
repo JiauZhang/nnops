@@ -7,7 +7,7 @@ class Tensor;
 TensorAccessor::TensorAccessor(const Tensor &tensor) : tensor_(&tensor) {}
 
 void *TensorAccessor::data_ptr_unsafe(const TensorShape &dims) {
-    index_t offset = tensor_->offset();
+    index_t offset = 0;
     for (int i = 0; i < tensor_->shape().size(); i++)
         offset += dims[i] * tensor_->stride()[i];
     return (void *)((char *)tensor_->data_ptr() + offset * tensor_->itemsize());

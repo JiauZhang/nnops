@@ -8,7 +8,7 @@ class Tensor;
 
 TensorIterator::TensorIterator(const Tensor &tensor) : tensor_(&tensor) {
     index_ = TensorShape(tensor_->shape().size(), 0);
-    offset_ = tensor_->meta().offset();
+    offset_ = 0;
 }
 
 TensorIterator &TensorIterator::operator++() {
@@ -47,7 +47,7 @@ TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start
     index_ = TensorShape(tensor_->shape().size(), 0);
     start_ = start;
     stop_ = stop;
-    offset_ = tensor_->meta().offset();
+    offset_ = 0;
 }
 
 TensorPartialIterator &TensorPartialIterator::operator++() {

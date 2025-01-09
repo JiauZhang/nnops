@@ -41,7 +41,7 @@ public:
     Tensor permute(TensorShape &index);
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
-    inline void *data_ptr() const { return this->tensor_buffer_->data_ptr_; }
+    inline void *data_ptr() const { return (void *)((char *)this->tensor_buffer_->data_ptr_ + this->offset() * this->itemsize()); }
     inline int ndim() const { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() { return this->tensor_buffer_->device_; }
