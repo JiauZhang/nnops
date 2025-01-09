@@ -7,6 +7,35 @@ using nnops::Tensor, nnops::TensorMeta;
 
 namespace nnops::cpu::ops {
 
+void do_binary_op_impl(Tensor &self, Tensor &other, Tensor &out, int axis, scalar_binary_op_t &op) {
+    if (axis < self.ndim() - 1) {
+        index_t &self_offset = self.mutable_offset();
+        index_t &other_offset = other.mutable_offset();
+        index_t &out_offset = out.mutable_offset();
+        const int loop = self.shape()[axis];
+        for (int i = 0; i < loop; i++) {
+            do_binary_op_impl(self, other, out, axis + 1, op);
+            self_offset += self.stride()[axis];
+            other_offset += other.stride()[axis];
+            out_offset += out.stride()[axis];
+        }
+        self_offset -= self.stride()[axis] * loop;
+        other_offset -= other.stride()[axis] * loop;
+        out_offset -= out.stride()[axis] * loop;
+    }
+
+    const int loop = self.shape()[axis];
+    void *self_ptr = (void *)((char *)self.data_ptr() + self.offset() * self.itemsize());
+    void *other_ptr = (void *)((char *)other.data_ptr() + other.offset() * other.itemsize());
+    void *ret_ptr = (void *)((char *)out.data_ptr() + out.offset() * out.itemsize());
+    for (int i = 0; i < loop; i++) {
+        op(ret_ptr, self_ptr, other_ptr);
+        self_ptr = (void *)((char *)self_ptr + self.stride()[axis] * self.itemsize());
+        other_ptr = (void *)((char *)other_ptr + other.stride()[axis] * other.itemsize());
+        ret_ptr = (void *)((char *)ret_ptr + out.stride()[axis] * out.itemsize());
+    }
+}
+
 template<ScalarBinaryOpType op_type>
 static Tensor binary_op_template(Tensor &self, Tensor &other) {
     if (!Tensor::is_broadcastable(self, other)) {
@@ -21,9 +50,7 @@ static Tensor binary_op_template(Tensor &self, Tensor &other) {
     Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
     auto scalar_binary_op = get_scalar_binary_op(op_type, self.dtype(), other.dtype());
 
-    auto self_iter = self_br.iterator(), other_iter = other_br.iterator(), ret_iter = ret.iterator();
-    for (; !self_iter.is_end(); ++self_iter, ++other_iter, ++ret_iter)
-        scalar_binary_op(*ret_iter, *self_iter, *other_iter);
+    do_binary_op_impl(self_br, other_br, ret, 0, scalar_binary_op);
 
     return ret;
 }

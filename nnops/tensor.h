@@ -49,6 +49,7 @@ public:
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
     inline size_t itemsize() const { return sizeof_dtype(this->dtype()); }
     inline index_t offset() const { return this->tensor_meta_.offset_; }
+    inline index_t &mutable_offset() { return this->tensor_meta_.offset_; }
     inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
     Tensor clone();
     Tensor contiguous();
