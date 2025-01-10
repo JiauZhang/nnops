@@ -22,17 +22,21 @@ void do_binary_op_impl(Tensor &self, Tensor &other, Tensor &out, int axis, scala
         self_offset -= self.stride()[axis] * loop;
         other_offset -= other.stride()[axis] * loop;
         out_offset -= out.stride()[axis] * loop;
+        return;
     }
 
     const int loop = self.shape()[axis];
     void *self_ptr = self.data_ptr();
     void *other_ptr = other.data_ptr();
     void *ret_ptr = out.data_ptr();
+    const index_t self_stride = self.stride()[axis] * self.itemsize();
+    const index_t other_stride = other.stride()[axis] * other.itemsize();
+    const index_t out_stride = out.stride()[axis] * out.itemsize();
     for (int i = 0; i < loop; i++) {
         op(ret_ptr, self_ptr, other_ptr);
-        self_ptr = (void *)((char *)self_ptr + self.stride()[axis] * self.itemsize());
-        other_ptr = (void *)((char *)other_ptr + other.stride()[axis] * other.itemsize());
-        ret_ptr = (void *)((char *)ret_ptr + out.stride()[axis] * out.itemsize());
+        self_ptr = (void *)((char *)self_ptr + self_stride);
+        other_ptr = (void *)((char *)other_ptr + other_stride);
+        ret_ptr = (void *)((char *)ret_ptr + out_stride);
     }
 }
 
