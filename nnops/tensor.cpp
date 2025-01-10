@@ -164,17 +164,33 @@ Tensor &Tensor::operator=(Tensor &other) {
     return *this;
 }
 
-void tensor_clone_impl(Tensor &src, Tensor &dst) {
-    auto cast_op = get_cast_op(src.dtype(), dst.dtype());
-    auto src_iter = src.iterator(), dst_iter = dst.iterator();
+void tensor_clone_impl(const Tensor *src, int src_offset, Tensor *dst, int dst_offset, int axis) {
+    if (axis < src->ndim() - 1) {
+        for (int i=0; i<src->shape()[axis]; i++)
+            tensor_clone_impl(
+                src, src_offset + i * (src->stride()[axis]),
+                dst, dst_offset + i * (dst->stride()[axis]),
+                axis + 1
+            );
+        return;
+    }
 
-    for (; !src_iter.is_end(); ++src_iter, ++dst_iter)
-        cast_op(*src_iter, *dst_iter);
+    const auto &cast_op = get_cast_op(src->dtype(), dst->dtype());
+    const index_t loop = src->shape()[axis];
+    void *args[2] = {
+        (void *)((unsigned char *)src->data_ptr() + src_offset * src->itemsize()),
+        (void *)((unsigned char *)dst->data_ptr() + dst_offset * dst->itemsize()),
+    };
+    const index_t strides[2] = {
+        src->stride()[axis] * src->itemsize(),
+        dst->stride()[axis] * dst->itemsize(),
+    };
+    cast_op(args, strides, loop);
 }
 
 Tensor Tensor::clone() {
     Tensor tensor(this->dtype(), this->shape(), this->device());
-    tensor_clone_impl(*this, tensor);
+    tensor_clone_impl(this, 0, &tensor, 0, 0);
     return tensor;
 }
 
@@ -297,7 +313,7 @@ Tensor Tensor::permute(TensorShape &index) {
 
 Tensor Tensor::astype(DataType dtype) {
     Tensor tensor(dtype, this->shape(), this->device());
-    tensor_clone_impl(*this, tensor);
+    tensor_clone_impl(this, 0, &tensor, 0, 0);
     return tensor;
 }
 

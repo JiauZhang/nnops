@@ -74,7 +74,7 @@ enum ScalarBinaryOpType : uint8_t {
 
 size_t sizeof_dtype(DataType dtype);
 
-using dtype_cast_op_t = void (*)(void *from, void *to);
+using dtype_cast_op_t = void (*)(void **args, const index_t *strides, const index_t size);
 dtype_cast_op_t get_cast_op(DataType from, DataType to);
 
 using scalar_binary_op_t = void (*)(void **args, const index_t *strides, const index_t size);

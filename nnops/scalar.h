@@ -14,11 +14,12 @@ public:
     Scalar(const Scalar &other);
     ~Scalar();
 
-    DataType dtype() const { return dtype_; }
-    void set_dtype(DataType type) { dtype_ = type; }
-    void *buffer() const { return data_; }
-    void set_buffer(void *data) { data_ = data; }
+    inline DataType dtype() const { return dtype_; }
+    inline void set_dtype(DataType type) { dtype_ = type; }
+    inline void *data_ptr() const { return data_; }
+    inline void set_buffer(void *data) { data_ = data; }
     Scalar astype(DataType dtype);
+    inline index_t itemsize() const { return sizeof_dtype(this->dtype_); }
 
 private:
     DataType dtype_;
