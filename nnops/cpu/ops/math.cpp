@@ -25,19 +25,14 @@ void do_binary_op_impl(Tensor &self, Tensor &other, Tensor &out, int axis, scala
         return;
     }
 
-    const int loop = self.shape()[axis];
-    void *self_ptr = self.data_ptr();
-    void *other_ptr = other.data_ptr();
-    void *ret_ptr = out.data_ptr();
-    const index_t self_stride = self.stride()[axis] * self.itemsize();
-    const index_t other_stride = other.stride()[axis] * other.itemsize();
-    const index_t out_stride = out.stride()[axis] * out.itemsize();
-    for (int i = 0; i < loop; i++) {
-        op(ret_ptr, self_ptr, other_ptr);
-        self_ptr = (void *)((char *)self_ptr + self_stride);
-        other_ptr = (void *)((char *)other_ptr + other_stride);
-        ret_ptr = (void *)((char *)ret_ptr + out_stride);
-    }
+    const index_t loop = self.shape()[axis];
+    void *args[3] = {out.data_ptr(), self.data_ptr(), other.data_ptr()};
+    const index_t strides[3] = {
+        (index_t)(out.stride()[axis] * out.itemsize()),
+        (index_t)(self.stride()[axis] * self.itemsize()),
+        (index_t)(other.stride()[axis] * other.itemsize()),
+    };
+    op(args, strides, loop);
 }
 
 template<ScalarBinaryOpType op_type>

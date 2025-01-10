@@ -5,12 +5,9 @@
 #include <nnops/data_type.h>
 #include <optional>
 #include <string>
+#include <nnops/common.h>
 
 namespace nnops {
-
-typedef int index_t;
-typedef std::vector<index_t> TensorShape;
-typedef std::vector<index_t> TensorStride;
 
 class Slice {
 public:

@@ -97,14 +97,21 @@ DataType get_promote_type(ScalarBinaryOpType op_type, DataType ltype, DataType r
 }
 
 #define GEN_SCALAR_BINARY_OP_FUNCTOR(dtype3, type3, dtype2, type2, dtype1, type1, op_functor) op_functor<type3, type2, type1>,
-#define MAKE_SCALAR_BINARY_OP_TEMPLATE(op_type, op_name, op)                \
-template<typename ReturnType, typename LeftType, typename RightType>        \
-void scalar_binary_op_##op_name(void *ret, void *lvalue, void *rvalue) {    \
-    *reinterpret_cast<ReturnType *>(ret) =                                  \
-        static_cast<ReturnType>(*reinterpret_cast<LeftType *>(lvalue)) op   \
-        static_cast<ReturnType>(*reinterpret_cast<RightType *>(rvalue));    \
-}                                                                           \
-constexpr std::array<std::array<std::array<scalar_binary_op_t,              \
+#define MAKE_SCALAR_BINARY_OP_TEMPLATE(op_type, op_name, op)                     \
+template<typename ReturnType, typename LeftType, typename RightType>             \
+void scalar_binary_op_##op_name(void **args, const index_t *strides, const index_t size) { \
+    void *ret = args[0], *lvalue = args[1], *rvalue = args[2];                   \
+    const index_t ret_s = strides[0], left_s = strides[1], right_s = strides[2]; \
+    for (int i = 0; i < size; i++) {                                             \
+        *reinterpret_cast<ReturnType *>(ret) =                                   \
+            static_cast<ReturnType>(*reinterpret_cast<LeftType *>(lvalue)) op    \
+            static_cast<ReturnType>(*reinterpret_cast<RightType *>(rvalue));     \
+        ret = (void *)((char *)ret + ret_s);                                     \
+        lvalue = (void *)((char *)lvalue + left_s);                              \
+        rvalue = (void *)((char *)rvalue + right_s);                             \
+    }                                                                            \
+}                                                                                \
+constexpr std::array<std::array<std::array<scalar_binary_op_t,                   \
     index2dtype.size()>, index2dtype.size()>, index2dtype.size()> __functors_##op_name = { \
     DATATYPE_GEN_TEMPLATE_LOOPx3(GEN_SCALAR_BINARY_OP_FUNCTOR, scalar_binary_op_##op_name) \
 };

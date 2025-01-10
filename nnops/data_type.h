@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <nnops/common.h>
 
 namespace nnops {
 
@@ -76,7 +77,7 @@ size_t sizeof_dtype(DataType dtype);
 using dtype_cast_op_t = void (*)(void *from, void *to);
 dtype_cast_op_t get_cast_op(DataType from, DataType to);
 
-using scalar_binary_op_t = void (*)(void *ret, void *lvalue, void *rvalue);
+using scalar_binary_op_t = void (*)(void **args, const index_t *strides, const index_t size);
 DataType get_promote_type(ScalarBinaryOpType op_type, DataType ltype, DataType rtype);
 scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType ltype, DataType rtype);
 
