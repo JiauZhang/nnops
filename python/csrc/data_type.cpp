@@ -17,6 +17,7 @@ void DEFINE_DATA_TYPE_MODULE(nb::module_ & (m)) {
         .value("uint16", nnops::DataType::TYPE_UINT16)
         .value("int8", nnops::DataType::TYPE_INT8)
         .value("uint8", nnops::DataType::TYPE_UINT8)
+        .value("bool", nnops::DataType::TYPE_BOOL)
         .export_values();
 }
 

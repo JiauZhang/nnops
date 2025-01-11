@@ -14,11 +14,15 @@ class TestOperators():
         [dtype.uint16, np.uint16],
         [dtype.int8, np.int8],
         [dtype.uint8, np.uint8],
+        [dtype.bool, np.bool],
     ]
 
     def cross_dtype_loop(self, op_functor, np_op_functor):
         for nps_type1, np_type1 in self.types:
             for nps_type2, np_type2 in self.types:
+                # numpy boolean subtract is not supported
+                if (np_type1 == np.bool or np_type2 == np.bool) and op_functor is ops.sub:
+                    continue
                 np_a = (np.random.randn(2, 3, 4) * 123).astype(np_type1)
                 np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
                 if op_functor is ops.div:

@@ -9,7 +9,8 @@
 namespace nnops {
 
 enum DataType : uint8_t {
-    TYPE_UINT8 = 0,
+    TYPE_BOOL = 0,
+    TYPE_UINT8,
     TYPE_INT8,
     TYPE_UINT16,
     TYPE_INT16,
@@ -31,6 +32,7 @@ enum ScalarBinaryOpType : uint8_t {
 };
 
 #define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, args...)      \
+    GEN(DataType::TYPE_BOOL, bool, ##args)              \
     GEN(DataType::TYPE_UINT8, uint8_t, ##args)          \
     GEN(DataType::TYPE_INT8, int8_t, ##args)            \
     GEN(DataType::TYPE_UINT16, uint16_t, ##args)        \
@@ -43,6 +45,7 @@ enum ScalarBinaryOpType : uint8_t {
     GEN(DataType::TYPE_FLOAT64, double, ##args)
 
 #define DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, args...)                                \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_BOOL, bool, ##args)          \
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT8, uint8_t, ##args)      \
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT8, int8_t, ##args)        \
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT16, uint16_t, ##args)    \
@@ -55,6 +58,7 @@ enum ScalarBinaryOpType : uint8_t {
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_FLOAT64, double, ##args)
 
 #define DATATYPE_GEN_TEMPLATE_LOOPx3(GEN, args...)                                \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_BOOL, bool, ##args)          \
     DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT8, uint8_t, ##args)      \
     DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT8, int8_t, ##args)        \
     DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT16, uint16_t, ##args)    \

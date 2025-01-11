@@ -168,6 +168,7 @@ static constexpr std::array<
     nb::dtype<uint32_t>(), nb::dtype<int32_t>(),
     nb::dtype<uint16_t>(), nb::dtype<int16_t>(),
     nb::dtype<uint8_t>(), nb::dtype<int8_t>(),
+    nb::dtype<bool>(),
 };
 static constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> __types__ = {
     DataType::TYPE_FLOAT64, DataType::TYPE_FLOAT32,
@@ -175,6 +176,7 @@ static constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> __t
     DataType::TYPE_UINT32, DataType::TYPE_INT32,
     DataType::TYPE_UINT16, DataType::TYPE_INT16,
     DataType::TYPE_UINT8, DataType::TYPE_INT8,
+    DataType::TYPE_BOOL,
 };
 
 template<typename T>

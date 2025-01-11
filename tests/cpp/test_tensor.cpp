@@ -61,12 +61,12 @@ TEST_F(TensorTest, TensorIteratorAndAccessor) {
     for (i = 0; i < t.nelems(); i++)
         ptr[i] = i + 1.12345;
 
-    TensorIterator iter = t.iterator();
+    TensorIterator iter(t);
     i = 0;
     for (; !iter.is_end(); ++iter, ++i)
         ASSERT_EQ(*iter, (void *)(ptr + i));
 
-    TensorAccessor acc = t.accessor();
+    TensorAccessor acc(t);
     TensorShape anchor_0 = {0, 0, 0}, anchor_1 = {1, 1, 2}, anchor_2 = {0, 1, 1};
     float *ptr_0 = (float *)acc.data_ptr_unsafe(anchor_0);
     ASSERT_EQ(ptr_0, ptr);
@@ -101,14 +101,14 @@ TEST_F(TensorTest, TensorPartialIteratorAndAccessor) {
         ASSERT_EQ(sub_t.ndim(), 3);
         ASSERT_EQ(sub_t.nelems(), 18);
         ASSERT_EQ(sub_t.ref_count(), 2);
-        TensorIterator sub_iter = sub_t.iterator();
+        TensorIterator sub_iter(sub_t);
         for (; !sub_iter.is_end(); ++sub_iter, ++sub_iter_count) {
             float *sub_ptr = (float *)(*sub_iter);
             ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + sub_iter_count));
         }
 
         TensorShape ijk(3, 0);
-        TensorAccessor acc_ijk = sub_t.accessor();
+        TensorAccessor acc_ijk(sub_t);
         void *anchor_ptr = acc_ijk.data_ptr_unsafe(ijk);
         for (int i = 0; i < sub_t.shape()[0]; i++) {
             ijk[0] = i;

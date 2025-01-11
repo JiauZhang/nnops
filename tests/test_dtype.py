@@ -15,6 +15,7 @@ class TestDataType():
         [dtype.uint16, np.uint16],
         [dtype.int8, np.int8],
         [dtype.uint8, np.uint8],
+        [dtype.bool, np.bool],
     ]
     def test_tensor_dtype(self):
         for tp, _ in self.types:
