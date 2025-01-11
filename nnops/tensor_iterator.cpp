@@ -1,10 +1,8 @@
+#include <nnops/common.h>
 #include <nnops/tensor_iterator.h>
-#include <nnops/tensor_meta.h>
 #include <stdexcept>
 
 namespace nnops {
-
-class Tensor;
 
 TensorIterator::TensorIterator(const Tensor &tensor) : tensor_(&tensor) {
     index_ = TensorShape(tensor_->shape().size(), 0);
@@ -33,21 +31,14 @@ TensorIterator &TensorIterator::operator++() {
     return *this;
 }
 
-void *TensorIterator::operator*() {
-    char *data_ptr = reinterpret_cast<char *>(tensor_->data_ptr()) + offset_ * tensor_->itemsize();
-    return reinterpret_cast<void *>(data_ptr);
-}
-
-TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start, index_t stop) : tensor_(&tensor) {
+TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start, index_t stop): TensorIterator(tensor) {
     if (start < 0 || stop > tensor.ndim() || start >= stop) {
         const std::string info = "invalid TensorPartialIterator parameter.";
         throw std::runtime_error(info);
     }
 
-    index_ = TensorShape(tensor_->shape().size(), 0);
     start_ = start;
     stop_ = stop;
-    offset_ = 0;
 }
 
 TensorPartialIterator &TensorPartialIterator::operator++() {
@@ -70,11 +61,6 @@ TensorPartialIterator &TensorPartialIterator::operator++() {
     this->end();
 
     return *this;
-}
-
-void *TensorPartialIterator::operator*() {
-    char *data_ptr = reinterpret_cast<char *>(tensor_->data_ptr()) + offset_ * tensor_->itemsize();
-    return reinterpret_cast<void *>(data_ptr);
 }
 
 Tensor TensorPartialIterator::tensor() {

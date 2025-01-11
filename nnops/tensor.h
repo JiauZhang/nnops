@@ -6,8 +6,6 @@
 #include <nnops/tensor_buffer.h>
 #include <nnops/device.h>
 #include <string>
-#include <nnops/tensor_iterator.h>
-#include <nnops/tensor_accessor.h>
 
 namespace nnops {
 
@@ -68,10 +66,6 @@ public:
     void set_meta(const TensorMeta &meta);
     TensorBuffer *buffer() const;
     void set_buffer(TensorBuffer *buf);
-
-    TensorIterator iterator();
-    TensorPartialIterator partial_iterator(index_t start, index_t stop);
-    TensorAccessor accessor();
 
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);
     inline TensorShape unravel_index(index_t idx) const { return unravel_index(idx, this->shape()); }

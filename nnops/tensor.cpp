@@ -354,21 +354,6 @@ void Tensor::set_buffer(TensorBuffer *buf) {
     }
 }
 
-TensorIterator Tensor::iterator() {
-    TensorIterator iter(*this);
-    return iter;
-}
-
-TensorPartialIterator Tensor::partial_iterator(index_t start, index_t stop) {
-    TensorPartialIterator iter(*this, start, stop);
-    return iter;
-}
-
-TensorAccessor Tensor::accessor() {
-    TensorAccessor acc(*this);
-    return acc;
-}
-
 TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
     TensorShape indices(shape.size()), strides_contig(shape.size());
     strides_contig[strides_contig.size() - 1] = 1;
