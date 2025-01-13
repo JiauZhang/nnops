@@ -2,5 +2,6 @@ include *.*
 include LICENSE
 recursive-include nnops *.*
 recursive-include python *.*
+recursive-include tests/cpp *.*
 prune */__pycache__
 global-exclude *.o *.so *.dylib *.a .git *.pyc *.swp
