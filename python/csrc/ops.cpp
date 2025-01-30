@@ -1,5 +1,5 @@
 #include <nnops/data_type.h>
-#include <nnops/cpu/ops/math.h>
+#include <nnops/cpu/ops/functional.h>
 #include <nanobind/nanobind.h>
 #include <python/csrc/tensor.h>
 

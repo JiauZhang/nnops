@@ -9,4 +9,4 @@ set(NNOPS_CPP_TEST_SOURCES
 )
 
 add_executable(cpp_tests ${NNOPS_CPP_TEST_SOURCES})
-target_link_libraries(cpp_tests PUBLIC nnops nnops_cuda GTest::GTest GTest::Main)
+target_link_libraries(cpp_tests PUBLIC nnops GTest::GTest GTest::Main)

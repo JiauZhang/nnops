@@ -1,4 +1,4 @@
 target_sources(
     nnops PUBLIC
-    math.cpp
+    math.cpp linear.cpp
 )
