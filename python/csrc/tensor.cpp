@@ -11,8 +11,7 @@ std::string tp_name(nb::handle &h) {
 }
 
 DataType parse_data_type(nb::handle h) {
-    if (!nb::isinstance<DataType>(h))
-        throw std::runtime_error("unsupported DataType: " + tp_name(h));
+    NNOPS_CHECK(nb::isinstance<DataType>(h), "unsupported DataType: " + tp_name(h))
     return nb::cast<DataType>(h);
 }
 
@@ -42,8 +41,7 @@ TensorShape parse_tensor_shape(nb::handle h) {
     }
 
     for (int i=0; i<len; i++) {
-        if (!nb::isinstance<nb::int_>(h[i]))
-            throw std::runtime_error("Only int data type is supported for shape dimensions!");
+        NNOPS_CHECK(nb::isinstance<nb::int_>(h[i]), "Only int data type is supported for shape dimensions!")
         shape.push_back(nb::cast<int>(h[i]));
     }
 
@@ -56,12 +54,8 @@ void indexing(TensorMeta &meta, nb::handle indices, int axis) {
     if (nb::isinstance<nb::tuple>(indices)) {
         // multi-dimensional indexing
         Py_ssize_t len = PyTuple_Size(ob_indices);
-        if (len > meta.ndim()) {
-            std::string info = "too many indices for tensor: ";
-            info += "tensor is " + std::to_string(meta.ndim()) + "-dimensional, but "
-                + std::to_string(len) + " were indexed";
-            throw std::runtime_error(info);
-        }
+        NNOPS_CHECK(len <= meta.ndim(), "too many indices for tensor: " + "tensor is " 
+            + std::to_string(meta.ndim()) + "-dimensional, but " + std::to_string(len) + " were indexed")
 
         // check ellipsis
         int idx = len, count = 0;
@@ -72,8 +66,7 @@ void indexing(TensorMeta &meta, nb::handle indices, int axis) {
             }
         }
 
-        if (count > 1)
-            throw std::runtime_error("an index can only have a single ellipsis ('...')");
+        NNOPS_CHECK(count <= 1, "an index can only have a single ellipsis ('...')")
 
         for (int i=0; i<len; i++) {
             if (i == idx) {
@@ -88,8 +81,7 @@ void indexing(TensorMeta &meta, nb::handle indices, int axis) {
     } else if (nb::isinstance<nb::slice>(indices)) {
         Py_ssize_t start, stop, step;
 
-        if (PySlice_GetIndices(ob_indices, meta.shape()[axis], &start, &stop, &step) < 0)
-            throw std::runtime_error("PySlice_GetIndices failed!");
+        NNOPS_CHECK(PySlice_GetIndices(ob_indices, meta.shape()[axis], &start, &stop, &step) >= 0, "PySlice_GetIndices failed!")
 
         nnops::Slice slice(start, stop, step);
         meta.slice_inplace(slice, axis);

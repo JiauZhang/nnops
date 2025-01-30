@@ -1,5 +1,5 @@
 #include <nnops/operator.h>
-#include <stdexcept>
+#include <nnops/common.h>
 
 namespace nnops {
 
@@ -7,12 +7,8 @@ std::map<std::string, Operator *> Operator::operators_[DeviceType::COMPILE_TIME_
 
 void Operator::register_operator(std::string &op_name, DeviceType type, Operator *op) {
     auto &ops_ = Operator::operators_[type];
-    if (ops_.count(op_name)) {
-        Device *device = Device::get_device(type);
-        std::string info = "Operator <" + op_name + "> has been registered in "
-            + device->get_device_name() + " device!";
-        throw std::runtime_error(info);
-    }
+    Device *device = Device::get_device(type);
+    NNOPS_CHECK(!ops_.count(op_name), "Operator <" + op_name + "> has been registered in " + device->get_device_name() + " device!")
     ops_[op_name] = op;
 }
 
@@ -28,10 +24,8 @@ void Operator::set_operator_name(std::string &op_name) {
     DeviceType type = get_device_type();
     auto &ops_ = Operator::operators_[type];
     auto iter = ops_.find(op_name);
-    if (iter != ops_.end())
-        operator_name_ = iter->first.c_str();
-    else
-        throw std::runtime_error("set_operator_name failed!");
+    NNOPS_CHECK(iter != ops_.end(), "set_operator_name failed!")
+    operator_name_ = iter->first.c_str();
 }
 
 } // namespace nnops

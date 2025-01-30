@@ -1,5 +1,5 @@
 #include <nnops/device.h>
-#include <stdexcept>
+#include <nnops/common.h>
 
 namespace nnops {
 
@@ -24,10 +24,8 @@ Device *Device::get_device(std::string &name) {
 
 void Device::set_device_name(std::string &name) {
     auto iter = named_devices_.find(name);
-    if (iter != named_devices_.end())
-        device_name_ = iter->first.c_str();
-    else
-        throw std::runtime_error("set_device_name failed!");
+    NNOPS_CHECK(iter != named_devices_.end(), "set_device_name failed!")
+    device_name_ = iter->first.c_str();
 }
 
 } // namespace nnops

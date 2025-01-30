@@ -1,4 +1,5 @@
 #include <nnops/tensor_meta.h>
+#include <nnops/common.h>
 #include <string>
 #include <stdexcept>
 
@@ -60,11 +61,8 @@ reshape_error:
 void TensorMeta::index_inplace(int index, int axis) {
     TensorShape &shape = dims_;
 
-    if (index >= shape[axis] || index < -shape[axis]) {
-        std::string info = "index_inplace " + std::to_string(index) + " is out of bounds for axis "
-            + std::to_string(axis) + " with size " + std::to_string(shape[axis]);
-        throw std::runtime_error(info);
-    }
+    NNOPS_CHECK(!(index >= shape[axis] || index < -shape[axis]), "index_inplace " + std::to_string(index)
+        + " is out of bounds for axis " + std::to_string(axis) + " with size " + std::to_string(shape[axis]))
 
     if (index < 0)
         index += shape[axis];

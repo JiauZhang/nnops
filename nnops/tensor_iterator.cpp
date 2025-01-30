@@ -1,6 +1,5 @@
 #include <nnops/common.h>
 #include <nnops/tensor_iterator.h>
-#include <stdexcept>
 
 namespace nnops {
 
@@ -32,11 +31,7 @@ TensorIterator &TensorIterator::operator++() {
 }
 
 TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start, index_t stop): TensorIterator(tensor) {
-    if (start < 0 || stop > tensor.ndim() || start >= stop) {
-        const std::string info = "invalid TensorPartialIterator parameter.";
-        throw std::runtime_error(info);
-    }
-
+    NNOPS_CHECK(!(start < 0 || stop > tensor.ndim() || start >= stop), "invalid TensorPartialIterator parameter.")
     start_ = start;
     stop_ = stop;
 }

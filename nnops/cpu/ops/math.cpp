@@ -37,12 +37,8 @@ void do_binary_op_impl(Tensor &self, Tensor &other, Tensor &out, int axis, scala
 
 template<ScalarBinaryOpType op_type>
 static Tensor binary_op_template(Tensor &self, Tensor &other) {
-    if (!Tensor::is_broadcastable(self, other)) {
-        std::string info = "operands could not be broadcast together with shapes "
-            + TensorMeta::shape_as_string(self.shape())
-            + " and " + TensorMeta::shape_as_string(other.shape());
-        throw std::runtime_error(info);
-    }
+    NNOPS_CHECK(Tensor::is_broadcastable(self, other), "operands could not be broadcast together with shapes "
+            + TensorMeta::shape_as_string(self.shape()) + " and " + TensorMeta::shape_as_string(other.shape()))
 
     TensorShape shape = Tensor::broadcast_shape(self, other);
     Tensor ret(get_promote_type(op_type, self.dtype(), other.dtype()), shape, self.device());

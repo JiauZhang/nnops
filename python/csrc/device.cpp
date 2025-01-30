@@ -1,3 +1,4 @@
+#include <nnops/common.h>
 #include <nnops/device.h>
 #include <nanobind/nanobind.h>
 
@@ -8,8 +9,7 @@ namespace pynnops {
 
 void show_device_info(DeviceType device) {
     Device *dev = Device::get_device(device);
-    if (dev == nullptr)
-        throw std::runtime_error("invalid device type!");
+    NNOPS_CHECK(dev != nullptr, "invalid device type!")
     dev->info();
 }
 
