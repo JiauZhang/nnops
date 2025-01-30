@@ -200,16 +200,23 @@ Tensor Tensor::contiguous() {
     }
 }
 
+index_t Tensor::shape(int index) const {
+    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "shape index is out of bounds")
+    if (index < 0)
+        index += this->ndim();
+    return this->tensor_meta_.dims_[index];
+}
+
 Tensor Tensor::reshape(TensorShape &dims) {
     Tensor tensor = this->contiguous();
     tensor.reshape_inplace(dims);
     return tensor;
 }
 
-bool Tensor::is_broadcastable(const TensorShape &s1, const TensorShape &s2) {
+bool Tensor::is_broadcastable(const TensorShape &s1, const TensorShape &s2, int offset) {
     int dims = std::min(s1.size(), s2.size()), s1_size = s1.size() - 1, s2_size = s2.size() - 1;
 
-    for (int i=0; i<dims; i++)
+    for (int i=offset; i<dims; i++)
         if (s1[s1_size-i] != s2[s2_size-i] && s1[s1_size-i] != 1 && s2[s2_size-i] != 1)
             return false;
     return true;

@@ -29,8 +29,8 @@ public:
 
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
     Tensor reshape(TensorShape &dims);
-    inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape()); }
-    static bool is_broadcastable(const TensorShape &s1, const TensorShape &s2);
+    inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape(), 0); }
+    static bool is_broadcastable(const TensorShape &s1, const TensorShape &s2, int offset);
     inline static TensorShape broadcast_shape(const Tensor &t1, const Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape()); }
     static TensorShape broadcast_shape(const TensorShape &s1, const TensorShape &s2);
     bool is_broadcast();
@@ -59,6 +59,7 @@ public:
     std::string to_repr();
 
     inline const TensorShape &shape() const { return this->tensor_meta_.dims_; }
+    index_t shape(int index) const;
     inline void set_shape(const TensorShape &shape) { this->tensor_meta_.dims_ = shape; }
     inline const TensorStride &stride() const { return this->tensor_meta_.strides_; }
     inline void set_stride(const TensorStride &stride) { this->tensor_meta_.strides_ = stride; }

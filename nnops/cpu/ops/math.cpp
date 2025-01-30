@@ -1,9 +1,9 @@
 #include <nnops/cpu/ops/functional.h>
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
-#include <stdexcept>
+#include <nnops/common.h>
 
-using nnops::Tensor, nnops::TensorMeta;
+using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape;
 
 namespace nnops::cpu::ops {
 
@@ -55,5 +55,11 @@ Tensor op_name(Tensor &self, Tensor &other) {        \
     return binary_op_template<op_type>(self, other); \
 }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
+
+Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
+    NNOPS_CHECK(lvalue.shape(-1) == rvalue.shape(-2), "matmul lvalue and rvalue are incompatible.")
+    NNOPS_CHECK(Tensor::is_broadcastable(lvalue.shape(), rvalue.shape(), 2), "matmul lvalue and rvalue are not broadcastable.")
+    return Tensor();
+}
 
 } // namespace nnops::cpu::ops
