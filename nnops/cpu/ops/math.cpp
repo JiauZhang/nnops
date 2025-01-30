@@ -59,6 +59,7 @@ SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
 Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
     NNOPS_CHECK(lvalue.shape(-1) == rvalue.shape(-2), "matmul lvalue and rvalue are incompatible.")
     NNOPS_CHECK(Tensor::is_broadcastable(lvalue.shape(), rvalue.shape(), 2), "matmul lvalue and rvalue are not broadcastable.")
+    TensorShape shape = Tensor::broadcast_shape(lvalue.shape(), rvalue.shape(), 2);
     return Tensor();
 }
 

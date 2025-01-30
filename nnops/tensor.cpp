@@ -222,7 +222,7 @@ bool Tensor::is_broadcastable(const TensorShape &s1, const TensorShape &s2, int 
     return true;
 }
 
-TensorShape Tensor::broadcast_shape(const TensorShape &s1, const TensorShape &s2) {
+TensorShape Tensor::broadcast_shape(const TensorShape &s1, const TensorShape &s2, int offset) {
     int dims = std::min(s1.size(), s2.size());
     TensorShape shape;
     const TensorShape *shape_long, *shape_short;
@@ -234,12 +234,12 @@ TensorShape Tensor::broadcast_shape(const TensorShape &s1, const TensorShape &s2
         shape_long = &s1;
         shape_short = &s2;
     }
-    dims = shape_long->size();
+    dims = shape_long->size() - offset;
     shape.resize(dims);
     for (int i=0; i<dims; i++)
         shape[i] = shape_long->data()[i];
-    dims = shape_long->size() - 1;
-    for (int i=shape_short->size()-1; i>=0; i--) {
+    dims -= 1;
+    for (int i=shape_short->size()-1-offset; i>=0; i--) {
         if (shape_short->data()[i] != shape[dims])
             shape[dims] *= shape_short->data()[i];
         dims--;
@@ -257,30 +257,35 @@ bool Tensor::is_broadcast() {
     return false;
 }
 
-Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape) {
+Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offset) {
     const TensorShape &ts = t.shape();
     std::string info = "Can not broadcast Tensor from shape " + TensorMeta::shape_as_string(ts)
         + " to " + TensorMeta::shape_as_string(shape);
+    int dims = std::min(ts.size(), shape.size());
 
     NNOPS_CHECK(ts.size() <= shape.size(), info)
+    NNOPS_CHECK(dims > offset, "broadcast_to offset is out of bounds.")
 
-    int dims = std::min(ts.size(), shape.size()), ts_size = ts.size() - 1, s_size = shape.size() - 1;
-    for (int i=0; i<dims; i++)
+    int ts_size = ts.size() - 1, s_size = shape.size() - 1;
+    for (int i=offset; i<dims; i++)
         NNOPS_CHECK(!(shape[s_size-i] != ts[ts_size-i] && ts[ts_size-i] != 1), info)
 
     Tensor tb = t;
     TensorStride strides = tb.stride();
     const TensorShape &tb_shape = tb.shape();
-    int offset = shape.size() - ts.size();
+    TensorShape shape_cp = shape;
+    int diff = shape.size() - ts.size();
 
-    for (int i=0; i<=ts_size; i++)
+    for (int i=0; i<=ts_size-offset; i++)
         if (tb_shape[i] == 1)
             strides[i] = 0;
-    tb.set_shape(shape);
+    for (int i = 0; i < offset; i++)
+        shape_cp[s_size - i] = tb_shape[ts_size - i];
+    tb.set_shape(shape_cp);
     strides.resize(shape.size());
-    for (int i=s_size; i>=offset; i--)
-        strides[i] = strides[i-offset];
-    for (int i=0; i<offset; i++)
+    for (int i=s_size; i>=diff; i--)
+        strides[i] = strides[i-diff];
+    for (int i=0; i<diff; i++)
         strides[i] = 0;
     tb.set_stride(strides);
 

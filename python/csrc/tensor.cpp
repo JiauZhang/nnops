@@ -241,7 +241,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     m.def("is_broadcastable", [](PyTensor &t1, PyTensor &t2) {
         return PyTensor::is_broadcastable(t1.shape(), t2.shape(), 0); });
     m.def("broadcast_shape", [](PyTensor &t1, PyTensor &t2) {
-        return PyTensor::broadcast_shape(t1.shape(), t2.shape()); });
+        return PyTensor::broadcast_shape(t1.shape(), t2.shape(), 0); });
 
     nb::class_<PyTensor>(m, "PyTensor")
         .def(nb::init<nb::kwargs &>())

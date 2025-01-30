@@ -31,11 +31,11 @@ public:
     Tensor reshape(TensorShape &dims);
     inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape(), 0); }
     static bool is_broadcastable(const TensorShape &s1, const TensorShape &s2, int offset);
-    inline static TensorShape broadcast_shape(const Tensor &t1, const Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape()); }
-    static TensorShape broadcast_shape(const TensorShape &s1, const TensorShape &s2);
+    inline static TensorShape broadcast_shape(const Tensor &t1, const Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape(), 0); }
+    static TensorShape broadcast_shape(const TensorShape &s1, const TensorShape &s2, int offset);
     bool is_broadcast();
-    inline Tensor broadcast_to(const TensorShape &shape) { return Tensor::broadcast_to(*this, shape); }
-    static Tensor broadcast_to(const Tensor &t, const TensorShape &shape);
+    inline Tensor broadcast_to(const TensorShape &shape) { return Tensor::broadcast_to(*this, shape, 0); }
+    static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
     Tensor permute(TensorShape &index);
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }

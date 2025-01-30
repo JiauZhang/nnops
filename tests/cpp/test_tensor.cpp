@@ -6,6 +6,7 @@
 #include <nnops/tensor_iterator.h>
 #include <nnops/tensor_accessor.h>
 #include <array>
+#include <vector>
 
 using nnops::DataType, nnops::DeviceType;
 using nnops::Tensor, nnops::TensorShape, nnops::index_t;
@@ -30,6 +31,33 @@ TEST_F(TensorTest, TensorInit) {
     Tensor t_cpu_f32(DataType::TYPE_FLOAT32, shape, DeviceType::CPU);
     ASSERT_EQ(t_cpu_f32.nelems(), 360);
     ASSERT_EQ(t_cpu_f32.nbytes(), 360 * 4);
+}
+
+TEST_F(TensorTest, IsBroadcast) {
+    const TensorShape s1 = {2, 3, 4, 5, 7, 8}, s2 = {4, 1, 8, 3}, s3 = {4, 2, 8, 3}, s4 = {2, 1, 8, 3};
+    ASSERT_TRUE(Tensor::is_broadcastable(s1, s2, 2));
+    ASSERT_FALSE(Tensor::is_broadcastable(s1, s3, 2));
+    ASSERT_TRUE(Tensor::is_broadcastable(s1, s3, 3));
+    ASSERT_FALSE(Tensor::is_broadcastable(s1, s4, 2));
+    ASSERT_TRUE(Tensor::is_broadcastable(s2, s3, 2));
+    ASSERT_FALSE(Tensor::is_broadcastable(s2, s4, 2));
+    ASSERT_FALSE(Tensor::is_broadcastable(s3, s4, 2));
+}
+
+TEST_F(TensorTest, BroadcastShape) {
+    const TensorShape s1 = {2, 3, 4, 5, 7, 8}, s2 = {4, 1, 8, 3}, s3 = {4, 2, 8, 3};
+    ASSERT_EQ(Tensor::broadcast_shape(s1, s2, 2), std::vector<index_t>({2, 3, 4, 5}));
+    ASSERT_EQ(Tensor::broadcast_shape(s1, s2, 3), std::vector<index_t>({2, 3, 4}));
+}
+
+TEST_F(TensorTest, BroadcastTo) {
+    const TensorShape s1 = {2, 1, 4, 1, 7, 8}, s2 = {4, 1, 8, 3};
+    const Tensor t1(DataType::TYPE_UINT8, s1, DeviceType::CPU), t2(DataType::TYPE_UINT8, s2, DeviceType::CPU);
+    const TensorShape s3 = {2, 3, 4, 5, 6, 6}, s4 = {4, 3, 3, 3};
+    ASSERT_EQ(Tensor::broadcast_to(t1, s3, 2).shape(), std::vector<index_t>({2, 3, 4, 5, 7, 8}));
+    ASSERT_EQ(Tensor::broadcast_to(t1, s3, 5).shape(), std::vector<index_t>({2, 1, 4, 1, 7, 8}));
+    ASSERT_EQ(Tensor::broadcast_to(t2, s4, 2).shape(), std::vector<index_t>({4, 3, 8, 3}));
+    ASSERT_EQ(Tensor::broadcast_to(t2, s4, 3).shape(), std::vector<index_t>({4, 1, 8, 3}));
 }
 
 TEST_F(TensorTest, UnravelIndex) {
