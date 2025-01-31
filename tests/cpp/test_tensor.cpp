@@ -5,6 +5,7 @@
 #include <nnops/tensor.h>
 #include <nnops/tensor_iterator.h>
 #include <nnops/tensor_accessor.h>
+#include <nnops/cpu/ops/functional.h>
 #include <array>
 #include <vector>
 
@@ -69,6 +70,22 @@ TEST_F(TensorTest, BroadcastTo) {
     const Tensor t3(DataType::TYPE_UINT8, s5, DeviceType::CPU);
     ASSERT_EQ(Tensor::broadcast_to(t3, s6, 2).shape(), s5);
     ASSERT_EQ(Tensor::broadcast_to(t3, s1, 2).shape(), std::vector<index_t>({2, 1, 4, 1, 3, 4}));
+}
+
+TEST_F(TensorTest, TensorMatMul) {
+    const TensorShape s1 = {2, 3}, s2 = {3, 3};
+    const Tensor t1(DataType::TYPE_FLOAT32, s1, DeviceType::CPU), t2(DataType::TYPE_FLOAT32, s2, DeviceType::CPU);
+    // t1: [[0, 1, 2], [3, 4, 5]]
+    for (int i = 0; i < t1.nelems(); i++)
+        *((float *)t1.data_ptr(i)) = i;
+    // t2: [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+    for (int i = 0; i < t2.nelems(); i++)
+        *((float *)t2.data_ptr(i)) = i;
+    Tensor ret = nnops::cpu::ops::matmul(t1, t2);
+    float out[6] = {15, 18, 21, 42, 54, 66};
+    ASSERT_EQ(ret.nelems(), 6);
+    for (int i = 0; i < 6; i++)
+        ASSERT_EQ(*((float *)ret.data_ptr(i)), out[i]);
 }
 
 TEST_F(TensorTest, UnravelIndex) {

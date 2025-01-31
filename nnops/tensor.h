@@ -46,7 +46,7 @@ public:
     inline int ndim() const { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() { return this->tensor_buffer_->device_; }
-    inline size_t nelems() { return this->tensor_meta_.nelems_; }
+    inline size_t nelems() const { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
     inline index_t itemsize() const { return sizeof_dtype(this->dtype()); }
     inline index_t offset() const { return this->tensor_meta_.offset_; }
