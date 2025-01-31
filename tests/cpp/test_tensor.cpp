@@ -42,12 +42,16 @@ TEST_F(TensorTest, IsBroadcast) {
     ASSERT_TRUE(Tensor::is_broadcastable(s2, s3, 2));
     ASSERT_FALSE(Tensor::is_broadcastable(s2, s4, 2));
     ASSERT_FALSE(Tensor::is_broadcastable(s3, s4, 2));
+    const TensorShape s5 = {3, 4}, s6 = {6, 7};
+    ASSERT_TRUE(Tensor::is_broadcastable(s5, s6, 2));
 }
 
 TEST_F(TensorTest, BroadcastShape) {
     const TensorShape s1 = {2, 3, 4, 5, 7, 8}, s2 = {4, 1, 8, 3}, s3 = {4, 2, 8, 3};
     ASSERT_EQ(Tensor::broadcast_shape(s1, s2, 2), std::vector<index_t>({2, 3, 4, 5}));
     ASSERT_EQ(Tensor::broadcast_shape(s1, s2, 3), std::vector<index_t>({2, 3, 4}));
+    const TensorShape s5 = {3, 4}, s6 = {6, 7};
+    ASSERT_EQ(Tensor::broadcast_shape(s5, s6, 2), std::vector<index_t>());
 }
 
 TEST_F(TensorTest, BroadcastTo) {
@@ -58,6 +62,13 @@ TEST_F(TensorTest, BroadcastTo) {
     ASSERT_EQ(Tensor::broadcast_to(t1, s3, 5).shape(), std::vector<index_t>({2, 1, 4, 1, 7, 8}));
     ASSERT_EQ(Tensor::broadcast_to(t2, s4, 2).shape(), std::vector<index_t>({4, 3, 8, 3}));
     ASSERT_EQ(Tensor::broadcast_to(t2, s4, 3).shape(), std::vector<index_t>({4, 1, 8, 3}));
+    ASSERT_EQ(Tensor::broadcast_to(t2, s3, 3).shape(), std::vector<index_t>({2, 3, 4, 1, 8, 3}));
+    ASSERT_EQ(Tensor::broadcast_to(t2, s1, 3).shape(), std::vector<index_t>({2, 1, 4, 1, 8, 3}));
+    ASSERT_EQ(Tensor::broadcast_to(t2, s1, 2).shape(), std::vector<index_t>({2, 1, 4, 1, 8, 3}));
+    const TensorShape s5 = {3, 4}, s6 = {6, 7};
+    const Tensor t3(DataType::TYPE_UINT8, s5, DeviceType::CPU);
+    ASSERT_EQ(Tensor::broadcast_to(t3, s6, 2).shape(), s5);
+    ASSERT_EQ(Tensor::broadcast_to(t3, s1, 2).shape(), std::vector<index_t>({2, 1, 4, 1, 3, 4}));
 }
 
 TEST_F(TensorTest, UnravelIndex) {

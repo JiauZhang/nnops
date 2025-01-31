@@ -207,6 +207,13 @@ index_t Tensor::shape(int index) const {
     return this->tensor_meta_.dims_[index];
 }
 
+index_t Tensor::stride(int index) const {
+    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "stride index is out of bounds")
+    if (index < 0)
+        index += this->ndim();
+    return this->tensor_meta_.strides_[index];
+}
+
 Tensor Tensor::reshape(TensorShape &dims) {
     Tensor tensor = this->contiguous();
     tensor.reshape_inplace(dims);
@@ -264,7 +271,7 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offse
     int dims = std::min(ts.size(), shape.size());
 
     NNOPS_CHECK(ts.size() <= shape.size(), info)
-    NNOPS_CHECK(dims > offset, "broadcast_to offset is out of bounds.")
+    NNOPS_CHECK(dims >= offset, "broadcast_to offset is out of bounds.")
 
     int ts_size = ts.size() - 1, s_size = shape.size() - 1;
     for (int i=offset; i<dims; i++)

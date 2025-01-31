@@ -16,7 +16,7 @@ using TensorStride = std::vector<index_t>;
         const std::string detailed_info =                     \
             + #cond " CHECK FAILED at "                       \
             + std::string(__FILE__)                           \
-            + " --> " + std::string(__func__) + " --> "       \
+            + "::" + std::string(__func__) + "::#L"           \
             + std::to_string(__LINE__) + '\n' + info;         \
         throw std::runtime_error(detailed_info);              \
     }
