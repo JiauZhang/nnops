@@ -58,7 +58,7 @@ public:
     PyTensor py_reshape(nb::args args);
     PyTensor py_permute(nb::args args);
     PyTensor __getitem__(nb::handle indices);
-    Tensor tensor() { return Tensor(this->meta(), this->buffer()); }
+    Tensor tensor() const { return Tensor(this->meta(), this->buffer()); }
     PyTensor astype(DataType dtype) {
         Tensor t = Tensor::astype(dtype);
         return PyTensor(t);

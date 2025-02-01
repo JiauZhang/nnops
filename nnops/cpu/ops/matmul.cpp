@@ -10,6 +10,7 @@ namespace nnops::cpu::ops {
 struct MatMulParams{
     const index_t shape[3];
     const index_t strides[6];
+    index_t offsets[3];
 };
 
 void matmul_2d_impl(void *lvalue, void *rvalue, void *out, const index_t *shape, const index_t *strides) {
@@ -37,6 +38,27 @@ void matmul_2d_impl(void *lvalue, void *rvalue, void *out, const index_t *shape,
     }
 }
 
+void matmul_impl(const Tensor &lvalue, const Tensor &rvalue, const Tensor &out, int axis, MatMulParams &params) {
+    if (axis < out.ndim() - 2) {
+        const int loop = out.shape()[axis];
+        for (int i = 0; i < loop; i++) {
+            matmul_impl(lvalue, rvalue, out, axis + 1, params);
+            params.offsets[0] += lvalue.stride()[axis];
+            params.offsets[1] += rvalue.stride()[axis];
+            params.offsets[2] += out.stride()[axis];
+        }
+        params.offsets[0] -= lvalue.stride()[axis] * loop;
+        params.offsets[1] -= rvalue.stride()[axis] * loop;
+        params.offsets[2] -= out.stride()[axis] * loop;
+        return;
+    }
+
+    matmul_2d_impl(
+        lvalue.data_ptr(params.offsets[0]), rvalue.data_ptr(params.offsets[1]),
+        out.data_ptr(params.offsets[2]), params.shape, params.strides
+    );
+}
+
 Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
     NNOPS_CHECK(lvalue.ndim() >= 2 && rvalue.ndim() >= 2, "matmul lvalue and rvalue ndim must be greater than 2.")
     NNOPS_CHECK(lvalue.shape(-1) == rvalue.shape(-2), "matmul lvalue and rvalue are incompatible.")
@@ -53,16 +75,20 @@ Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
     shape[size + 1] = rvalue.shape(-1);
     Tensor rvalue_br = rvalue.broadcast_to(shape);
 
-    Tensor ret(DataType::TYPE_FLOAT32, {lvalue.shape(-2), rvalue.shape(-1)}, DeviceType::CPU);
-    const MatMulParams params = {
+    shape[size] = lvalue.shape(-2);
+    shape[size + 1] = rvalue.shape(-1);
+    Tensor ret(DataType::TYPE_FLOAT32, shape, DeviceType::CPU);
+    MatMulParams params = {
         {lvalue_br.shape(-2), lvalue_br.shape(-1), rvalue_br.shape(-1)},
         {
             lvalue_br.stride(-2) * lvalue_br.itemsize(), lvalue_br.stride(-1) * lvalue_br.itemsize(),
             rvalue_br.stride(-2) * rvalue_br.itemsize(), rvalue_br.stride(-1) * rvalue_br.itemsize(),
             ret.stride(-2) * ret.itemsize(), ret.stride(-1) * ret.itemsize()
-        }
+        },
+        {0, 0, 0}
     };
-    matmul_2d_impl(lvalue_br.data_ptr(), rvalue_br.data_ptr(), ret.data_ptr(), params.shape, params.strides);
+    matmul_impl(lvalue_br, rvalue_br, ret, 0, params);
+    // matmul_2d_impl(lvalue_br.data_ptr(), rvalue_br.data_ptr(), ret.data_ptr(), params.shape, params.strides);
 
     return ret;
 }

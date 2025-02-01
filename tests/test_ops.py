@@ -1,3 +1,4 @@
+import pytest
 import nnops.ops as ops
 import nnops.tensor, nnops.dtype as dtype
 import numpy as np
@@ -69,26 +70,30 @@ class TestOperators():
                 assert t_c.is_contiguous() == False and t_d.is_contiguous() == False
                 assert (op_functor(t_c, t_d).numpy() == np_op_functor(np_c_stride, np_d_stride)).all()
 
-    def test_add_op(self):
-        op_functor = ops.add
-        def np_op_functor(a, b):
-            return a + b
-        self.cross_dtype_loop(op_functor, np_op_functor)
+    @pytest.mark.parametrize(
+        'nnops_op, np_op', [
+            (ops.add, lambda a, b: a + b),
+            (ops.sub, lambda a, b: a - b),
+            (ops.mul, lambda a, b: a * b),
+            (ops.div, lambda a, b: a / b),
+        ]
+    )
+    def test_binary_ops(self, nnops_op, np_op):
+        self.cross_dtype_loop(nnops_op, np_op)
 
-    def test_sub_op(self):
-        op_functor = ops.sub
-        def np_op_functor(a, b):
-            return a - b
-        self.cross_dtype_loop(op_functor, np_op_functor)
-
-    def test_mul_op(self):
-        op_functor = ops.mul
-        def np_op_functor(a, b):
-            return a * b
-        self.cross_dtype_loop(op_functor, np_op_functor)
-
-    def test_div_op(self):
-        op_functor = ops.div
-        def np_op_functor(a, b):
-            return a / b
-        self.cross_dtype_loop(op_functor, np_op_functor)
+    @pytest.mark.parametrize(
+        's1, s2, s3', [
+            ((3, 4), (4, 6), (3, 6)),
+            ((2, 1, 5, 3), (4, 3, 1, 2, 3, 7), (4, 3, 2, 2, 5, 7)),
+        ]
+    )
+    def test_matmul_op(self, s1, s2, s3):
+        n1 = np.random.randn(*s1).astype(np.float32)
+        n2 = np.random.randn(*s2).astype(np.float32)
+        no = n1 @ n2
+        t1 = nnops.tensor.from_numpy(n1)
+        t2 = nnops.tensor.from_numpy(n2)
+        to = nnops.ops.matmul(t1, t2).numpy()
+        assert to.dtype == no.dtype
+        assert to.shape == s3
+        assert (np.abs(no - to) < 1e-3).all()
