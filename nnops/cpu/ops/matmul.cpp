@@ -16,24 +16,32 @@ struct MatMulParams{
 void matmul_2d_impl(void *lvalue, void *rvalue, void *out, const index_t *shape, const index_t *strides) {
     // shape(lvalue: (m, n), rvalue: (n, k), out: (m, k)): [m, n, k]
     // strides: [lvalue.strides, rvalue.strides, out.strides] in bytes
+
     index_t out_ms = 0, lv_ms = 0;
     for (int m = 0; m < shape[0]; m++) {
-        index_t out_ks = 0, rv_ks = 0;
-        const char *out_m = (char *)out + out_ms;
+        float *out_mk = (float *)((char *)out + out_ms);
         for (int k = 0; k < shape[2]; k++) {
-            float *out_mk = (float *)(out_m + out_ks);
-            index_t lv_ns = 0, rv_ns = 0;
-            const char *lv_m = (char *)lvalue + lv_ms, *rv_k = (char *)rvalue + rv_ks;
             *out_mk = 0;
-            for (int n = 0; n < shape[1]; n++) {
-                const float *lv_mn = (float *)(lv_m + lv_ns);
-                const float *rv_nk = (float *)(rv_k + rv_ns);
+            out_mk = (float *)((char *)out_mk + strides[5]);
+        }
+        out_ms += strides[4];
+    }
+
+    out_ms = 0;
+    for (int m = 0; m < shape[0]; m++) {
+        const char *out_m = (char *)out + out_ms;
+        index_t lv_ns = 0, rv_ns = 0;
+        for (int n = 0; n < shape[1]; n++) {
+            index_t out_ks = 0, rv_ks = 0;
+            const float *lv_mn = (float *)((char *)lvalue + lv_ms + lv_ns);
+            float *out_mk = (float *)out_m, *rv_nk = (float *)((char *)rvalue + rv_ns);
+            for (int k = 0; k < shape[2]; k++) {
                 *out_mk += (*lv_mn) * (*rv_nk);
-                lv_ns += strides[1];
-                rv_ns += strides[2];
+                out_mk = (float *)((char *)out_mk + strides[5]);
+                rv_nk = (float *)((char *)rv_nk + strides[3]);
             }
-            out_ks += strides[5];
-            rv_ks += strides[3];
+            lv_ns += strides[1];
+            rv_ns += strides[2];
         }
         out_ms += strides[4];
         lv_ms += strides[0];
