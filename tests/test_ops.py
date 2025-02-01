@@ -84,7 +84,7 @@ class TestOperators():
     @pytest.mark.parametrize(
         's1, s2, s3', [
             ((3, 4), (4, 6), (3, 6)),
-            ((2, 1, 5, 3), (4, 3, 1, 2, 3, 7), (4, 3, 2, 2, 5, 7)),
+            ((2, 1, 5, 9), (4, 3, 1, 2, 9, 7), (4, 3, 2, 2, 5, 7)),
         ]
     )
     def test_matmul_op(self, s1, s2, s3):
@@ -97,3 +97,16 @@ class TestOperators():
         assert to.dtype == no.dtype
         assert to.shape == s3
         assert (np.abs(no - to) < 1e-3).all()
+
+        n1_stride = n1[..., ::2]
+        t1_stride = t1[..., ::2]
+        if len(s1) > 2:
+            n2_stride = n2[..., ::2, :]
+            t2_stride = t2[..., ::2, :]
+        else:
+            n2_stride = n2[::2, :]
+            t2_stride = t2[::2, :]
+        no_stride = n1_stride @ n2_stride
+        to_stride = nnops.ops.matmul(t1_stride, t2_stride).numpy()
+        assert to_stride.shape == s3
+        assert (np.abs(no_stride - to_stride) < 1e-3).all()
