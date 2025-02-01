@@ -19,13 +19,15 @@ void matmul_2d_impl(void *lvalue, void *rvalue, void *out, const index_t *shape,
     index_t out_ms = 0, lv_ms = 0;
     for (int m = 0; m < shape[0]; m++) {
         index_t out_ks = 0, rv_ks = 0;
+        const char *out_m = (char *)out + out_ms;
         for (int k = 0; k < shape[2]; k++) {
-            float *out_mk = (float *)((char *)out + out_ms + out_ks);
+            float *out_mk = (float *)(out_m + out_ks);
             index_t lv_ns = 0, rv_ns = 0;
+            const char *lv_m = (char *)lvalue + lv_ms, *rv_k = (char *)rvalue + rv_ks;
             *out_mk = 0;
             for (int n = 0; n < shape[1]; n++) {
-                const float *lv_mn = (float *)((char *)lvalue + lv_ms + lv_ns);
-                const float *rv_nk = (float *)((char *)rvalue + rv_ns + rv_ks);
+                const float *lv_mn = (float *)(lv_m + lv_ns);
+                const float *rv_nk = (float *)(rv_k + rv_ns);
                 *out_mk += (*lv_mn) * (*rv_nk);
                 lv_ns += strides[1];
                 rv_ns += strides[2];
@@ -88,7 +90,6 @@ Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
         {0, 0, 0}
     };
     matmul_impl(lvalue_br, rvalue_br, ret, 0, params);
-    // matmul_2d_impl(lvalue_br.data_ptr(), rvalue_br.data_ptr(), ret.data_ptr(), params.shape, params.strides);
 
     return ret;
 }
