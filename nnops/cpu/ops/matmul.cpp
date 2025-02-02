@@ -19,22 +19,20 @@ void matmul_2d_impl(void *lvalue, void *rvalue, void *out, const index_t *shape,
 
     index_t out_ms = 0, lv_ms = 0;
     for (int m = 0; m < shape[0]; m++) {
-        float *out_mk = (float *)((char *)out + out_ms);
+        const char *out_m = (char *)out + out_ms;
+        index_t lv_ns = 0, rv_ns = 0;
+        float *out_mk = (float *)out_m;
+
         for (int k = 0; k < shape[2]; k++) {
             *out_mk = 0;
             out_mk = (float *)((char *)out_mk + strides[5]);
         }
-        out_ms += strides[4];
-    }
 
-    out_ms = 0;
-    for (int m = 0; m < shape[0]; m++) {
-        const char *out_m = (char *)out + out_ms;
-        index_t lv_ns = 0, rv_ns = 0;
         for (int n = 0; n < shape[1]; n++) {
             index_t out_ks = 0, rv_ks = 0;
             const float *lv_mn = (float *)((char *)lvalue + lv_ms + lv_ns);
-            float *out_mk = (float *)out_m, *rv_nk = (float *)((char *)rvalue + rv_ns);
+            float *rv_nk = (float *)((char *)rvalue + rv_ns);
+            out_mk = (float *)out_m;
             for (int k = 0; k < shape[2]; k++) {
                 *out_mk += (*lv_mn) * (*rv_nk);
                 out_mk = (float *)((char *)out_mk + strides[5]);
