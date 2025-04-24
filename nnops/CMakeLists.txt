@@ -3,6 +3,7 @@ add_library(
     data_type.cpp tensor_meta.cpp tensor.cpp tensor_buffer.cpp device.cpp scalar.cpp
     tensor_iterator.cpp tensor_accessor.cpp
     operator.cpp
+    random.cpp
 )
 
 add_subdirectory(cpu)
