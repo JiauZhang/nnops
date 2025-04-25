@@ -39,7 +39,7 @@ public:
     Tensor permute(TensorShape &index);
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
-    inline void *data_ptr() const { return (void *)((char *)this->tensor_buffer_->data_ptr_ + this->offset() * this->itemsize()); }
+    inline void *data_ptr() const { return data_ptr(0); }
     inline void *data_ptr(index_t offset) const {
         return (void *)((char *)this->tensor_buffer_->data_ptr_ + (this->offset() + offset) * this->itemsize());
     }

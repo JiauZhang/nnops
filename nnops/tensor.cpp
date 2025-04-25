@@ -68,7 +68,7 @@ Tensor::~Tensor() {
 }
 
 template<typename T>
-void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int dim, int offset) {
+void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int dim, index_t offset) {
     std::string cur_prefix;
 
     if (ret->size() && ret->back() == '\n') {
@@ -95,7 +95,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
         return;
     }
 
-    T *data_ptr = (T *)tensor->data_ptr();
+    T *data_ptr = (T *)tensor->data_ptr(offset);
     auto &stride = tensor->stride();
 
     if (tensor->ndim() == 0) {
@@ -122,8 +122,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
 
 #define TO_STRING_TEMPLATE_GEN(dtype, type)                  \
     case dtype: {                                            \
-        int offset = this->tensor_meta_.offset_;             \
-        to_string_impl<type>(this, prefix, ret, 0, offset);  \
+        to_string_impl<type>(this, prefix, ret, 0, 0);       \
         break;                                               \
     }
 
