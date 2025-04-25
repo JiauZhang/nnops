@@ -3,6 +3,15 @@
 pip install nnops
 ```
 
+### Example
+```python
+import nnops, nnops.tensor
+
+x = nnops.tensor.randn(2, 3)
+y = nnops.tensor.randn(3, 4)
+z = x @ y # [2, 4]
+```
+
 ### Sponsor
 <table align="center">
     <thead>
