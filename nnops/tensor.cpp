@@ -321,9 +321,13 @@ Tensor Tensor::permute(TensorShape &index) {
 }
 
 Tensor Tensor::astype(DataType dtype) {
-    Tensor tensor(dtype, this->shape(), this->device());
-    tensor_clone_impl(this, 0, &tensor, 0, 0);
-    return tensor;
+    if (this->dtype() == dtype) {
+        return *this;
+    } else {
+        Tensor tensor(dtype, this->shape(), this->device());
+        tensor_clone_impl(this, 0, &tensor, 0, 0);
+        return tensor;
+    }
 }
 
 Tensor Tensor::to(DeviceType device) {

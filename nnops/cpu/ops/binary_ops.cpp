@@ -39,9 +39,10 @@ static Tensor binary_op_template(Tensor &self, Tensor &other) {
             + TensorMeta::shape_as_string(self.shape()) + " and " + TensorMeta::shape_as_string(other.shape()))
 
     TensorShape shape = Tensor::broadcast_shape(self, other);
-    Tensor ret(get_promote_type(op_type, self.dtype(), other.dtype()), shape, self.device());
-    Tensor self_br = self.broadcast_to(shape), other_br = other.broadcast_to(shape);
-    auto scalar_binary_op = get_scalar_binary_op(op_type, self.dtype(), other.dtype());
+    DataType dtype = get_promote_type(op_type, self.dtype(), other.dtype());
+    Tensor ret(dtype, shape, self.device());
+    Tensor self_br = self.astype(dtype).broadcast_to(shape), other_br = other.astype(dtype).broadcast_to(shape);
+    auto scalar_binary_op = get_scalar_binary_op(op_type, dtype);
     ScalarBinaryOpParams params = {
         scalar_binary_op, self_br.shape(-1), {
             0, 0, 0
