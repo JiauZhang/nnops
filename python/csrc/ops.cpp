@@ -1,5 +1,5 @@
 #include <nnops/data_type.h>
-#include <nnops/cpu/ops/functional.h>
+#include <nnops/tensor_operator.h>
 #include <nanobind/nanobind.h>
 #include <python/csrc/tensor.h>
 
@@ -10,7 +10,7 @@ namespace pynnops {
 #define MAKE_BINARY_OP_FUNCTOR(op_type, op_name, op) \
 PyTensor op_name(const PyTensor &self, const PyTensor &other) {  \
     Tensor st = self.tensor(), ot = other.tensor();  \
-    Tensor o = nnops::cpu::ops::op_name(st, ot);     \
+    Tensor o = st op ot;     \
     return PyTensor(o);                              \
 }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)

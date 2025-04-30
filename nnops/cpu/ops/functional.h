@@ -8,8 +8,11 @@ using nnops::Tensor;
 
 namespace nnops::cpu::ops {
 
-// basic Tensor binary ops
-#define MAKE_BINARY_OP_FUNCTOR(op_type, op_name, op) Tensor op_name(nnops::Tensor &self, nnops::Tensor &other);
+template<ScalarBinaryOpType op_type>
+Tensor binary_op_template(Tensor &self, Tensor &other);
+
+#define MAKE_BINARY_OP_FUNCTOR(op_type, op_name, op) \
+inline Tensor operator op (Tensor &self, Tensor &other) { return binary_op_template<op_type>(self, other); }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
 #undef MAKE_BINARY_OP_FUNCTOR
 

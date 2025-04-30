@@ -28,14 +28,18 @@ class TestDataType():
                 src_np_array = (np.random.randn(5, 6, 7, 8) * 123).astype(src_np_dtype)
                 src_nps_array = nnops.tensor.from_numpy(src_np_array)
                 assert src_nps_array.dtype == src_nps_dtype
+                # ref_count will +1 if src_nps_array.dtype == dst_nps_dtype
+                # becasue same target dtype only create a new view other than a new tensor 
                 dst_np_array = src_np_array.astype(dst_np_dtype)
                 dst_nps_array = src_nps_array.astype(dst_nps_dtype)
+                src_nps_ref_count = 2 if src_nps_array.dtype == dst_nps_dtype else 1
+                assert src_nps_ref_count == src_nps_array.ref_count
                 assert (dst_nps_array.numpy() == dst_np_array).all()
 
                 # discontiguous data
                 src_np_stride = src_np_array[1::2, 2::2, 3::2, 1:7:3]
                 src_nps_stride = src_nps_array[1::2, 2::2, 3::2, 1:7:3]
-                assert src_nps_stride.ref_count == 2
+                assert src_nps_stride.ref_count == src_nps_ref_count + 1
                 dst_np_stride = src_np_stride.astype(dst_np_dtype)
                 dst_nps_stride = src_nps_stride.astype(dst_nps_dtype)
                 assert (dst_nps_stride.numpy() == dst_np_stride).all()

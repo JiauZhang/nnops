@@ -9,10 +9,6 @@
 
 namespace nnops {
 
-class TensorIterator;
-class TensorPartialIterator;
-class TensorAccessor;
-
 class Tensor {
 public:
     Tensor();

@@ -34,7 +34,7 @@ void do_binary_op_impl(const Tensor &self, const Tensor &other, const Tensor &ou
 }
 
 template<ScalarBinaryOpType op_type>
-static Tensor binary_op_template(Tensor &self, Tensor &other) {
+Tensor binary_op_template(Tensor &self, Tensor &other) {
     NNOPS_CHECK(Tensor::is_broadcastable(self, other), "operands could not be broadcast together with shapes "
             + TensorMeta::shape_as_string(self.shape()) + " and " + TensorMeta::shape_as_string(other.shape()))
 
@@ -59,9 +59,8 @@ static Tensor binary_op_template(Tensor &self, Tensor &other) {
 }
 
 #define MAKE_BINARY_OP_FUNCTOR(op_type, op_name, op) \
-Tensor op_name(Tensor &self, Tensor &other) {        \
-    return binary_op_template<op_type>(self, other); \
-}
+template Tensor binary_op_template<op_type>(Tensor &self, Tensor &other);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
+#undef MAKE_BINARY_OP_FUNCTOR
 
 } // namespace nnops::cpu::ops
