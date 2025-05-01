@@ -5,9 +5,15 @@
 
 namespace nnops {
 
+#define GEN_SCALAR_DATA_ITEM(dtype, type) type d_##type;
+union ScalarData {
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_SCALAR_DATA_ITEM)
+};
+#undef GEN_SCALAR_DATA_ITEM
+
 class Scalar {
 public:
-    Scalar(): data_(nullptr) {}
+    Scalar();
 #define GEN_SCALAR_CONSTRUCTOR(dtype, type) Scalar(type data);
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_SCALAR_CONSTRUCTOR)
 #undef GEN_SCALAR_CONSTRUCTOR
@@ -15,15 +21,15 @@ public:
     ~Scalar();
 
     inline DataType dtype() const { return dtype_; }
-    inline void set_dtype(DataType type) { dtype_ = type; }
-    inline void *data_ptr() const { return data_; }
-    inline void set_buffer(void *data) { data_ = data; }
+    inline ScalarData data() const { return data_; }
+    inline void *data_ptr() const { return (void *)(&data_); }
+    inline void set_dtype(DataType dtype) { dtype_ = dtype; }
     Scalar astype(DataType dtype);
     inline index_t itemsize() const { return sizeof_dtype(this->dtype_); }
 
 private:
     DataType dtype_;
-    void *data_;
+    ScalarData data_;
 };
 
 } // namespace nnops

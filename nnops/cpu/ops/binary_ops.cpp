@@ -14,11 +14,11 @@ struct ScalarBinaryOpParams {
     const index_t strides[3];
 };
 
-void do_binary_op_impl(const Tensor &self, const Tensor &other, const Tensor &out, int axis, ScalarBinaryOpParams &params) {
+void do_binary_op_tensor_tensor_impl(const Tensor &self, const Tensor &other, const Tensor &out, int axis, ScalarBinaryOpParams &params) {
     if (axis < self.ndim() - 1) {
         const int loop = self.shape()[axis];
         for (int i = 0; i < loop; i++) {
-            do_binary_op_impl(self, other, out, axis + 1, params);
+            do_binary_op_tensor_tensor_impl(self, other, out, axis + 1, params);
             params.offsets[0] += out.stride()[axis];
             params.offsets[1] += self.stride()[axis];
             params.offsets[2] += other.stride()[axis];
@@ -34,7 +34,7 @@ void do_binary_op_impl(const Tensor &self, const Tensor &other, const Tensor &ou
 }
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_template(Tensor &self, Tensor &other) {
+Tensor binary_op_tensor_tensor_template(Tensor &self, Tensor &other) {
     NNOPS_CHECK(Tensor::is_broadcastable(self, other), "operands could not be broadcast together with shapes "
             + TensorMeta::shape_as_string(self.shape()) + " and " + TensorMeta::shape_as_string(other.shape()))
 
@@ -53,13 +53,13 @@ Tensor binary_op_template(Tensor &self, Tensor &other) {
         }
     };
 
-    do_binary_op_impl(self_br, other_br, ret, 0, params);
+    do_binary_op_tensor_tensor_impl(self_br, other_br, ret, 0, params);
 
     return ret;
 }
 
 #define MAKE_BINARY_OP_FUNCTOR(op_type, op_name, op) \
-template Tensor binary_op_template<op_type>(Tensor &self, Tensor &other);
+template Tensor binary_op_tensor_tensor_template<op_type>(Tensor &self, Tensor &other);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
 #undef MAKE_BINARY_OP_FUNCTOR
 
