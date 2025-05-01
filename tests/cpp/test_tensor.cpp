@@ -5,7 +5,7 @@
 #include <nnops/tensor.h>
 #include <nnops/tensor_iterator.h>
 #include <nnops/tensor_accessor.h>
-#include <nnops/cpu/ops/functional.h>
+#include <nnops/cpu/ops/binary_ops.h>
 #include <array>
 #include <vector>
 

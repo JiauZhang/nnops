@@ -1,4 +1,4 @@
-#include <nnops/cpu/ops/functional.h>
+#include <nnops/cpu/ops/unary_ops.h>
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
 #include <nnops/common.h>

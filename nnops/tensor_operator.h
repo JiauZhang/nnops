@@ -3,7 +3,7 @@
 
 #include <nnops/tensor.h>
 #include <nnops/data_type.h>
-#include <nnops/cpu/ops/functional.h>
+#include <nnops/cpu/ops/binary_ops.h>
 
 namespace nnops {
 

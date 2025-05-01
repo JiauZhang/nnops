@@ -1,5 +1,5 @@
-#ifndef __OPS_MATH_H__
-#define __OPS_MATH_H__
+#ifndef __BINARY_OPS_H__
+#define __BINARY_OPS_H__
 
 #include <nnops/tensor.h>
 #include <optional>
@@ -21,4 +21,4 @@ Tensor linear(const Tensor &input, const Tensor &weight, const std::optional<Ten
 
 } // namespace nnops::cpu::ops
 
-#endif // __OPS_MATH_H__
+#endif // __BINARY_OPS_H__
