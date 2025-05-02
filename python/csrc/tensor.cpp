@@ -1,5 +1,6 @@
 #include <nnops/data_type.h>
 #include <python/csrc/tensor.h>
+#include <python/csrc/binary_ops.h>
 #include <cstdint>
 #include <array>
 
@@ -237,12 +238,6 @@ PyTensor from_numpy(nb::ndarray<> array) {
     return tensor;
 }
 
-extern PyTensor add(const PyTensor &self, const PyTensor &other);
-extern PyTensor sub(const PyTensor &self, const PyTensor &other);
-extern PyTensor mul(const PyTensor &self, const PyTensor &other);
-extern PyTensor div(const PyTensor &self, const PyTensor &other);
-extern PyTensor matmul(const PyTensor &self, const PyTensor &other);
-
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     m.def("from_numpy", &from_numpy);
     m.def("is_broadcastable", [](PyTensor &t1, PyTensor &t2) {
@@ -264,10 +259,10 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("reshape", &PyTensor::py_reshape)
         .def("permute", &PyTensor::py_permute)
         .def("broadcast_to", &PyTensor::py_broadcast_to)
-        .def("__add__", &add)
-        .def("__sub__", &sub)
-        .def("__mul__", &mul)
-        .def("__div__", &div)
+        .def("__add__", &add_tensor_tensor)
+        .def("__sub__", &sub_tensor_tensor)
+        .def("__mul__", &mul_tensor_tensor)
+        .def("__div__", &div_tensor_tensor)
         .def("__matmul__", &matmul)
         .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })
