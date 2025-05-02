@@ -2,6 +2,7 @@
 #define __SCALAR_H__
 
 #include <nnops/data_type.h>
+#include <nnops/tensor.h>
 
 namespace nnops {
 
@@ -26,6 +27,7 @@ public:
     inline void set_dtype(DataType dtype) { dtype_ = dtype; }
     Scalar astype(DataType dtype);
     inline index_t itemsize() const { return sizeof_dtype(this->dtype_); }
+    Tensor tensor();
 
 private:
     DataType dtype_;

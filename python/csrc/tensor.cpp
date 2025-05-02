@@ -280,14 +280,14 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     // tensor-scalar binary ops
     #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
     pytensor_cls.def("__"#op_name"__", &op_name##type##_tensor_scalar); \
-    pytensor_cls.def("__r"#op_name"__", &op_name##type##_tensor_scalar);
+    pytensor_cls.def("__r"#op_name"__", &op_name##type##_tensor_scalar_reverse);
     #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
     DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)
     // fix __(r)div__ --> __(r)truediv__
     #define MAKE_TRUEDIV_TENSOR_SCALAR_BINDING(dtype, type) \
     pytensor_cls.def("__truediv__", &div##type##_tensor_scalar); \
-    pytensor_cls.def("__rtruediv__", &div##type##_tensor_scalar);
+    pytensor_cls.def("__rtruediv__", &div##type##_tensor_scalar_reverse);
     DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_TRUEDIV_TENSOR_SCALAR_BINDING)
 }
 

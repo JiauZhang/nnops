@@ -19,10 +19,12 @@ SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR)
 
 template<ScalarBinaryOpType op_type>
 Tensor binary_op_tensor_scalar_template(Tensor &self, Scalar &other);
+template<ScalarBinaryOpType op_type>
+Tensor binary_op_tensor_scalar_template_reverse(Scalar &other, Tensor &self);
 
 #define MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR(op_type, op_name, op) \
 inline Tensor operator op (Tensor &self, Scalar &other) { return binary_op_tensor_scalar_template<op_type>(self, other); } \
-inline Tensor operator op (Scalar &other, Tensor &self) { return binary_op_tensor_scalar_template<op_type>(self, other); }
+inline Tensor operator op (Scalar &other, Tensor &self) { return binary_op_tensor_scalar_template_reverse<op_type>(other, self); }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR
 

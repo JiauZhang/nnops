@@ -28,6 +28,17 @@ PyTensor op_name##type##_tensor_scalar(const PyTensor &self, const type other) {
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR, type)
 DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_FUNCTOR)
 
+#define MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR_REVERSE(op_type, op_name, op, type) \
+PyTensor op_name##type##_tensor_scalar_reverse(const PyTensor &self, const type other) {  \
+    Tensor st = self.tensor(); \
+    Scalar ot(other);  \
+    Tensor o = ot op st;     \
+    return PyTensor(o);                              \
+}
+#define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_FUNCTOR_REVERSE(dtype, type) \
+SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR_REVERSE, type)
+DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_FUNCTOR_REVERSE)
+
 PyTensor matmul(const PyTensor &lvalue, const PyTensor &rvalue) {
     Tensor lv = lvalue.tensor(), rv = rvalue.tensor();
     Tensor o = nnops::cpu::ops::matmul(lv, rv);
@@ -38,7 +49,9 @@ void DEFINE_OPS_MODULE(nb::module_ & (m)) {
 #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) m.def(#op_name, &op_name##_tensor_tensor);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_BINDING)
 
-#define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) m.def(#op_name, &op_name##type##_tensor_scalar);
+#define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
+    m.def(#op_name, &op_name##type##_tensor_scalar); \
+    m.def(#op_name, &op_name##type##_tensor_scalar_reverse);
 #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
 DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)
