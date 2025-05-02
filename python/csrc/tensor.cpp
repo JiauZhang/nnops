@@ -245,7 +245,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     m.def("broadcast_shape", [](PyTensor &t1, PyTensor &t2) {
         return PyTensor::broadcast_shape(t1.shape(), t2.shape(), 0); });
 
-    nb::class_<PyTensor>(m, "PyTensor")
+    auto &pytensor_cls = nb::class_<PyTensor>(m, "PyTensor")
         .def(nb::init<nb::kwargs &>())
         .def("__str__", [](PyTensor &self) { return self.to_string(); })
         .def("__repr__", &PyTensor::to_repr)
@@ -259,11 +259,6 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("reshape", &PyTensor::py_reshape)
         .def("permute", &PyTensor::py_permute)
         .def("broadcast_to", &PyTensor::py_broadcast_to)
-        .def("__add__", &add_tensor_tensor)
-        .def("__sub__", &sub_tensor_tensor)
-        .def("__mul__", &mul_tensor_tensor)
-        .def("__div__", &div_tensor_tensor)
-        .def("__matmul__", &matmul)
         .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })
         .def_prop_ro("data_ptr", [](PyTensor &t) { return t.data_ptr(); })
@@ -273,6 +268,27 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def_prop_ro("nelems", [](PyTensor &t) { return t.nelems(); })
         .def_prop_ro("stride", [](PyTensor &t) { return t.stride(); })
         .def_prop_ro("shape", [](PyTensor &t) { return t.shape(); });
+
+    pytensor_cls.def("__matmul__", &matmul);
+
+    // tensor-tensor binary ops
+    #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) pytensor_cls.def("__"#op_name"__", &op_name##_tensor_tensor);
+    SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_BINDING)
+    // fix __(r)div__ --> __(r)truediv__
+    pytensor_cls.def("__truediv__", &div_tensor_tensor);
+
+    // tensor-scalar binary ops
+    #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
+    pytensor_cls.def("__"#op_name"__", &op_name##type##_tensor_scalar); \
+    pytensor_cls.def("__r"#op_name"__", &op_name##type##_tensor_scalar);
+    #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
+    SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
+    DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)
+    // fix __(r)div__ --> __(r)truediv__
+    #define MAKE_TRUEDIV_TENSOR_SCALAR_BINDING(dtype, type) \
+    pytensor_cls.def("__truediv__", &div##type##_tensor_scalar); \
+    pytensor_cls.def("__rtruediv__", &div##type##_tensor_scalar);
+    DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_TRUEDIV_TENSOR_SCALAR_BINDING)
 }
 
 } // namespace pynnops

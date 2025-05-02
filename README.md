@@ -9,6 +9,9 @@ import nnops, nnops.tensor
 
 x = nnops.tensor.randn(2, 3)
 y = nnops.tensor.randn(3, 4)
+
+x = (x + 2) * 3
+y = (y - 4) / 5
 z = x @ y # [2, 4]
 ```
 
