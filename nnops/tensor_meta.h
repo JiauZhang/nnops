@@ -25,7 +25,7 @@ public:
 
     static std::string shape_as_string(const TensorShape &dims);
     inline std::string shape_as_string() { return TensorMeta::shape_as_string(this->dims_); };
-    bool is_contiguous();
+    bool is_contiguous() const;
 
     void reshape_inplace(TensorShape &dims);
     void index_inplace(int index, int axis);

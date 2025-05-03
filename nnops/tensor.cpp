@@ -185,13 +185,13 @@ void tensor_clone_impl(const Tensor *src, int src_offset, Tensor *dst, int dst_o
     cast_op(args, strides, loop);
 }
 
-Tensor Tensor::clone() {
+Tensor Tensor::clone() const {
     Tensor tensor(this->dtype(), this->shape(), this->device());
     tensor_clone_impl(this, 0, &tensor, 0, 0);
     return tensor;
 }
 
-Tensor Tensor::contiguous() {
+Tensor Tensor::contiguous() const {
     if (this->is_contiguous()) {
         return *this;
     } else {
@@ -320,7 +320,7 @@ Tensor Tensor::permute(TensorShape &index) {
     return Tensor(meta, this->buffer());
 }
 
-Tensor Tensor::transpose(Tensor &t, index_t dim0, index_t dim1) {
+Tensor Tensor::transpose(const Tensor &t, index_t dim0, index_t dim1) {
     const int len = 2, size = t.ndim();
     index_t dims[len] = {dim0, dim1};
     for (int i = 0; i < len; i++) {

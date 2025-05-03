@@ -34,8 +34,8 @@ public:
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
 
     Tensor permute(TensorShape &index);
-    static Tensor transpose(Tensor &t, index_t dim0, index_t dim1);
-    inline Tensor transpose(index_t dim0, index_t dim1) { return transpose(*this, dim0, dim1); }
+    static Tensor transpose(const Tensor &t, index_t dim0, index_t dim1);
+    inline Tensor transpose(index_t dim0, index_t dim1) const { return transpose(*this, dim0, dim1); }
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
     inline void *data_ptr() const { return data_ptr(0); }
@@ -44,14 +44,14 @@ public:
     }
     inline int ndim() const { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
-    inline Device *device() { return this->tensor_buffer_->device_; }
+    inline Device *device() const { return this->tensor_buffer_->device_; }
     inline size_t nelems() const { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
     inline index_t itemsize() const { return sizeof_dtype(this->dtype()); }
     inline index_t offset() const { return this->tensor_meta_.offset_; }
-    inline bool is_contiguous() {return this->tensor_meta_.is_contiguous(); }
-    Tensor clone();
-    Tensor contiguous();
+    inline bool is_contiguous() const {return this->tensor_meta_.is_contiguous(); }
+    Tensor clone() const;
+    Tensor contiguous() const;
     Tensor astype(DataType dtype);
     Tensor to(DeviceType device);
 

@@ -99,7 +99,7 @@ void TensorMeta::slice_inplace(Slice &slice, int axis) {
     nbytes_ = nelems_ * sizeof_dtype(dtype_);
 }
 
-bool TensorMeta::is_contiguous() {
+bool TensorMeta::is_contiguous() const {
     int nelems = 1;
 
     for (int i=this->dims_.size()-1; i>=0; i--) {
