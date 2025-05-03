@@ -32,7 +32,10 @@ public:
     bool is_broadcast();
     inline Tensor broadcast_to(const TensorShape &shape) const { return Tensor::broadcast_to(*this, shape, 0); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
+
     Tensor permute(TensorShape &index);
+    static Tensor transpose(Tensor &t, index_t dim0, index_t dim1);
+    inline Tensor transpose(index_t dim0, index_t dim1) { return transpose(*this, dim0, dim1); }
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
     inline void *data_ptr() const { return data_ptr(0); }

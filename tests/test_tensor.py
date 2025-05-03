@@ -1,4 +1,4 @@
-import nnops
+import nnops, pytest
 from nnops.tensor import Tensor
 from nnops import dtype
 import numpy as np
@@ -233,3 +233,21 @@ class TestTensor():
         assert nnops_permutex2.ref_count == 4
         assert tuple(nnops_permutex2.shape) == np_permutex2.shape
         assert (nnops_permutex2.numpy() == np_permutex2).all()
+
+@pytest.mark.parametrize(
+    'shape, tidx, target, npidx', [
+        ((2, 3, 4, 5), (0, 3), [5, 3, 4, 2], (3, 1, 2, 0)),
+        ((4, 5, 6, 7, 8, 9), (1, -3), [4, 7, 6, 5, 8, 9], (0, -3, 2, 1, 4, 5)),
+        ((6, 3, 4, 5), (-3, -1), [6, 5, 4, 3], (0, -1, 2, -3)),
+        ((9, 8, 7), (1, 1), [9, 8, 7], (0, 1, 2)),
+    ]
+)
+def test_tensor_transpose(shape, tidx, target, npidx):
+    a = nnops.tensor.randn(*shape)
+    a_T = a.transpose(*tidx)
+    assert a_T.shape == target
+
+    np_a = a.numpy()
+    nnops_a_T = a_T.numpy()
+    np_a_T = np_a.transpose(*npidx)
+    assert (nnops_a_T == np_a_T).all()

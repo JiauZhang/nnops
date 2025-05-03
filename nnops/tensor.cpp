@@ -320,6 +320,29 @@ Tensor Tensor::permute(TensorShape &index) {
     return Tensor(meta, this->buffer());
 }
 
+Tensor Tensor::transpose(Tensor &t, index_t dim0, index_t dim1) {
+    const int len = 2, size = t.ndim();
+    index_t dims[len] = {dim0, dim1};
+    for (int i = 0; i < len; i++) {
+        auto &dim = dims[i];
+        NNOPS_CHECK(!(dim < -size || dim >= size), "axis " + std::to_string(dim)
+            + " is out of bounds for tensor of dimension " + std::to_string(size))
+        if (dim < 0)
+            dim += size;
+    }
+
+    if (dims[0] == dims[1])
+        return t;
+
+    TensorMeta meta = t.meta();
+    for (int i = 0; i < len; i++) {
+        auto idx = i ^ 1;
+        meta.dims_[dims[i]] = t.meta().shape()[dims[idx]];
+        meta.strides_[dims[i]] = t.meta().stride()[dims[idx]];
+    }
+    return Tensor(meta, t.buffer());
+}
+
 Tensor Tensor::astype(DataType dtype) {
     if (this->dtype() == dtype) {
         return *this;

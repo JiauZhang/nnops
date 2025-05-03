@@ -155,6 +155,11 @@ PyTensor PyTensor::py_permute(nb::args args) {
     return PyTensor(tensor);
 }
 
+PyTensor PyTensor::py_transpose(int dim0, int dim1) {
+    PyTensor t(this->tensor().transpose(dim0, dim1));
+    return t;
+}
+
 static constexpr std::array<
     nb::dlpack::dtype, DataType::COMPILE_TIME_MAX_DATA_TYPES> __nptypes__ = {
     nb::dtype<double>(), nb::dtype<float>(),
@@ -258,6 +263,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("numpy", &PyTensor::numpy)
         .def("reshape", &PyTensor::py_reshape)
         .def("permute", &PyTensor::py_permute)
+        .def("transpose", &PyTensor::py_transpose)
         .def("broadcast_to", &PyTensor::py_broadcast_to)
         .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
         .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })

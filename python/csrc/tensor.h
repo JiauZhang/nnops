@@ -57,6 +57,7 @@ public:
     nb::ndarray<nb::numpy> numpy();
     PyTensor py_reshape(nb::args args);
     PyTensor py_permute(nb::args args);
+    PyTensor py_transpose(int dim0, int dim1);
     PyTensor __getitem__(nb::handle indices);
     Tensor tensor() const { return Tensor(this->meta(), this->buffer()); }
     PyTensor astype(DataType dtype) {
