@@ -280,8 +280,6 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     // tensor-tensor binary ops
     #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) pytensor_cls.def("__"#op_name"__", &op_name##_tensor_tensor);
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_BINDING)
-    // fix __(r)div__ --> __(r)truediv__
-    pytensor_cls.def("__truediv__", &div_tensor_tensor);
 
     // tensor-scalar binary ops
     #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
@@ -290,11 +288,6 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
     DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)
-    // fix __(r)div__ --> __(r)truediv__
-    #define MAKE_TRUEDIV_TENSOR_SCALAR_BINDING(dtype, type) \
-    pytensor_cls.def("__truediv__", &div##type##_tensor_scalar); \
-    pytensor_cls.def("__rtruediv__", &div##type##_tensor_scalar_reverse);
-    DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_TRUEDIV_TENSOR_SCALAR_BINDING)
 }
 
 } // namespace pynnops

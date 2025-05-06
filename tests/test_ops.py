@@ -26,7 +26,7 @@ class TestOperators():
                     continue
                 np_a = (np.random.randn(2, 3, 4) * 123).astype(np_type1)
                 np_b = (np.random.randn(2, 3, 4) * 123).astype(np_type2)
-                if op_functor is ops.div:
+                if op_functor is ops.truediv:
                     np_b[np.abs(np_b) < 1e-5] = 12.3456789
                 np_ret = np_op_functor(np_a, np_b)
                 nps_a = nnops.tensor.from_numpy(np_a)
@@ -38,7 +38,7 @@ class TestOperators():
 
                 # broadcast
                 np_a = (np.random.randn(3, 1, 4) * 123).astype(np_type1)
-                if op_functor is ops.div:
+                if op_functor is ops.truediv:
                     np_a[np.abs(np_a) < 1e-5] = 56.789
                 np_b = (np.random.randn(2, 1) * 45).astype(np_type2)
                 np_c = (np.random.randn(5, 4) * 234).astype(np_type1)
@@ -54,7 +54,7 @@ class TestOperators():
                 # broadcast with not contiguous tensor
                 np_a = (np.random.randn(4, 5, 1, 7) * 23).astype(np_type1)
                 np_b = (np.random.randn(5, 5, 7) * 45).astype(np_type2)
-                if op_functor is ops.div:
+                if op_functor is ops.truediv:
                     np_b[np.abs(np_b) < 1e-5] = 98.7654321
                 np_a_stride = np_a[::2, ::2, :, ::3] # [2, 3, 1, 3]
                 np_b_stride = np_b[::2, ::2, ::3] # [3, 2, 3]
@@ -75,7 +75,7 @@ class TestOperators():
             (ops.add, lambda a, b: a + b),
             (ops.sub, lambda a, b: a - b),
             (ops.mul, lambda a, b: a * b),
-            (ops.div, lambda a, b: a / b),
+            (ops.truediv, lambda a, b: a / b),
         ]
     )
     def test_binary_ops(self, nnops_op, np_op):

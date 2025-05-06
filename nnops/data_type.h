@@ -74,7 +74,7 @@ enum ScalarBinaryOpType : uint8_t {
     GEN(ScalarBinaryOpType::ADD, add, +, ##args)             \
     GEN(ScalarBinaryOpType::SUB, sub, -, ##args)             \
     GEN(ScalarBinaryOpType::MUL, mul, *, ##args)             \
-    GEN(ScalarBinaryOpType::DIV, div, /, ##args)
+    GEN(ScalarBinaryOpType::DIV, truediv, /, ##args)
 
 size_t sizeof_dtype(DataType dtype);
 
