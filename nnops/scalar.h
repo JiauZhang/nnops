@@ -27,7 +27,7 @@ public:
     inline void set_dtype(DataType dtype) { dtype_ = dtype; }
     Scalar astype(DataType dtype);
     inline index_t itemsize() const { return sizeof_dtype(this->dtype_); }
-    Tensor tensor();
+    Tensor tensor() const;
 
 private:
     DataType dtype_;

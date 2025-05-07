@@ -52,8 +52,8 @@ public:
     inline bool is_contiguous() const {return this->tensor_meta_.is_contiguous(); }
     Tensor clone() const;
     Tensor contiguous() const;
-    Tensor astype(DataType dtype);
-    Tensor to(DeviceType device);
+    Tensor astype(DataType dtype) const;
+    Tensor to(DeviceType device) const;
 
     void to_string(std::string *prefix, std::string *ret);
     std::string to_string();

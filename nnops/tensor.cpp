@@ -343,7 +343,7 @@ Tensor Tensor::transpose(const Tensor &t, index_t dim0, index_t dim1) {
     return Tensor(meta, t.buffer());
 }
 
-Tensor Tensor::astype(DataType dtype) {
+Tensor Tensor::astype(DataType dtype) const {
     if (this->dtype() == dtype) {
         return *this;
     } else {
@@ -353,7 +353,7 @@ Tensor Tensor::astype(DataType dtype) {
     }
 }
 
-Tensor Tensor::to(DeviceType device) {
+Tensor Tensor::to(DeviceType device) const {
     if (device == this->device()->get_device_type())
         return *this;
     Device *dev = Device::get_device(device);

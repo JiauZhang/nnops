@@ -10,21 +10,21 @@ using nnops::Tensor;
 namespace nnops::cpu::ops {
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_tensor_template(Tensor &self, Tensor &other);
+Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other);
 
 #define MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR(op_type, op_name, op) \
-inline Tensor operator op (Tensor &self, Tensor &other) { return binary_op_tensor_tensor_template<op_type>(self, other); }
+inline Tensor operator op (const Tensor &self, const Tensor &other) { return binary_op_tensor_tensor_template<op_type>(self, other); }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template(Tensor &self, Scalar &other);
+Tensor binary_op_tensor_scalar_template(const Tensor &self, const Scalar &other);
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template_reverse(Scalar &other, Tensor &self);
+Tensor binary_op_tensor_scalar_template_reverse(const Scalar &other, const Tensor &self);
 
 #define MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR(op_type, op_name, op) \
-inline Tensor operator op (Tensor &self, Scalar &other) { return binary_op_tensor_scalar_template<op_type>(self, other); } \
-inline Tensor operator op (Scalar &other, Tensor &self) { return binary_op_tensor_scalar_template_reverse<op_type>(other, self); }
+inline Tensor operator op (const Tensor &self, const Scalar &other) { return binary_op_tensor_scalar_template<op_type>(self, other); } \
+inline Tensor operator op (const Scalar &other, const Tensor &self) { return binary_op_tensor_scalar_template_reverse<op_type>(other, self); }
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR
 

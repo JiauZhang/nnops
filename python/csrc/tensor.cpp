@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <array>
 
+using namespace nb::literals;
+
 namespace pynnops {
 
 std::string tp_name(nb::handle &h) {
@@ -99,7 +101,7 @@ void indexing(TensorMeta &meta, nb::handle indices, int axis) {
     }
 }
 
-PyTensor::PyTensor(nb::kwargs &kwargs) {
+Tensor create_pytensor(nb::kwargs &kwargs) {
     DataType dtype = DataType::TYPE_FLOAT32;
     Device *device = Device::get_device(DeviceType::CPU);
     TensorShape shape;
@@ -121,13 +123,13 @@ PyTensor::PyTensor(nb::kwargs &kwargs) {
         nb::del(val);
     }
 
-    Tensor::init_tensor(dtype, shape, device);
+    return Tensor(dtype, shape, device);
 }
 
-PyTensor PyTensor::__getitem__(nb::handle indices) {
-    TensorMeta meta = this->meta();
+Tensor __getitem__(Tensor &self, nb::handle indices) {
+    TensorMeta meta = self.meta();
     indexing(meta, indices, 0);
-    return PyTensor(meta, this->buffer());
+    return Tensor(meta, self.buffer());
 }
 
 void parse_int_args(nb::args &args, TensorShape &indices) {
@@ -139,25 +141,6 @@ void parse_int_args(nb::args &args, TensorShape &indices) {
             throw std::runtime_error("only int index supported!");
         }
     }
-}
-
-PyTensor PyTensor::py_reshape(nb::args args) {
-    TensorShape indices;
-    parse_int_args(args, indices);
-    Tensor &&tensor = this->reshape(indices);
-    return PyTensor(tensor);
-}
-
-PyTensor PyTensor::py_permute(nb::args args) {
-    TensorShape indices;
-    parse_int_args(args, indices);
-    Tensor &&tensor = this->permute(indices);
-    return PyTensor(tensor);
-}
-
-PyTensor PyTensor::py_transpose(int dim0, int dim1) {
-    PyTensor t(this->tensor().transpose(dim0, dim1));
-    return t;
 }
 
 static constexpr std::array<
@@ -186,13 +169,12 @@ static int match_dtype(const std::array<T, __types__.size()> &types, T &type) {
     throw std::runtime_error("match_dtype failed!");
 }
 
-nb::ndarray<nb::numpy> PyTensor::numpy() {
-    Tensor t = this->clone();
-    PyTensor *tensor = new PyTensor(t);
+nb::ndarray<nb::numpy> numpy(Tensor &self) {
+    Tensor *tensor = new Tensor(self);
     std::vector<size_t> shape;
 
     nb::capsule deleter(tensor, [](void *p) noexcept {
-        delete (PyTensor *)p;
+        delete (Tensor *)p;
     });
     for (auto s: tensor->shape())
         shape.push_back(s);
@@ -205,7 +187,7 @@ nb::ndarray<nb::numpy> PyTensor::numpy() {
             tensor->data_ptr(), tensor->ndim(), shape.data(), deleter, nullptr, dtype);
 }
 
-void from_numpy_impl(nb::ndarray<> *src, int src_offset, PyTensor *dst, int dst_offset, int axis) {
+void from_numpy_impl(nb::ndarray<> *src, int src_offset, Tensor *dst, int dst_offset, int axis) {
     if (axis < src->ndim() - 1) {
         for (int i=0; i<src->shape(axis); i++)
             from_numpy_impl(
@@ -227,7 +209,7 @@ void from_numpy_impl(nb::ndarray<> *src, int src_offset, PyTensor *dst, int dst_
     }
 }
 
-PyTensor from_numpy(nb::ndarray<> array) {
+Tensor from_numpy(nb::ndarray<> array) {
     TensorShape shape;
 
     for (int i=0; i<array.ndim(); i++)
@@ -236,7 +218,7 @@ PyTensor from_numpy(nb::ndarray<> array) {
     nb::dlpack::dtype array_dtype = array.dtype();
     int idx = match_dtype<nb::dlpack::dtype>(__nptypes__, array_dtype);
     DataType dtype = __types__[idx];
-    PyTensor tensor(dtype, shape, DeviceType::CPU);
+    Tensor tensor(dtype, shape, DeviceType::CPU);
 
     from_numpy_impl(&array, 0, &tensor, 0, 0);
 
@@ -245,46 +227,47 @@ PyTensor from_numpy(nb::ndarray<> array) {
 
 void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     m.def("from_numpy", &from_numpy);
-    m.def("is_broadcastable", [](PyTensor &t1, PyTensor &t2) {
-        return PyTensor::is_broadcastable(t1.shape(), t2.shape(), 0); });
-    m.def("broadcast_shape", [](PyTensor &t1, PyTensor &t2) {
-        return PyTensor::broadcast_shape(t1.shape(), t2.shape(), 0); });
+    m.def("is_broadcastable", [](Tensor &t1, Tensor &t2) {
+        return Tensor::is_broadcastable(t1.shape(), t2.shape(), 0); });
+    m.def("broadcast_shape", [](Tensor &t1, Tensor &t2) {
+        return Tensor::broadcast_shape(t1.shape(), t2.shape(), 0); });
 
-    auto &pytensor_cls = nb::class_<PyTensor>(m, "PyTensor")
-        .def(nb::init<nb::kwargs &>())
-        .def("__str__", [](PyTensor &self) { return self.to_string(); })
-        .def("__repr__", &PyTensor::to_repr)
-        .def("__getitem__", &PyTensor::__getitem__)
-        .def("is_contiguous", &PyTensor::is_contiguous)
-        .def("contiguous", &PyTensor::py_contiguous)
-        .def("clone", &PyTensor::py_clone)
-        .def("astype", &PyTensor::astype)
-        .def("to", &PyTensor::to)
-        .def("numpy", &PyTensor::numpy)
-        .def("reshape", &PyTensor::py_reshape)
-        .def("permute", &PyTensor::py_permute)
-        .def("transpose", &PyTensor::py_transpose)
-        .def("broadcast_to", &PyTensor::py_broadcast_to)
-        .def_prop_ro("dtype", [](PyTensor &t) { return t.dtype(); })
-        .def_prop_ro("device", [](PyTensor &t) { return t.device()->get_device_type(); })
-        .def_prop_ro("data_ptr", [](PyTensor &t) { return t.data_ptr(); })
-        .def_prop_ro("ref_count", [](PyTensor &t) { return t.ref_count(); })
-        .def_prop_ro("ndim", [](PyTensor &t) { return t.ndim(); })
-        .def_prop_ro("nbytes", [](PyTensor &t) { return t.nbytes(); })
-        .def_prop_ro("nelems", [](PyTensor &t) { return t.nelems(); })
-        .def_prop_ro("stride", [](PyTensor &t) { return t.stride(); })
-        .def_prop_ro("shape", [](PyTensor &t) { return t.shape(); });
+    // https://nanobind.readthedocs.io/en/latest/classes.html#overloaded-methods
+    auto &pytensor = nb::class_<Tensor>(m, "Tensor")
+        .def(nb::new_([](nb::kwargs &kwargs) { return create_pytensor(kwargs); }))
+        .def("__str__", nb::overload_cast<>(&Tensor::to_string))
+        .def("__repr__", &Tensor::to_repr)
+        .def("__getitem__", &__getitem__)
+        .def("is_contiguous", &Tensor::is_contiguous)
+        .def("contiguous", &Tensor::contiguous)
+        .def("clone", &Tensor::clone)
+        .def("astype", &Tensor::astype)
+        .def("to", &Tensor::to)
+        .def("numpy", &numpy)
+        .def("reshape", &Tensor::reshape)
+        .def("permute", &Tensor::permute)
+        .def("transpose", [](Tensor &self, index_t dim0, index_t dim1) { return Tensor::transpose(self, dim0, dim1); })
+        .def("broadcast_to", [](Tensor &self, TensorShape &shape) { return Tensor::broadcast_to(self, shape, 0); })
+        .def_prop_ro("dtype", &Tensor::dtype)
+        .def_prop_ro("device", [](Tensor &self) { return self.device()->get_device_type(); })
+        .def_prop_ro("data_ptr", [](Tensor &self) { return self.data_ptr(0); })
+        .def_prop_ro("ref_count", &Tensor::ref_count)
+        .def_prop_ro("ndim", &Tensor::ndim)
+        .def_prop_ro("nbytes", &Tensor::nbytes)
+        .def_prop_ro("nelems", &Tensor::nelems)
+        .def_prop_ro("stride", [](Tensor &self) { return self.stride(); })
+        .def_prop_ro("shape", [](Tensor &self) { return self.shape(); });
 
-    pytensor_cls.def("__matmul__", &matmul);
+    pytensor.def("__matmul__", &matmul);
 
     // tensor-tensor binary ops
-    #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) pytensor_cls.def("__"#op_name"__", &op_name##_tensor_tensor);
+    #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) pytensor.def("__"#op_name"__", &op_name##_tensor_tensor);
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_BINDING)
 
     // tensor-scalar binary ops
     #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
-    pytensor_cls.def("__"#op_name"__", &op_name##type##_tensor_scalar); \
-    pytensor_cls.def("__r"#op_name"__", &op_name##type##_tensor_scalar_reverse);
+    pytensor.def("__"#op_name"__", &op_name##type##_tensor_scalar); \
+    pytensor.def("__r"#op_name"__", &op_name##type##_tensor_scalar_reverse);
     #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
     DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)

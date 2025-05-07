@@ -28,7 +28,7 @@ Scalar Scalar::astype(DataType dtype) {
     return scalar;
 }
 
-Tensor Scalar::tensor() {
+Tensor Scalar::tensor() const {
     Tensor t(dtype_, {1}, DeviceType::CPU);
     auto copy_op = get_cast_op(dtype_, dtype_);
     void *args[2] = {this->data_ptr(), t.data_ptr()};

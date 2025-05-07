@@ -12,10 +12,10 @@ namespace pynnops {
 
 extern void parse_int_args(nb::args &args, TensorShape &indices);
 
-PyTensor randn(nb::args &args) {
+Tensor randn(nb::args &args) {
     TensorShape indices;
     parse_int_args(args, indices);
-    PyTensor tensor(DataType::TYPE_FLOAT32, indices, DeviceType::CPU);
+    Tensor tensor(DataType::TYPE_FLOAT32, indices, DeviceType::CPU);
     nnops::RandN randn(0, 1);
     randn.sample((float *)tensor.data_ptr(), tensor.nelems());
     return tensor;
