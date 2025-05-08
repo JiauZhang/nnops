@@ -10,8 +10,6 @@ using nnops::TensorShape, nnops::DeviceType, nnops::DataType;
 
 namespace pynnops {
 
-extern void parse_int_args(nb::args &args, TensorShape &indices);
-
 Tensor randn(nb::args &args) {
     TensorShape indices;
     parse_int_args(args, indices);

@@ -19,4 +19,10 @@ namespace nb = nanobind;
 using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape, nnops::TensorBuffer;
 using nnops::DataType, nnops::DeviceType, nnops::Device, nnops::index_t;
 
+namespace pynnops {
+
+void parse_int_args(const nb::args &args, TensorShape &indices);
+
+} // namespace pynnops
+
 #endif // __PYTENSOR_H__

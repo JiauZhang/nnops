@@ -213,7 +213,7 @@ index_t Tensor::stride(int index) const {
     return this->tensor_meta_.strides_[index];
 }
 
-Tensor Tensor::reshape(TensorShape &dims) {
+Tensor Tensor::reshape(TensorShape &dims) const {
     Tensor tensor = this->contiguous();
     tensor.reshape_inplace(dims);
     return tensor;
@@ -298,7 +298,7 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offse
     return tb;
 }
 
-Tensor Tensor::permute(TensorShape &index) {
+Tensor Tensor::permute(TensorShape &index) const {
     NNOPS_CHECK(index.size() == this->shape().size(), "axes size don't match!")
     int len = index.size();
     TensorShape count(len, 0);

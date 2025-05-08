@@ -24,7 +24,7 @@ public:
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
 
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
-    Tensor reshape(TensorShape &dims);
+    Tensor reshape(TensorShape &dims) const;
     inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape(), 0); }
     static bool is_broadcastable(const TensorShape &s1, const TensorShape &s2, int offset);
     inline static TensorShape broadcast_shape(const Tensor &t1, const Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape(), 0); }
@@ -33,7 +33,7 @@ public:
     inline Tensor broadcast_to(const TensorShape &shape) const { return Tensor::broadcast_to(*this, shape, 0); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
 
-    Tensor permute(TensorShape &index);
+    Tensor permute(TensorShape &index) const;
     static Tensor transpose(const Tensor &t, index_t dim0, index_t dim1);
     inline Tensor transpose(index_t dim0, index_t dim1) const { return transpose(*this, dim0, dim1); }
 

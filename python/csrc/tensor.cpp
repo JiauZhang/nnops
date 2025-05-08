@@ -132,7 +132,7 @@ Tensor __getitem__(Tensor &self, nb::handle indices) {
     return Tensor(meta, self.buffer());
 }
 
-void parse_int_args(nb::args &args, TensorShape &indices) {
+void parse_int_args(const nb::args &args, TensorShape &indices) {
     for (int i=0; i<args.size(); i++) {
         auto v = args[i];
         if (nb::isinstance<nb::int_>(v)) {
@@ -141,6 +141,18 @@ void parse_int_args(nb::args &args, TensorShape &indices) {
             throw std::runtime_error("only int index supported!");
         }
     }
+}
+
+Tensor reshape(const Tensor &self, const nb::args &args) {
+    TensorShape indices;
+    parse_int_args(args, indices);
+    return self.reshape(indices);
+}
+
+Tensor permute(const Tensor &self, const nb::args &args) {
+    TensorShape indices;
+    parse_int_args(args, indices);
+    return self.permute(indices);
 }
 
 static constexpr std::array<
@@ -170,7 +182,8 @@ static int match_dtype(const std::array<T, __types__.size()> &types, T &type) {
 }
 
 nb::ndarray<nb::numpy> numpy(Tensor &self) {
-    Tensor *tensor = new Tensor(self);
+    // numpy must independently own a tensor
+    Tensor *tensor = new Tensor(self.clone());
     std::vector<size_t> shape;
 
     nb::capsule deleter(tensor, [](void *p) noexcept {
@@ -244,8 +257,8 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("astype", &Tensor::astype)
         .def("to", &Tensor::to)
         .def("numpy", &numpy)
-        .def("reshape", &Tensor::reshape)
-        .def("permute", &Tensor::permute)
+        .def("reshape", &reshape)
+        .def("permute", &permute)
         .def("transpose", [](Tensor &self, index_t dim0, index_t dim1) { return Tensor::transpose(self, dim0, dim1); })
         .def("broadcast_to", [](Tensor &self, TensorShape &shape) { return Tensor::broadcast_to(self, shape, 0); })
         .def_prop_ro("dtype", &Tensor::dtype)
