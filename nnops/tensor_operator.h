@@ -11,6 +11,8 @@ namespace nnops {
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_FUNCTOR)
 #undef MAKE_BINARY_OP_FUNCTOR
 
+using cpu::ops::matmul;
+
 } // namespace nnops
 
 #endif // __TENSOR_OPERATOR_H__
