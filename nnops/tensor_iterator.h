@@ -10,10 +10,10 @@ public:
     TensorIterator(const Tensor &tensor);
 
     TensorIterator &operator++();
-    void *operator*() { return (void *)((char *)(tensor_->data_ptr()) + offset_ * tensor_->itemsize()); }
+    inline void *operator*() const { return (void *)((char *)(tensor_->data_ptr()) + offset_ * tensor_->itemsize()); }
 
     inline void end() { offset_ = -1; }
-    inline bool is_end() { return offset_ == -1; }
+    inline bool is_end() const { return offset_ == -1; }
 
 protected:
     const Tensor *tensor_;
