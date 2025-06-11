@@ -31,50 +31,50 @@ enum ScalarBinaryOpType : uint8_t {
     COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES,
 };
 
-#define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, args...)      \
-    GEN(DataType::TYPE_BOOL, bool, ##args)              \
-    GEN(DataType::TYPE_UINT8, uint8_t, ##args)          \
-    GEN(DataType::TYPE_INT8, int8_t, ##args)            \
-    GEN(DataType::TYPE_UINT16, uint16_t, ##args)        \
-    GEN(DataType::TYPE_INT16, int16_t, ##args)          \
-    GEN(DataType::TYPE_UINT32, uint32_t, ##args)        \
-    GEN(DataType::TYPE_INT32, int32_t, ##args)          \
-    GEN(DataType::TYPE_UINT64, uint64_t, ##args)        \
-    GEN(DataType::TYPE_INT64, int64_t, ##args)          \
-    GEN(DataType::TYPE_FLOAT32, float, ##args)          \
-    GEN(DataType::TYPE_FLOAT64, double, ##args)
+#define DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, ...)      \
+    GEN(DataType::TYPE_BOOL, bool, ##__VA_ARGS__)              \
+    GEN(DataType::TYPE_UINT8, uint8_t, ##__VA_ARGS__)          \
+    GEN(DataType::TYPE_INT8, int8_t, ##__VA_ARGS__)            \
+    GEN(DataType::TYPE_UINT16, uint16_t, ##__VA_ARGS__)        \
+    GEN(DataType::TYPE_INT16, int16_t, ##__VA_ARGS__)          \
+    GEN(DataType::TYPE_UINT32, uint32_t, ##__VA_ARGS__)        \
+    GEN(DataType::TYPE_INT32, int32_t, ##__VA_ARGS__)          \
+    GEN(DataType::TYPE_UINT64, uint64_t, ##__VA_ARGS__)        \
+    GEN(DataType::TYPE_INT64, int64_t, ##__VA_ARGS__)          \
+    GEN(DataType::TYPE_FLOAT32, float, ##__VA_ARGS__)          \
+    GEN(DataType::TYPE_FLOAT64, double, ##__VA_ARGS__)
 
-#define DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, args...)                                \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_BOOL, bool, ##args)          \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT8, uint8_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT8, int8_t, ##args)        \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT16, uint16_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT16, int16_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT32, uint32_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT32, int32_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT64, uint64_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT64, int64_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_FLOAT32, float, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_FLOAT64, double, ##args)
+#define DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, ...)                                \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_BOOL, bool, ##__VA_ARGS__)          \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT8, uint8_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT8, int8_t, ##__VA_ARGS__)        \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT16, uint16_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT16, int16_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT32, uint32_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT32, int32_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_UINT64, uint64_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_INT64, int64_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_FLOAT32, float, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN, DataType::TYPE_FLOAT64, double, ##__VA_ARGS__)
 
-#define DATATYPE_GEN_TEMPLATE_LOOPx3(GEN, args...)                                \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_BOOL, bool, ##args)          \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT8, uint8_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT8, int8_t, ##args)        \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT16, uint16_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT16, int16_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT32, uint32_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT32, int32_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT64, uint64_t, ##args)    \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT64, int64_t, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_FLOAT32, float, ##args)      \
-    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_FLOAT64, double, ##args)
+#define DATATYPE_GEN_TEMPLATE_LOOPx3(GEN, ...)                                \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_BOOL, bool, ##__VA_ARGS__)          \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT8, uint8_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT8, int8_t, ##__VA_ARGS__)        \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT16, uint16_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT16, int16_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT32, uint32_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT32, int32_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_UINT64, uint64_t, ##__VA_ARGS__)    \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_INT64, int64_t, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_FLOAT32, float, ##__VA_ARGS__)      \
+    DATATYPE_GEN_TEMPLATE_LOOPx2(GEN, DataType::TYPE_FLOAT64, double, ##__VA_ARGS__)
 
-#define SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(GEN, args...)   \
-    GEN(ScalarBinaryOpType::ADD, add, +, ##args)             \
-    GEN(ScalarBinaryOpType::SUB, sub, -, ##args)             \
-    GEN(ScalarBinaryOpType::MUL, mul, *, ##args)             \
-    GEN(ScalarBinaryOpType::DIV, truediv, /, ##args)
+#define SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(GEN, ...)   \
+    GEN(ScalarBinaryOpType::ADD, add, +, ##__VA_ARGS__)             \
+    GEN(ScalarBinaryOpType::SUB, sub, -, ##__VA_ARGS__)             \
+    GEN(ScalarBinaryOpType::MUL, mul, *, ##__VA_ARGS__)             \
+    GEN(ScalarBinaryOpType::DIV, truediv, /, ##__VA_ARGS__)
 
 size_t sizeof_dtype(DataType dtype);
 
