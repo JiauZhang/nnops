@@ -1,6 +1,6 @@
-import os, re, subprocess, sys
+import os, re, subprocess, sys, shutil
 from pathlib import Path
-
+from glob import glob
 from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
 
@@ -10,6 +10,8 @@ PLAT_TO_CMAKE = {
     "win-arm32": "ARM",
     "win-arm64": "ARM64",
 }
+
+IS_WINDOWS = os.name == "nt"
 
 # A CMakeExtension needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -116,6 +118,12 @@ class CMakeBuild(build_ext):
         subprocess.run(
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
         )
+
+        if IS_WINDOWS:
+            target_lib = glob(f'{build_temp}/**/*.lib', recursive=True) + glob(f'{build_temp}/**/*.dll', recursive=True)
+            target_dir = os.path.join(self.build_lib, 'nnops')
+            for lib in target_lib:
+                shutil.copy(lib, target_dir)
 
 setup(
     ext_modules=[CMakeExtension("nnops._C", sourcedir=".")],

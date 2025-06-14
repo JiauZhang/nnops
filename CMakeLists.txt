@@ -4,6 +4,10 @@ project(nnops)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(nnops)
