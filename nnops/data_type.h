@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <nnops/common.h>
+#include <tuple>
 
 namespace nnops {
 
@@ -22,6 +23,43 @@ enum DataType : uint8_t {
     TYPE_FLOAT64,
     COMPILE_TIME_MAX_DATA_TYPES,
 };
+using CppType = std::tuple<
+    bool,
+    uint8_t,
+    int8_t,
+    uint16_t,
+    int16_t,
+    uint32_t,
+    int32_t,
+    uint64_t,
+    int64_t,
+    float,
+    double
+>;
+constexpr size_t kNumDataTypes = std::tuple_size<CppType>::value;
+
+template <size_t index>
+using CppTypeElement = typename std::tuple_element<index, CppType>::type;
+
+template <size_t index>
+struct DataTypeElementImpl : std::integral_constant<DataType, static_cast<DataType>(index)> {
+    static_assert(index < kNumDataTypes, "Index out of range for DataType");
+};
+
+template <size_t index>
+inline constexpr DataType DataTypeElement = DataTypeElementImpl<index>::value;
+
+template <DataType T>
+struct DataTypeToCppTypeImpl;
+
+template <DataType T>
+struct DataTypeToCppTypeImpl {
+    static_assert(static_cast<uint8_t>(T) < std::tuple_size_v<CppType>, "Invalid DataType value");
+    using type = CppTypeElement<static_cast<std::size_t>(T)>;
+};
+
+template <DataType T>
+using DataTypeToCppType = typename DataTypeToCppTypeImpl<T>::type;
 
 enum ScalarBinaryOpType : uint8_t {
     ADD = 0,

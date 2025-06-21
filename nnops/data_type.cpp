@@ -1,5 +1,6 @@
 #include <nnops/data_type.h>
 #include <array>
+#include <utility> // for std::index_sequence, std::make_index_sequence
 
 namespace nnops {
 
@@ -29,21 +30,47 @@ constexpr std::array<DataType, DataType::COMPILE_TIME_MAX_DATA_TYPES> index2dtyp
     DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_INDEX2DTYPE_ITEM)
 };
 
-template<typename FromType, typename ToType>
+template<DataType FromDataType, DataType ToDataType>
 void type_cast(void **args, const index_t *strides, const index_t size) {
+    using FromCppType = DataTypeToCppType<FromDataType>;
+    using ToCppType = DataTypeToCppType<ToDataType>;
     void *src = args[0], *dst = args[1];
     const index_t &fs = strides[0], &ts = strides[1];
     for (int i = 0; i < size; i++) {
-        *reinterpret_cast<ToType *>(dst) = *reinterpret_cast<FromType *>(src);
+        *reinterpret_cast<ToCppType *>(dst) = *reinterpret_cast<FromCppType *>(src);
         dst = (void *)((char *)dst + ts);
         src = (void *)((char *)src + fs);
     }
 }
 
-#define GEN_ITEM_INST(dtype2, type2, dtype1, type1) type_cast<type1, type2>,
-static std::array<
-    std::array<dtype_cast_op_t, index2dtype.size()>,
-    index2dtype.size()> __dtype_cast_ops__ = { DATATYPE_GEN_TEMPLATE_LOOPx2(GEN_ITEM_INST) };
+template <size_t I, size_t J>
+constexpr dtype_cast_op_t get_cast_op_by_index() {
+    constexpr DataType FromDataType = DataTypeElement<I>;
+    constexpr DataType ToDataType = DataTypeElement<J>;
+    return type_cast<FromDataType, ToDataType>;
+}
+
+template <size_t I, size_t... J>
+constexpr auto make_inner_array(std::index_sequence<J...>) {
+    return std::array<dtype_cast_op_t, sizeof...(J)> {
+        get_cast_op_by_index<I, J>()...
+    };
+}
+
+template <size_t... I>
+constexpr auto make_outer_array(std::index_sequence<I...>) {
+    return std::array<std::array<dtype_cast_op_t, sizeof...(I)>, sizeof...(I)> {
+        make_inner_array<I>(std::make_index_sequence<sizeof...(I)>{})...
+    };
+}
+
+constexpr auto make_dtype_cast_ops() {
+    return make_outer_array(std::make_index_sequence<kNumDataTypes>{});
+}
+
+static constexpr auto __dtype_cast_ops__ = make_dtype_cast_ops();
+static_assert(__dtype_cast_ops__.size() == kNumDataTypes, "dtype cast table row size error!");
+static_assert(__dtype_cast_ops__[0].size() == kNumDataTypes, "dtype cast column size error!");
 
 constexpr std::array<int, index2dtype.size()> calculate_dtype2index() {
     std::array<int, index2dtype.size()> dtype2index = {};
@@ -90,26 +117,52 @@ DataType get_promote_type(ScalarBinaryOpType op_type, DataType ltype, DataType r
     return __promote_types__[ltype][rtype];
 }
 
-#define MAKE_SCALAR_BINARY_OP_TEMPLATE(op_type, op_name, op)                     \
-template<typename T>             \
-void scalar_binary_op_##op_name(void **args, const index_t *strides, const index_t size) { \
-    void *ret = args[0], *lvalue = args[1], *rvalue = args[2];                   \
-    const index_t ret_s = strides[0], left_s = strides[1], right_s = strides[2]; \
-    for (int i = 0; i < size; i++) {                                             \
-        *reinterpret_cast<T *>(ret) = (*reinterpret_cast<T *>(lvalue)) op (*reinterpret_cast<T *>(rvalue));     \
-        ret = (void *)((char *)ret + ret_s);                                     \
-        lvalue = (void *)((char *)lvalue + left_s);                              \
-        rvalue = (void *)((char *)rvalue + right_s);                             \
-    }                                                                            \
-}
-SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_SCALAR_BINARY_OP_TEMPLATE)
+template <typename T, ScalarBinaryOpType OP>
+struct ScalarBinaryOpImpl;
 
-#define DTYPE_OPTYPE_INSTANCE(DTYPE, T, OPTYPE, OPNAME, OP) scalar_binary_op_##OPNAME<T>,
-#define DTYPE_OPTYPE_GENERATOR(OPTYPE, OPNAME, OP) DATATYPE_GEN_TEMPLATE_LOOPx1(DTYPE_OPTYPE_INSTANCE, OPTYPE, OPNAME, OP)
-static scalar_binary_op_t \
-__scalar_binary_ops__[ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES][DataType::COMPILE_TIME_MAX_DATA_TYPES] = {
-    SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(DTYPE_OPTYPE_GENERATOR)
+#define DEFINE_SCALAR_BINARY_OP_IMPL(op_type, op_name, op_symbol)              \
+template <typename T> \
+struct ScalarBinaryOpImpl<T, op_type> { \
+    static void apply(void **args, const index_t *strides, const index_t size) { \
+        void *ret = args[0], *lvalue = args[1], *rvalue = args[2];                   \
+        const index_t ret_s = strides[0], left_s = strides[1], right_s = strides[2]; \
+        for (int i = 0; i < size; i++) {                                             \
+            *reinterpret_cast<T *>(ret) = (*reinterpret_cast<T *>(lvalue)) op_symbol (*reinterpret_cast<T *>(rvalue));     \
+            ret = (void *)((char *)ret + ret_s);                                     \
+            lvalue = (void *)((char *)lvalue + left_s);                              \
+            rvalue = (void *)((char *)rvalue + right_s);                             \
+        }                                                                            \
+    } \
 };
+SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(DEFINE_SCALAR_BINARY_OP_IMPL)
+
+template <ScalarBinaryOpType OP, DataType DT>
+constexpr scalar_binary_op_t get_scalar_binary_op_func() {
+    using T = std::tuple_element_t<static_cast<size_t>(DT), CppType>;
+    return &ScalarBinaryOpImpl<T, OP>::apply;
+}
+
+template <ScalarBinaryOpType OP, size_t... Idxs>
+constexpr auto make_op_array(std::index_sequence<Idxs...>) {
+    return std::array<scalar_binary_op_t, sizeof...(Idxs)>{
+        get_scalar_binary_op_func<OP, static_cast<DataType>(Idxs)>()...
+    };
+}
+
+template <size_t... Ops>
+constexpr auto make_ops_array(std::index_sequence<Ops...>) {
+    return std::array{
+        make_op_array<static_cast<ScalarBinaryOpType>(Ops)>(
+            std::make_index_sequence<DataType::COMPILE_TIME_MAX_DATA_TYPES>{}
+        )...
+    };
+}
+
+static constexpr auto __scalar_binary_ops__ = []() constexpr {
+    return make_ops_array(
+        std::make_index_sequence<ScalarBinaryOpType::COMPILE_TIME_MAX_SCALAR_BINARY_OP_TYPES>{}
+    );
+}();
 
 scalar_binary_op_t get_scalar_binary_op(ScalarBinaryOpType op_type, DataType dtype) {
     return __scalar_binary_ops__[op_type][dtype];
