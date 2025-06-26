@@ -17,7 +17,7 @@
 
 namespace nb = nanobind;
 using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape, nnops::TensorBuffer;
-using nnops::DataType, nnops::DeviceType, nnops::Device, nnops::index_t;
+using nnops::DataType, nnops::DeviceType, nnops::Device, nnops::index_t, nnops::TensorStride;
 
 namespace pynnops {
 

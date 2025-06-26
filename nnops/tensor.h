@@ -55,9 +55,9 @@ public:
     Tensor astype(DataType dtype) const;
     Tensor to(DeviceType device) const;
 
-    void to_string(std::string *prefix, std::string *ret);
-    std::string to_string();
-    std::string to_repr();
+    void to_string(std::string *prefix, std::string *ret) const;
+    std::string to_string() const;
+    std::string to_repr() const;
 
     inline const TensorShape &shape() const { return this->tensor_meta_.dims_; }
     index_t shape(int index) const;

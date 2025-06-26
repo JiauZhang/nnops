@@ -4,14 +4,14 @@
 
 namespace nnops {
 
-#define GEN_DTYPE_SIZE(dtype, type) sizeof(type),
-static constexpr std::array<size_t, DataType::COMPILE_TIME_MAX_DATA_TYPES> __dtype_size__ = {
-    DATATYPE_GEN_TEMPLATE_LOOPx1(GEN_DTYPE_SIZE)
-};
-
-size_t sizeof_dtype(DataType dtype) {
-    return __dtype_size__[dtype];
+template <size_t... I>
+constexpr std::array<size_t, kNumDataTypes> make_dtype_size(std::index_sequence<I...>) {
+    return std::array<size_t, kNumDataTypes> {
+        sizeof(CppTypeElement<I>)...
+    };
 }
+constexpr std::array<size_t, kNumDataTypes> __dtype_size__ = make_dtype_size(std::make_index_sequence<kNumDataTypes>{});
+size_t sizeof_dtype(DataType dtype) { return __dtype_size__[static_cast<size_t>(dtype)]; }
 
 #define b1 DataType::TYPE_BOOL
 #define u1 DataType::TYPE_UINT8

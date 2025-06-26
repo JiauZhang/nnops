@@ -248,7 +248,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     // https://nanobind.readthedocs.io/en/latest/classes.html#overloaded-methods
     auto &pytensor = nb::class_<Tensor>(m, "Tensor")
         .def(nb::new_([](nb::kwargs &kwargs) { return create_pytensor(kwargs); }))
-        .def("__str__", nb::overload_cast<>(&Tensor::to_string))
+        .def("__str__", nb::overload_cast<>(&Tensor::to_string, nb::const_))
         .def("__repr__", &Tensor::to_repr)
         .def("__getitem__", &__getitem__)
         .def("is_contiguous", &Tensor::is_contiguous)
@@ -268,8 +268,8 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def_prop_ro("ndim", &Tensor::ndim)
         .def_prop_ro("nbytes", &Tensor::nbytes)
         .def_prop_ro("nelems", &Tensor::nelems)
-        .def_prop_ro("stride", [](Tensor &self) { return self.stride(); })
-        .def_prop_ro("shape", [](Tensor &self) { return self.shape(); });
+        .def_prop_ro("stride", nb::overload_cast<>(&Tensor::stride, nb::const_))
+        .def_prop_ro("shape", nb::overload_cast<>(&Tensor::shape, nb::const_));
 
     pytensor.def("__matmul__", &matmul);
 

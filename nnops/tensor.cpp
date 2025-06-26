@@ -68,7 +68,7 @@ Tensor::~Tensor() {
 }
 
 template<typename T>
-void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int dim, index_t offset) {
+void to_string_impl(const Tensor *tensor, std::string *prefix, std::string *ret, int dim, index_t offset) {
     std::string cur_prefix;
 
     if (ret->size() && ret->back() == '\n') {
@@ -126,7 +126,7 @@ void to_string_impl(Tensor *tensor, std::string *prefix, std::string *ret, int d
         break;                                               \
     }
 
-void Tensor::to_string(std::string *prefix, std::string *ret) {
+void Tensor::to_string(std::string *prefix, std::string *ret) const {
     if (tensor_meta_.nelems_ == 0)
         return;
 
@@ -137,13 +137,13 @@ void Tensor::to_string(std::string *prefix, std::string *ret) {
     }
 }
 
-std::string Tensor::to_string() {
+std::string Tensor::to_string() const {
     std::string ret;
     this->to_string(nullptr, &ret);
     return ret;
 }
 
-std::string Tensor::to_repr() {
+std::string Tensor::to_repr() const {
     std::string ret = "Tensor(";
     std::string prefix(ret.size(), ' ');
 
