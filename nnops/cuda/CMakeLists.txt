@@ -17,3 +17,5 @@ target_compile_options(nnops_cuda PRIVATE -arch=sm_50)
 set_target_properties(nnops_cuda PROPERTIES CUDA_ARCHITECTURES "50")
 
 target_link_libraries(nnops PUBLIC nnops_cuda)
+
+install(TARGETS nnops_cuda DESTINATION .)

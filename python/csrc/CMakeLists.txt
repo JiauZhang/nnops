@@ -4,3 +4,5 @@ nanobind_add_module(
   python.cpp
 )
 target_link_libraries(_C PRIVATE nnops)
+
+install(TARGETS _C DESTINATION .)
