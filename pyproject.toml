@@ -21,7 +21,7 @@ keywords = [
     'Neural Network Operators',
     'Artificial Intelligence',
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.8"
 dependencies = [
     "numpy",
 ]

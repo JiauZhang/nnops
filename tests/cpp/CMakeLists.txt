@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
-if (WIN32)
-    set(GTest_DIR "F:/vcpkg/installed/x64-windows/share/gtest")
+if (WIN32 AND NOT DEFINED GTest_DIR)
+    set(GTest_DIR "$ENV{VCPKG_ROOT}/installed/x64-windows/share/gtest")
+    message(STATUS "GTest_DIR = ${GTest_DIR}")
 endif()
 
 project(nnops_cpp_tests)
