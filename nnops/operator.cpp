@@ -8,7 +8,7 @@ std::map<std::string, Operator *> Operator::operators_[DeviceType::COMPILE_TIME_
 void Operator::register_operator(std::string &op_name, DeviceType type, Operator *op) {
     auto &ops_ = Operator::operators_[type];
     Device *device = Device::get_device(type);
-    NNOPS_CHECK(!ops_.count(op_name), "Operator <" + op_name + "> has been registered in " + device->get_device_name() + " device!")
+    NNOPS_CHECK(!ops_.count(op_name), "Operator `%s` has been registered in %s device!", op_name.c_str(), device->get_device_cname());
     ops_[op_name] = op;
 }
 
@@ -24,7 +24,7 @@ void Operator::set_operator_name(std::string &op_name) {
     DeviceType type = get_device_type();
     auto &ops_ = Operator::operators_[type];
     auto iter = ops_.find(op_name);
-    NNOPS_CHECK(iter != ops_.end(), "set_operator_name failed!")
+    NNOPS_CHECK(iter != ops_.end(), "set_operator_name failed!");
     operator_name_ = iter->first.c_str();
 }
 

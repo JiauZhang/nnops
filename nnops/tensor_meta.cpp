@@ -61,8 +61,11 @@ reshape_error:
 void TensorMeta::index_inplace(int index, int axis) {
     TensorShape &shape = dims_;
 
-    NNOPS_CHECK(!(index >= shape[axis] || index < -shape[axis]), "index_inplace " + std::to_string(index)
-        + " is out of bounds for axis " + std::to_string(axis) + " with size " + std::to_string(shape[axis]))
+    NNOPS_CHECK(
+        !(index >= shape[axis] || index < -shape[axis]),
+        "index %d is out of bounds for axis %d with size %d",
+        index, axis, shape[axis]
+    );
 
     if (index < 0)
         index += shape[axis];

@@ -23,6 +23,9 @@ public:
     Tensor &operator=(Tensor &other);
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
 
+    static void fill(const Tensor &self, const Tensor &value);
+    inline void fill(const Tensor &value) { fill(*this, value); }
+
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
     Tensor reshape(TensorShape &dims) const;
     inline static bool is_broadcastable(const Tensor &t1, const Tensor &t2) { return is_broadcastable(t1.shape(), t2.shape(), 0); }

@@ -6,7 +6,7 @@ namespace nnops {
 TensorBuffer::TensorBuffer(Device *device, int size):
     device_(device), ref_count_(1), size_(size) {
     data_ptr_ = device_->malloc(size_);
-    NNOPS_CHECK(data_ptr_ != nullptr, "alloc TensorBuffer memory failed on " + device_->get_device_name() + " device!")
+    NNOPS_CHECK(data_ptr_ != nullptr, "alloc TensorBuffer memory failed on %s device!", device_->get_device_cname());
 }
 
 void TensorBuffer::dec_ref() {

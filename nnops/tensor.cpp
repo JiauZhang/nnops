@@ -44,10 +44,14 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
         nelems_ *= shape[i];
     }
 
-    NNOPS_CHECK(!(shape.size() == 0 || nelems_ <= 0), "invalid shape info!")
+    NNOPS_CHECK(!(shape.size() == 0 || nelems_ <= 0), "invalid shape info!");
 
     tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
     tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes_);
+}
+
+void Tensor::fill(const Tensor &self, const Tensor &value) {
+    NNOPS_CHECK(is_broadcastable(self, value), "broadcast_to offset is out of bounds.");
 }
 
 Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
@@ -200,14 +204,14 @@ Tensor Tensor::contiguous() const {
 }
 
 index_t Tensor::shape(int index) const {
-    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "shape index is out of bounds")
+    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "shape index is out of bounds");
     if (index < 0)
         index += this->ndim();
     return this->tensor_meta_.dims_[index];
 }
 
 index_t Tensor::stride(int index) const {
-    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "stride index is out of bounds")
+    NNOPS_CHECK(index >= -this->ndim() && index < this->ndim(), "stride index is out of bounds");
     if (index < 0)
         index += this->ndim();
     return this->tensor_meta_.strides_[index];
@@ -265,16 +269,16 @@ bool Tensor::is_broadcast() {
 
 Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offset) {
     const TensorShape &ts = t.shape();
-    std::string info = "Can not broadcast Tensor from shape " + TensorMeta::shape_as_string(ts)
-        + " to " + TensorMeta::shape_as_string(shape);
+    const char *info = "Can not broadcast Tensor from shape";
+    const std::string &&str_shape_tensor = TensorMeta::shape_as_string(ts), &&str_shape = TensorMeta::shape_as_string(shape);
     int dims = std::min(ts.size(), shape.size());
 
-    NNOPS_CHECK(ts.size() <= shape.size(), info)
-    NNOPS_CHECK(dims >= offset, "broadcast_to offset is out of bounds.")
+    NNOPS_CHECK(ts.size() <= shape.size(), "%s %s to %s", info, str_shape_tensor.c_str(), str_shape.c_str());
+    NNOPS_CHECK(dims >= offset, "broadcast_to offset is out of bounds.");
 
     int ts_size = ts.size() - 1, s_size = shape.size() - 1;
     for (int i=offset; i<dims; i++)
-        NNOPS_CHECK(!(shape[s_size-i] != ts[ts_size-i] && ts[ts_size-i] != 1), info)
+        NNOPS_CHECK(!(shape[s_size-i] != ts[ts_size-i] && ts[ts_size-i] != 1), "%s %s to %s", info, str_shape_tensor.c_str(), str_shape.c_str());
 
     Tensor tb = t;
     TensorStride strides = tb.stride();
@@ -299,17 +303,16 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offse
 }
 
 Tensor Tensor::permute(TensorShape &index) const {
-    NNOPS_CHECK(index.size() == this->shape().size(), "axes size don't match!")
+    NNOPS_CHECK(index.size() == this->shape().size(), "axes size don't match!");
     int len = index.size();
     TensorShape count(len, 0);
     for (int i = 0; i < len; i++) {
         auto &idx = index[i];
-        NNOPS_CHECK(!(idx < -len || idx >= len), "axis " + std::to_string(idx)
-            + " is out of bounds for tensor of dimension " + std::to_string(len))
+        NNOPS_CHECK(!(idx < -len || idx >= len), "axis %d is out of bounds for tensor of dimension %d", idx, len);
         if (idx < 0)
             idx += len;
         ++count[idx];
-        NNOPS_CHECK(count[idx] <= 1, "repeated axis in permute")
+        NNOPS_CHECK(count[idx] <= 1, "repeated axis in permute");
     }
 
     TensorMeta meta = this->meta();
@@ -325,8 +328,7 @@ Tensor Tensor::transpose(const Tensor &t, index_t dim0, index_t dim1) {
     index_t dims[len] = {dim0, dim1};
     for (int i = 0; i < len; i++) {
         auto &dim = dims[i];
-        NNOPS_CHECK(!(dim < -size || dim >= size), "axis " + std::to_string(dim)
-            + " is out of bounds for tensor of dimension " + std::to_string(size))
+        NNOPS_CHECK(!(dim < -size || dim >= size), "axis %d is out of bounds for tensor of dimension %d", dim, size);
         if (dim < 0)
             dim += size;
     }
@@ -357,7 +359,7 @@ Tensor Tensor::to(DeviceType device) const {
     if (device == this->device()->get_device_type())
         return *this;
     Device *dev = Device::get_device(device);
-    NNOPS_CHECK(dev != nullptr, "device is invalid!")
+    NNOPS_CHECK(dev != nullptr, "device is invalid!");
     Tensor dst(this->dtype(), this->shape(), dev), src = this->contiguous();
     if (src.device()->get_device_type() == DeviceType::CPU) {
         dev->copy_from_cpu(src.data_ptr(), dst.data_ptr(), src.nbytes());
@@ -396,8 +398,7 @@ TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
         strides_contig[i] = strides_contig[i + 1] * shape[i + 1];
     index_t nelems = strides_contig[0] * shape[0];
 
-    NNOPS_CHECK(idx <= nelems, "index " + std::to_string(idx)
-        + "is out of bounds for TensorShape with size" + std::to_string(nelems))
+    NNOPS_CHECK(idx <= nelems, "index %d is out of bounds for TensorShape with size %d", idx, nelems);
     for (int i = 0; i < indices.size(); i++) {
         indices[i] = idx / strides_contig[i];
         idx -= indices[i] * strides_contig[i];
@@ -406,15 +407,14 @@ TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {
 }
 
 index_t Tensor::ravel_index(const TensorShape &indices, const TensorShape &shape) {
-    NNOPS_CHECK(indices.size() == shape.size(), "parameter indices must be a sequence of length " + std::to_string(shape.size()))
+    NNOPS_CHECK(indices.size() == shape.size(), "parameter indices must be a sequence of length %ld", shape.size());
     TensorShape strides_contig(shape.size());
     index_t idx = 0;
     strides_contig[shape.size() - 1] = 1;
     for (int i = shape.size() - 2; i >= 0; i--)
         strides_contig[i] = strides_contig[i + 1] * shape[i + 1];
     for (int i = 0; i < shape.size(); i++) {
-        NNOPS_CHECK(indices[i] < shape[i], "indices[" + std::to_string(i) + "]: " + std::to_string(indices[i])
-            + "is out of bounds for shape[" + std::to_string(i) + "]: " + std::to_string(shape[i]))
+        NNOPS_CHECK(indices[i] < shape[i], "indices[%d]: %d is out of bounds for shape[%d]: %d", i, indices[i], i, shape[i]);
     }
     for (int i = 0; i < shape.size(); i++)
         idx += indices[i] * strides_contig[i];

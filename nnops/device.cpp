@@ -24,7 +24,7 @@ Device *Device::get_device(std::string &name) {
 
 void Device::set_device_name(std::string &name) {
     auto iter = named_devices_.find(name);
-    NNOPS_CHECK(iter != named_devices_.end(), "set_device_name failed!")
+    NNOPS_CHECK(iter != named_devices_.end(), "set_device_name failed!");
     device_name_ = iter->first.c_str();
 }
 

@@ -31,7 +31,7 @@ TensorIterator &TensorIterator::operator++() {
 }
 
 TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start, index_t stop): TensorIterator(tensor) {
-    NNOPS_CHECK(!(start < 0 || stop > tensor.ndim() || start >= stop), "invalid TensorPartialIterator parameter.")
+    NNOPS_CHECK(!(start < 0 || stop > tensor.ndim() || start >= stop), "invalid TensorPartialIterator parameter.");
     start_ = start;
     stop_ = stop;
 }

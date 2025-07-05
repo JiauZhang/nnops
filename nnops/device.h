@@ -18,6 +18,7 @@ class Device {
 public:
     void set_device_name(std::string &name);
     inline std::string get_device_name() { return std::string(device_name_); }
+    inline const char *get_device_cname() { return device_name_; }
     inline void set_device_type(DeviceType &dt) { device_type_ = dt; }
     inline DeviceType get_device_type() { return device_type_; }
 

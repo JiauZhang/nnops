@@ -36,8 +36,11 @@ void do_binary_op_tensor_tensor_impl(const Tensor &self, const Tensor &other, co
 
 template<ScalarBinaryOpType op_type>
 Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other) {
-    NNOPS_CHECK(Tensor::is_broadcastable(self, other), "operands could not be broadcast together with shapes "
-            + TensorMeta::shape_as_string(self.shape()) + " and " + TensorMeta::shape_as_string(other.shape()))
+    const auto &&self_shape_str = TensorMeta::shape_as_string(self.shape()), &&other_shape_str = TensorMeta::shape_as_string(other.shape());
+    NNOPS_CHECK(Tensor::is_broadcastable(self, other),
+        "operands could not be broadcast together with shapes %s and %s",
+        self_shape_str.c_str(), other_shape_str.c_str()
+    );
 
     TensorShape shape = Tensor::broadcast_shape(self, other);
     DataType dtype = get_promote_type(op_type, self.dtype(), other.dtype());

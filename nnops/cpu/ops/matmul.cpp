@@ -68,9 +68,9 @@ void matmul_impl(const Tensor &lvalue, const Tensor &rvalue, const Tensor &out, 
 }
 
 Tensor matmul(const Tensor &lvalue, const Tensor &rvalue) {
-    NNOPS_CHECK(lvalue.ndim() >= 2 && rvalue.ndim() >= 2, "matmul lvalue and rvalue ndim must be greater than 2.")
-    NNOPS_CHECK(lvalue.shape(-1) == rvalue.shape(-2), "matmul lvalue and rvalue are incompatible.")
-    NNOPS_CHECK(Tensor::is_broadcastable(lvalue.shape(), rvalue.shape(), 2), "matmul lvalue and rvalue are not broadcastable.")
+    NNOPS_CHECK(lvalue.ndim() >= 2 && rvalue.ndim() >= 2, "matmul lvalue and rvalue ndim must be greater than 2.");
+    NNOPS_CHECK(lvalue.shape(-1) == rvalue.shape(-2), "matmul lvalue and rvalue are incompatible.");
+    NNOPS_CHECK(Tensor::is_broadcastable(lvalue.shape(), rvalue.shape(), 2), "matmul lvalue and rvalue are not broadcastable.");
     TensorShape shape = Tensor::broadcast_shape(lvalue.shape(), rvalue.shape(), 2);
     auto size = shape.size();
     shape.resize(size + 2);

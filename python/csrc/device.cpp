@@ -9,7 +9,7 @@ namespace pynnops {
 
 void show_device_info(DeviceType device) {
     Device *dev = Device::get_device(device);
-    NNOPS_CHECK(dev != nullptr, "invalid device type!")
+    NNOPS_CHECK(dev != nullptr, "invalid device type!");
     dev->info();
 }
 
