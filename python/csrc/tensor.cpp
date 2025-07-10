@@ -125,10 +125,15 @@ Tensor create_pytensor(nb::kwargs &kwargs) {
     return Tensor(dtype, shape, device);
 }
 
-Tensor __getitem__(Tensor &self, nb::handle indices) {
+inline Tensor __getitem__(Tensor &self, nb::handle indices) {
     TensorMeta meta = self.meta();
     indexing(meta, indices, 0);
     return Tensor(meta, self.buffer());
+}
+
+void __setitem__(Tensor &self, nb::handle indices, const Tensor &value) {
+    Tensor &&tensor = __getitem__(self, indices);
+    tensor.fill(value);
 }
 
 void parse_int_args(const nb::args &args, TensorShape &indices) {
@@ -250,6 +255,7 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
         .def("__str__", nb::overload_cast<>(&Tensor::to_string, nb::const_))
         .def("__repr__", &Tensor::to_repr)
         .def("__getitem__", &__getitem__)
+        .def("__setitem__", &__setitem__)
         .def("is_contiguous", &Tensor::is_contiguous)
         .def("contiguous", &Tensor::contiguous)
         .def("clone", &Tensor::clone)

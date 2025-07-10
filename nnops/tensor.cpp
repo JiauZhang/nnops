@@ -51,7 +51,11 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
 }
 
 void Tensor::fill(const Tensor &self, const Tensor &value) {
-    NNOPS_CHECK(is_broadcastable(self, value), "broadcast_to offset is out of bounds.");
+    NNOPS_CHECK(
+        is_broadcastable_to(self.shape(), value.shape(), 0),
+        "could not broadcast tensor from shape %s into shape %s",
+        self.shape_as_string().c_str(), value.shape_as_string().c_str()
+    );
 }
 
 Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
@@ -267,23 +271,34 @@ bool Tensor::is_broadcast() {
     return false;
 }
 
+bool Tensor::is_broadcastable_to(const TensorShape &self, const TensorShape &other, int offset) {
+    int dims = std::min(self.size(), other.size());
+
+    if (self.size() > other.size() || dims < offset)
+        return false;
+
+    int self_i = self.size() - 1, other_i = other.size() - 1;
+    for (int i=offset; i<dims; i++)
+        if (self[self_i-i] != other[other_i-i] && self[self_i-i] != 1)
+            return false;
+
+    return true;
+}
+
 Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offset) {
     const TensorShape &ts = t.shape();
-    const char *info = "Can not broadcast Tensor from shape";
-    const std::string &&str_shape_tensor = TensorMeta::shape_as_string(ts), &&str_shape = TensorMeta::shape_as_string(shape);
-    int dims = std::min(ts.size(), shape.size());
 
-    NNOPS_CHECK(ts.size() <= shape.size(), "%s %s to %s", info, str_shape_tensor.c_str(), str_shape.c_str());
-    NNOPS_CHECK(dims >= offset, "broadcast_to offset is out of bounds.");
-
-    int ts_size = ts.size() - 1, s_size = shape.size() - 1;
-    for (int i=offset; i<dims; i++)
-        NNOPS_CHECK(!(shape[s_size-i] != ts[ts_size-i] && ts[ts_size-i] != 1), "%s %s to %s", info, str_shape_tensor.c_str(), str_shape.c_str());
+    NNOPS_CHECK(
+        is_broadcastable_to(t.shape(), shape, offset),
+        "could not broadcast tensor from shape %s into shape %s",
+        t.shape_as_string().c_str(), TensorMeta::shape_as_string(shape).c_str()
+    );
 
     Tensor tb = t;
     TensorStride strides = tb.stride();
     const TensorShape &tb_shape = tb.shape();
     TensorShape shape_cp = shape;
+    int ts_size = ts.size() - 1, s_size = shape.size() - 1;
     int diff = shape.size() - ts.size();
 
     for (int i=0; i<=ts_size-offset; i++)

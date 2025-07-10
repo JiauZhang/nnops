@@ -33,6 +33,8 @@ public:
     inline static TensorShape broadcast_shape(const Tensor &t1, const Tensor &t2) { return broadcast_shape(t1.shape(), t2.shape(), 0); }
     static TensorShape broadcast_shape(const TensorShape &s1, const TensorShape &s2, int offset);
     bool is_broadcast();
+    static bool is_broadcastable_to(const TensorShape &self, const TensorShape &other, int offset);
+    inline bool is_broadcastable_to(const TensorShape &shape) { return is_broadcastable_to(this->shape(), shape, 0); }
     inline Tensor broadcast_to(const TensorShape &shape) const { return Tensor::broadcast_to(*this, shape, 0); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
 
@@ -62,6 +64,7 @@ public:
     std::string to_string() const;
     std::string to_repr() const;
 
+    inline std::string shape_as_string() const { return this->tensor_meta_.shape_as_string(); }
     inline const TensorShape &shape() const { return this->tensor_meta_.dims_; }
     index_t shape(int index) const;
     inline void set_shape(const TensorShape &shape) { this->tensor_meta_.dims_ = shape; }

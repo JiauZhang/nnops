@@ -24,7 +24,7 @@ public:
     TensorMeta(): nbytes_(0), nelems_(0), offset_(0) {}
 
     static std::string shape_as_string(const TensorShape &dims);
-    inline std::string shape_as_string() { return TensorMeta::shape_as_string(this->dims_); };
+    inline std::string shape_as_string() const { return TensorMeta::shape_as_string(this->dims_); };
     bool is_contiguous() const;
 
     void reshape_inplace(TensorShape &dims);
