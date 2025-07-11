@@ -261,3 +261,8 @@ def test_tensor_assignment():
     nop_a[::2, ::3, ::4] = nop_b[:, ::2, ::2]
     np_a[::2, ::3, ::4] = np_b[:, ::2, ::2]
     assert (nop_a.numpy() == np_a).all()
+
+    # broadcast
+    nop_a[::3, ::2, ::3] = nop_b[-3:, -1:, ::2]
+    np_a[::3, ::2, ::3] = np_b[-3:, -1:, ::2]
+    assert (nop_a.numpy() == np_a).all()

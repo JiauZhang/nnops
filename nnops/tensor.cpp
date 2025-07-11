@@ -52,12 +52,12 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
 
 void Tensor::fill(Tensor &self, const Tensor &value) {
     NNOPS_CHECK(
-        is_broadcastable_to(self.shape(), value.shape(), 0),
+        is_broadcastable_to(value.shape(), self.shape(), 0),
         "could not broadcast tensor from shape %s into shape %s",
-        self.shape_as_string().c_str(), value.shape_as_string().c_str()
+        value.shape_as_string().c_str(), self.shape_as_string().c_str()
     );
 
-    Tensor type_value = value.astype(self.dtype());
+    Tensor type_value = value.astype(self.dtype()).broadcast_to(self.shape());
     tensor_clone_impl(&type_value, 0, &self, 0, 0);
 }
 
