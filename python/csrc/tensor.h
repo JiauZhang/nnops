@@ -2,6 +2,7 @@
 #define __PYTENSOR_H__
 
 #include <nnops/tensor.h>
+#include <nnops/scalar.h>
 #include <nnops/data_type.h>
 #include <nnops/tensor_meta.h>
 #include <nnops/tensor_buffer.h>
@@ -18,6 +19,7 @@
 namespace nb = nanobind;
 using nnops::Tensor, nnops::TensorMeta, nnops::TensorShape, nnops::TensorBuffer;
 using nnops::DataType, nnops::DeviceType, nnops::Device, nnops::index_t, nnops::TensorStride;
+using nnops::Scalar;
 
 namespace pynnops {
 
