@@ -23,7 +23,7 @@ public:
     Tensor &operator=(Tensor &other);
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
 
-    static void fill(const Tensor &self, const Tensor &value);
+    static void fill(Tensor &self, const Tensor &value);
     inline void fill(const Tensor &value) { fill(*this, value); }
 
     inline void reshape_inplace(TensorShape &dims) { this->tensor_meta_.reshape_inplace(dims); }
@@ -85,6 +85,8 @@ private:
     TensorMeta tensor_meta_;
     TensorBuffer *tensor_buffer_;
 };
+
+void tensor_clone_impl(const Tensor *src, int src_offset, Tensor *dst, int dst_offset, int axis);
 
 } // namespace nnops
 

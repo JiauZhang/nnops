@@ -251,3 +251,13 @@ def test_tensor_transpose(shape, tidx, target, npidx):
     nnops_a_T = a_T.numpy()
     np_a_T = np_a.transpose(*npidx)
     assert (nnops_a_T == np_a_T).all()
+
+def test_tensor_assignment():
+    nop_a = nnops.tensor.randn(7, 8, 9)
+    nop_b = nnops.tensor.randn(4, 5, 6)
+    np_a = nop_a.numpy()
+    np_b = nop_b.numpy()
+
+    nop_a[::2, ::3, ::4] = nop_b[:, ::2, ::2]
+    np_a[::2, ::3, ::4] = np_b[:, ::2, ::2]
+    assert (nop_a.numpy() == np_a).all()

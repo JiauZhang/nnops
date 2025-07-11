@@ -50,12 +50,15 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
     tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes_);
 }
 
-void Tensor::fill(const Tensor &self, const Tensor &value) {
+void Tensor::fill(Tensor &self, const Tensor &value) {
     NNOPS_CHECK(
         is_broadcastable_to(self.shape(), value.shape(), 0),
         "could not broadcast tensor from shape %s into shape %s",
         self.shape_as_string().c_str(), value.shape_as_string().c_str()
     );
+
+    Tensor type_value = value.astype(self.dtype());
+    tensor_clone_impl(&type_value, 0, &self, 0, 0);
 }
 
 Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
