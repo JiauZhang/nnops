@@ -112,4 +112,46 @@ bool TensorMeta::is_contiguous() const {
     return true;
 }
 
+TensorMeta TensorMeta::permute(const TensorShape &index) const {
+    NNOPS_CHECK(index.size() == this->shape().size(), "axes size don't match!");
+    int len = index.size();
+    TensorShape count(len, 0), indices = index;
+    for (int i = 0; i < len; i++) {
+        auto &idx = indices[i];
+        NNOPS_CHECK(!(idx < -len || idx >= len), "axis %d is out of bounds for tensor of dimension %d", idx, len);
+        if (idx < 0)
+            idx += len;
+        ++count[idx];
+        NNOPS_CHECK(count[idx] <= 1, "repeated axis in permute");
+    }
+
+    TensorMeta meta = *this;
+    for (int i = 0; i < this->shape().size(); i++) {
+        meta.dims_[i] = this->shape()[indices[i]];
+        meta.strides_[i] = this->stride()[indices[i]];
+    }
+    return meta;
+}
+
+TensorMeta TensorMeta::transpose(index_t dim0, index_t dim1) const {
+    const int len = 2, size = this->ndim();
+    index_t dims[len] = {dim0, dim1};
+    for (int i = 0; i < len; i++) {
+        auto &dim = dims[i];
+        NNOPS_CHECK(!(dim < -size || dim >= size), "axis %d is out of bounds for tensor of dimension %d", dim, size);
+        if (dim < 0)
+            dim += size;
+    }
+
+    NNOPS_CHECK(dims[0] != dims[1], "repeated axis in transpose");
+
+    TensorMeta meta = *this;
+    for (int i = 0; i < len; i++) {
+        auto idx = i ^ 1;
+        meta.dims_[dims[i]] = this->shape()[dims[idx]];
+        meta.strides_[dims[i]] = this->stride()[dims[idx]];
+    }
+    return meta;
+}
+
 } // namespace nnops

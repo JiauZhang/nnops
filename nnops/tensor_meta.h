@@ -27,13 +27,16 @@ public:
     inline std::string shape_as_string() const { return TensorMeta::shape_as_string(this->dims_); };
     bool is_contiguous() const;
 
+    TensorMeta permute(const TensorShape &index) const;
+    TensorMeta transpose(index_t dim0, index_t dim1) const;
+
     void reshape_inplace(TensorShape &dims);
     void index_inplace(int index, int axis);
     void slice_inplace(Slice &slice, int axis);
 
     inline const TensorShape &shape() const { return this->dims_; }
     inline const TensorStride &stride() const { return this->strides_; }
-    inline int ndim() { return this->shape().size(); }
+    inline int ndim() const { return this->shape().size(); }
     inline int offset() const { return this->offset_; }
     inline size_t nbytes() const { return nelems_ * sizeof_dtype(dtype_); }
 

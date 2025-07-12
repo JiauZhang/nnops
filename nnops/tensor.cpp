@@ -319,49 +319,6 @@ Tensor Tensor::broadcast_to(const Tensor &t, const TensorShape &shape, int offse
     return tb;
 }
 
-Tensor Tensor::permute(TensorShape &index) const {
-    NNOPS_CHECK(index.size() == this->shape().size(), "axes size don't match!");
-    int len = index.size();
-    TensorShape count(len, 0);
-    for (int i = 0; i < len; i++) {
-        auto &idx = index[i];
-        NNOPS_CHECK(!(idx < -len || idx >= len), "axis %d is out of bounds for tensor of dimension %d", idx, len);
-        if (idx < 0)
-            idx += len;
-        ++count[idx];
-        NNOPS_CHECK(count[idx] <= 1, "repeated axis in permute");
-    }
-
-    TensorMeta meta = this->meta();
-    for (int i = 0; i < meta.shape().size(); i++) {
-        meta.dims_[i] = this->meta().shape()[index[i]];
-        meta.strides_[i] = this->meta().stride()[index[i]];
-    }
-    return Tensor(meta, this->buffer());
-}
-
-Tensor Tensor::transpose(const Tensor &t, index_t dim0, index_t dim1) {
-    const int len = 2, size = t.ndim();
-    index_t dims[len] = {dim0, dim1};
-    for (int i = 0; i < len; i++) {
-        auto &dim = dims[i];
-        NNOPS_CHECK(!(dim < -size || dim >= size), "axis %d is out of bounds for tensor of dimension %d", dim, size);
-        if (dim < 0)
-            dim += size;
-    }
-
-    if (dims[0] == dims[1])
-        return t;
-
-    TensorMeta meta = t.meta();
-    for (int i = 0; i < len; i++) {
-        auto idx = i ^ 1;
-        meta.dims_[dims[i]] = t.meta().shape()[dims[idx]];
-        meta.strides_[dims[i]] = t.meta().stride()[dims[idx]];
-    }
-    return Tensor(meta, t.buffer());
-}
-
 Tensor Tensor::astype(DataType dtype) const {
     if (this->dtype() == dtype) {
         return *this;

@@ -38,9 +38,8 @@ public:
     inline Tensor broadcast_to(const TensorShape &shape) const { return Tensor::broadcast_to(*this, shape, 0); }
     static Tensor broadcast_to(const Tensor &t, const TensorShape &shape, int offset);
 
-    Tensor permute(TensorShape &index) const;
-    static Tensor transpose(const Tensor &t, index_t dim0, index_t dim1);
-    inline Tensor transpose(index_t dim0, index_t dim1) const { return transpose(*this, dim0, dim1); }
+    inline Tensor permute(const TensorShape &index) const { return Tensor(this->meta().permute(index), this->buffer()); }
+    inline Tensor transpose(index_t dim0, index_t dim1) const { return Tensor(this->meta().transpose(dim0, dim1), this->buffer()); }
 
     inline DataType dtype() const { return this->tensor_meta_.dtype_; }
     inline void *data_ptr() const { return data_ptr(0); }
@@ -50,6 +49,7 @@ public:
     inline int ndim() const { return this->shape().size(); }
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() const { return this->tensor_buffer_->device_; }
+    inline DeviceType device_type() const { return this->device()->get_device_type(); }
     inline size_t nelems() const { return this->tensor_meta_.nelems_; }
     inline size_t nbytes() { return this->tensor_meta_.nbytes(); }
     inline index_t itemsize() const { return sizeof_dtype(this->dtype()); }
