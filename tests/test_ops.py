@@ -1,4 +1,4 @@
-import pytest
+import pytest, random
 import nnops.ops as ops
 import nnops.tensor, nnops.dtype as dtype
 import numpy as np
@@ -80,6 +80,45 @@ class TestOperators():
     )
     def test_binary_ops(self, nnops_op, np_op):
         self.cross_dtype_loop(nnops_op, np_op)
+
+    def _np_iadd(a, b): a += b
+    def _np_isub(a, b): a -= b
+    def _np_imul(a, b): a *= b
+    def _np_itruediv(a, b): a /= b
+
+    @pytest.mark.parametrize(
+        'nnops_op, np_op, lshape, rshape', [
+            (ops.iadd, _np_iadd, (3, 4, 5), (4, 5)),
+            (ops.isub, _np_isub, (6, 7, 8), (7, 1)),
+            (ops.imul, _np_imul, (2, 5, 6), (1, 6)),
+            (ops.itruediv, _np_itruediv, (2, 9, 3), (9, 3)),
+        ]
+    )
+    def test_binary_ops_tensor_tensor_inplace(self, nnops_op, np_op, lshape, rshape):
+        left = nnops.tensor.randn(*lshape)
+        right = nnops.tensor.randn(*rshape)
+        np_left = left.numpy()
+        np_right = right.numpy()
+        nnops_op(left, right)
+        np_op(np_left, np_right)
+        assert (left.numpy() == np_left).all()
+
+    @pytest.mark.parametrize(
+        'nnops_op, np_op, shape', [
+            (ops.iadd, _np_iadd, (4, 4, 5)),
+            (ops.isub, _np_isub, (9, 7, 8)),
+            (ops.imul, _np_imul, (7, 5, 6)),
+            (ops.itruediv, _np_itruediv, (5, 9, 4)),
+        ]
+    )
+    def test_binary_ops_tensor_scalar_inplace(self, nnops_op, np_op, shape):
+        left = nnops.tensor.randn(*shape)
+        right = random.random()
+        np_left = left.numpy()
+        np_right = right
+        nnops_op(left, right)
+        np_op(np_left, np_right)
+        assert (left.numpy() == np_left).all()
 
     @pytest.mark.parametrize(
         's1, s2, s3', [

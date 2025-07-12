@@ -285,14 +285,17 @@ void DEFINE_TENSOR_MODULE(nb::module_ & (m)) {
     pytensor.def("__matmul__", &matmul);
 
     // tensor-tensor binary ops
-    #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op) pytensor.def("__"#op_name"__", &op_name##_tensor_tensor);
+    #define MAKE_BINARY_OP_TENSOR_TENSOR_BINDING(op_type, op_name, op_symbol)   \
+        pytensor.def("__"#op_name"__", &op_name##_tensor_tensor);               \
+        pytensor.def("__i"#op_name"__", &i##op_name##_tensor_tensor);
     SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_BINDING)
 
     // tensor-scalar binary ops
-    #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op, type) \
-        pytensor.def("__"#op_name"__", &op_name##type##_tensor_scalar);      \
+    #define MAKE_BINARY_OP_TENSOR_SCALAR_BINDING(op_type, op_name, op_symbol, type) \
+        pytensor.def("__"#op_name"__", &op_name##type##_tensor_scalar);             \
+        pytensor.def("__i"#op_name"__", &i##op_name##type##_tensor_scalar);         \
         pytensor.def("__r"#op_name"__", &op_name##type##_tensor_scalar_reverse);
-    #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type) \
+    #define MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING(dtype, type)                 \
         SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_BINDING, type)
     DATATYPE_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_DTYPE_BINDING)
 

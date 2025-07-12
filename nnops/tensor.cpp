@@ -163,7 +163,7 @@ std::string Tensor::to_repr() const {
     return ret;
 }
 
-Tensor &Tensor::operator=(Tensor &other) {
+Tensor &Tensor::operator=(const Tensor &other) {
     if (this != &other) {
         set_meta(other.meta());
         set_buffer(other.buffer());

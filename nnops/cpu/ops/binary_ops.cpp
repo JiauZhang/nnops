@@ -35,17 +35,33 @@ void do_binary_op_tensor_tensor_impl(const Tensor &self, const Tensor &other, co
 }
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other) {
-    const auto &&self_shape_str = TensorMeta::shape_as_string(self.shape()), &&other_shape_str = TensorMeta::shape_as_string(other.shape());
-    NNOPS_CHECK(Tensor::is_broadcastable(self, other),
-        "operands could not be broadcast together with shapes %s and %s",
-        self_shape_str.c_str(), other_shape_str.c_str()
-    );
+Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other, bool inplace) {
+    Tensor ret, self_br, other_br;
+    DataType dtype;
 
-    TensorShape shape = Tensor::broadcast_shape(self, other);
-    DataType dtype = get_promote_type(op_type, self.dtype(), other.dtype());
-    Tensor ret(dtype, shape, self.device());
-    Tensor self_br = self.astype(dtype).broadcast_to(shape), other_br = other.astype(dtype).broadcast_to(shape);
+    if (inplace) {
+        // TODO: expanded tensor
+        NNOPS_CHECK(
+            Tensor::is_broadcastable_to(other.shape(), self.shape(), 0),
+            "could not broadcast tensor from shape %s into shape %s",
+            other.shape_as_string().c_str(), self.shape_as_string().c_str()
+        );
+        dtype = self.dtype();
+        ret = self;
+        self_br = self;
+        other_br = other.astype(dtype).broadcast_to(self.shape());
+    } else {
+        NNOPS_CHECK(Tensor::is_broadcastable(self, other),
+            "operands could not be broadcast together with shape %s and shape %s",
+            self.shape_as_string().c_str(), other.shape_as_string().c_str()
+        );
+        TensorShape shape = Tensor::broadcast_shape(self, other);
+        dtype = get_promote_type(op_type, self.dtype(), other.dtype());
+        self_br = self.astype(dtype).broadcast_to(shape);
+        other_br = other.astype(dtype).broadcast_to(shape);
+        ret = Tensor(dtype, shape, self.device());
+    }
+
     auto scalar_binary_op = get_scalar_binary_op(op_type, dtype);
     ScalarBinaryOpParams params = {
         scalar_binary_op, self_br.shape(-1), {
@@ -63,25 +79,25 @@ Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other)
 }
 
 #define MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR(op_type, op_name, op) \
-template Tensor binary_op_tensor_tensor_template<op_type>(const Tensor &self, const Tensor &other);
+template Tensor binary_op_tensor_tensor_template<op_type>(const Tensor &self, const Tensor &other, bool inplace);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template(const Tensor &self, const Scalar &other) {
+Tensor binary_op_tensor_scalar_template(const Tensor &self, const Scalar &other, bool inplace) {
     Tensor other_tensor = other.tensor();
-    return binary_op_tensor_tensor_template<op_type>(self, other_tensor);
+    return binary_op_tensor_tensor_template<op_type>(self, other_tensor, inplace);
 }
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template_reverse(const Scalar &other, const Tensor &self) {
+Tensor binary_op_tensor_scalar_template_reverse(const Scalar &other, const Tensor &self, bool inplace) {
     Tensor other_tensor = other.tensor();
-    return binary_op_tensor_tensor_template<op_type>(other_tensor, self);
+    return binary_op_tensor_tensor_template<op_type>(other_tensor, self, inplace);
 }
 
 #define MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR(op_type, op_name, op) \
-template Tensor binary_op_tensor_scalar_template<op_type>(const Tensor &self, const Scalar &other); \
-template Tensor binary_op_tensor_scalar_template_reverse<op_type>(const Scalar &other, const Tensor &self);
+template Tensor binary_op_tensor_scalar_template<op_type>(const Tensor &self, const Scalar &other, bool inplace); \
+template Tensor binary_op_tensor_scalar_template_reverse<op_type>(const Scalar &other, const Tensor &self, bool inplace);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR
 

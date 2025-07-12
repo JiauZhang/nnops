@@ -20,7 +20,7 @@ public:
     ~Tensor();
 
     inline const Tensor &operator*() { return *this; }
-    Tensor &operator=(Tensor &other);
+    Tensor &operator=(const Tensor &other);
     void init_tensor(DataType &dtype, const TensorShape &dims, Device *device);
 
     static void fill(Tensor &self, const Tensor &value);
