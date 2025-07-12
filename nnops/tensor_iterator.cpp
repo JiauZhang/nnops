@@ -78,7 +78,7 @@ Tensor TensorPartialIterator::tensor() {
         meta.strides_[idx] = tensor_->stride()[i];
         ++idx;
     }
-    meta.nbytes_ = meta.nelems_ * tensor_->itemsize();
+
     return Tensor(meta, tensor_->buffer());
 }
 

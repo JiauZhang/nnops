@@ -46,8 +46,7 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
 
     NNOPS_CHECK(!(shape.size() == 0 || nelems_ <= 0), "invalid shape info!");
 
-    tensor_meta_.nbytes_ = nelems_ * sizeof_dtype(dtype);
-    tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes_);
+    tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes());
 }
 
 void Tensor::fill(Tensor &self, const Tensor &value) {

@@ -21,7 +21,7 @@ public:
 
 class TensorMeta {
 public:
-    TensorMeta(): nbytes_(0), nelems_(0), offset_(0) {}
+    TensorMeta(): nelems_(0), offset_(0) {}
 
     static std::string shape_as_string(const TensorShape &dims);
     inline std::string shape_as_string() const { return TensorMeta::shape_as_string(this->dims_); };
@@ -35,8 +35,8 @@ public:
     inline const TensorStride &stride() const { return this->strides_; }
     inline int ndim() { return this->shape().size(); }
     inline int offset() const { return this->offset_; }
+    inline size_t nbytes() const { return nelems_ * sizeof_dtype(dtype_); }
 
-    size_t nbytes_;
     size_t nelems_;
     index_t offset_;
     TensorShape dims_;

@@ -79,7 +79,6 @@ void TensorMeta::index_inplace(int index, int axis) {
     }
     shape.pop_back();
     strides_.pop_back();
-    nbytes_ = nelems_ * sizeof_dtype(dtype_);
 }
 
 void TensorMeta::slice_inplace(Slice &slice, int axis) {
@@ -99,7 +98,6 @@ void TensorMeta::slice_inplace(Slice &slice, int axis) {
     }
 
     nelems_ *= shape_[axis];
-    nbytes_ = nelems_ * sizeof_dtype(dtype_);
 }
 
 bool TensorMeta::is_contiguous() const {

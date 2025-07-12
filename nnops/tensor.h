@@ -51,7 +51,7 @@ public:
     inline int ref_count() { return this->tensor_buffer_->count(); }
     inline Device *device() const { return this->tensor_buffer_->device_; }
     inline size_t nelems() const { return this->tensor_meta_.nelems_; }
-    inline size_t nbytes() { return this->tensor_meta_.nbytes_; }
+    inline size_t nbytes() { return this->tensor_meta_.nbytes(); }
     inline index_t itemsize() const { return sizeof_dtype(this->dtype()); }
     inline index_t offset() const { return this->tensor_meta_.offset_; }
     inline bool is_contiguous() const {return this->tensor_meta_.is_contiguous(); }
