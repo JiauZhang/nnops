@@ -35,11 +35,11 @@ void do_binary_op_tensor_tensor_impl(const Tensor &self, const Tensor &other, co
 }
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other, bool inplace) {
-    Tensor ret, self_br, other_br;
+void binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other, Tensor &ret) {
+    Tensor self_br, other_br;
     DataType dtype;
 
-    if (inplace) {
+    if (&self == &ret) {
         // TODO: expanded tensor
         NNOPS_CHECK(
             Tensor::is_broadcastable_to(other.shape(), self.shape(), 0),
@@ -47,7 +47,6 @@ Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other,
             other.shape_as_string().c_str(), self.shape_as_string().c_str()
         );
         dtype = self.dtype();
-        ret = self;
         self_br = self;
         other_br = other.astype(dtype).broadcast_to(self.shape());
     } else {
@@ -74,30 +73,28 @@ Tensor binary_op_tensor_tensor_template(const Tensor &self, const Tensor &other,
     };
 
     do_binary_op_tensor_tensor_impl(self_br, other_br, ret, 0, params);
-
-    return ret;
 }
 
 #define MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR(op_type, op_name, op) \
-template Tensor binary_op_tensor_tensor_template<op_type>(const Tensor &self, const Tensor &other, bool inplace);
+    template void binary_op_tensor_tensor_template<op_type>(const Tensor &self, const Tensor &other, Tensor &ret);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_TENSOR_FUNCTOR
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template(const Tensor &self, const Scalar &other, bool inplace) {
+void binary_op_tensor_scalar_template(const Tensor &self, const Scalar &other, Tensor &ret) {
     Tensor other_tensor = other.tensor();
-    return binary_op_tensor_tensor_template<op_type>(self, other_tensor, inplace);
+    binary_op_tensor_tensor_template<op_type>(self, other_tensor, ret);
 }
 
 template<ScalarBinaryOpType op_type>
-Tensor binary_op_tensor_scalar_template_reverse(const Scalar &other, const Tensor &self, bool inplace) {
+void binary_op_tensor_scalar_template_reverse(const Scalar &other, const Tensor &self, Tensor &ret) {
     Tensor other_tensor = other.tensor();
-    return binary_op_tensor_tensor_template<op_type>(other_tensor, self, inplace);
+    binary_op_tensor_tensor_template<op_type>(other_tensor, self, ret);
 }
 
 #define MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR(op_type, op_name, op) \
-template Tensor binary_op_tensor_scalar_template<op_type>(const Tensor &self, const Scalar &other, bool inplace); \
-template Tensor binary_op_tensor_scalar_template_reverse<op_type>(const Scalar &other, const Tensor &self, bool inplace);
+    template void binary_op_tensor_scalar_template<op_type>(const Tensor &self, const Scalar &other, Tensor &ret); \
+    template void binary_op_tensor_scalar_template_reverse<op_type>(const Scalar &other, const Tensor &self, Tensor &ret);
 SCALAR_BINARY_OP_GEN_TEMPLATE_LOOPx1(MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR)
 #undef MAKE_BINARY_OP_TENSOR_SCALAR_FUNCTOR
 
