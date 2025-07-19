@@ -38,7 +38,8 @@ public:
     inline const TensorStride &stride() const { return this->strides_; }
     inline int ndim() const { return this->shape().size(); }
     inline int offset() const { return this->offset_; }
-    inline size_t nbytes() const { return nelems_ * sizeof_dtype(dtype_); }
+    inline index_t itemsize() const { return sizeof_dtype(this->dtype_); }
+    inline size_t nbytes() const { return nelems_ * this->itemsize(); }
 
     size_t nelems_;
     index_t offset_;

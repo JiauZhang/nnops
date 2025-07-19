@@ -6,6 +6,7 @@
 #include <nnops/tensor_iterator.h>
 #include <nnops/tensor_accessor.h>
 #include <nnops/cpu/ops/binary_ops.h>
+#include <nnops/tensor_util.h>
 #include <array>
 #include <vector>
 
@@ -117,7 +118,7 @@ TEST_F(TensorTest, TensorIteratorAndAccessor) {
     for (i = 0; i < t.nelems(); i++)
         ptr[i] = i + 1.12345;
 
-    TensorIterator iter(t);
+    TensorIterator iter(t.meta(), t.buffer());
     i = 0;
     for (; !iter.is_end(); ++iter, ++i)
         ASSERT_EQ(*iter, (void *)(ptr + i));
@@ -149,15 +150,15 @@ TEST_F(TensorTest, TensorPartialIteratorAndAccessor) {
     for (int i = 0; i < t.nelems(); i++)
         data_ptr[i] = (float)i;
     // make a 3-d sub tensor iterator
-    TensorPartialIterator iter(t, 0, s.size() - 3);
+    TensorPartialIterator iter(t.meta(), t.buffer(), 0, s.size() - 3);
     int iter_count = 0;
     for (; !iter.is_end(); ++iter, ++iter_count) {
         int sub_iter_count = 0;
-        Tensor sub_t = iter.tensor();
+        Tensor &&sub_t = tensor_from(iter);
         ASSERT_EQ(sub_t.ndim(), 3);
         ASSERT_EQ(sub_t.nelems(), 18);
-        ASSERT_EQ(sub_t.ref_count(), 2);
-        TensorIterator sub_iter(sub_t);
+        ASSERT_EQ(sub_t.ref_count(), 3);
+        TensorIterator sub_iter(sub_t.meta(), sub_t.buffer());
         for (; !sub_iter.is_end(); ++sub_iter, ++sub_iter_count) {
             float *sub_ptr = (float *)(*sub_iter);
             ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + sub_iter_count));

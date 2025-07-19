@@ -1,7 +1,7 @@
 add_library(
     nnops SHARED
     data_type.cpp tensor_meta.cpp tensor.cpp tensor_buffer.cpp device.cpp scalar.cpp
-    tensor_iterator.cpp tensor_accessor.cpp
+    tensor_iterator.cpp tensor_accessor.cpp tensor_util.cpp
     operator.cpp
     random.cpp
 )

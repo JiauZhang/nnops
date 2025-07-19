@@ -3,14 +3,16 @@
 
 namespace nnops {
 
-TensorIterator::TensorIterator(const Tensor &tensor) : tensor_(&tensor) {
-    index_ = TensorShape(tensor_->shape().size(), 0);
+TensorIterator::TensorIterator(const TensorMeta &tensor_meta, std::shared_ptr<TensorBuffer> buffer) {
+    tensor_meta_ = tensor_meta;
+    tensor_buffer_ = buffer;
+    index_ = TensorShape(this->shape().size(), 0);
     offset_ = 0;
 }
 
 TensorIterator &TensorIterator::operator++() {
-    const TensorShape &shape = tensor_->shape();
-    const TensorStride &stride = tensor_->stride();
+    const TensorShape &shape = tensor_meta_.shape();
+    const TensorStride &stride = tensor_meta_.stride();
     int ax = shape.size() - 1;
 
     while (ax >= 0) {
@@ -30,15 +32,17 @@ TensorIterator &TensorIterator::operator++() {
     return *this;
 }
 
-TensorPartialIterator::TensorPartialIterator(const Tensor &tensor, index_t start, index_t stop): TensorIterator(tensor) {
-    NNOPS_CHECK(!(start < 0 || stop > tensor.ndim() || start >= stop), "invalid TensorPartialIterator parameter.");
+TensorPartialIterator::TensorPartialIterator(
+    const TensorMeta &tensor_meta, std::shared_ptr<TensorBuffer> buffer, index_t start, index_t stop
+    ) : TensorIterator(tensor_meta, buffer) {
+    NNOPS_CHECK(!(start < 0 || stop > tensor_meta_.ndim() || start >= stop), "invalid TensorPartialIterator parameter.");
     start_ = start;
     stop_ = stop;
 }
 
 TensorPartialIterator &TensorPartialIterator::operator++() {
-    const TensorShape &shape = tensor_->shape();
-    const TensorStride &stride = tensor_->stride();
+    const TensorShape &shape = tensor_meta_.shape();
+    const TensorStride &stride = tensor_meta_.stride();
     int ax = stop_ - 1;
 
     while (ax >= start_) {
@@ -56,30 +60,6 @@ TensorPartialIterator &TensorPartialIterator::operator++() {
     this->end();
 
     return *this;
-}
-
-Tensor TensorPartialIterator::tensor() {
-    TensorMeta meta;
-    meta.dtype_ = tensor_->dtype();
-    meta.offset_ = this->offset_;
-    meta.dims_.resize(tensor_->ndim() - stop_ + start_);
-    meta.strides_.resize(tensor_->ndim() - stop_ + start_);
-    int idx = 0;
-    meta.nelems_ = 1;
-    for (int i = 0; i < start_; i++) {
-        meta.dims_[idx] = tensor_->shape()[i];
-        meta.nelems_ *= meta.dims_[idx];
-        meta.strides_[idx] = tensor_->stride()[i];
-        ++idx;
-    }
-    for (int i = stop_; i < tensor_->ndim(); i++) {
-        meta.dims_[idx] = tensor_->shape()[i];
-        meta.nelems_ *= meta.dims_[idx];
-        meta.strides_[idx] = tensor_->stride()[i];
-        ++idx;
-    }
-
-    return Tensor(meta, tensor_->buffer());
 }
 
 } // namespace nnops
