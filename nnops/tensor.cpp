@@ -46,7 +46,7 @@ void Tensor::init_tensor(DataType &dtype, const TensorShape &dims, Device *devic
 
     NNOPS_CHECK(!(shape.size() == 0 || nelems_ <= 0), "invalid shape info!");
 
-    tensor_buffer_ = new TensorBuffer(device, tensor_meta_.nbytes());
+    tensor_buffer_ = std::make_shared<TensorBuffer>(device, tensor_meta_.nbytes());
 }
 
 void Tensor::fill(Tensor &self, const Tensor &value) {
@@ -65,17 +65,12 @@ Tensor::Tensor(const Tensor &other) : tensor_buffer_(nullptr){
     set_buffer(other.buffer());
 }
 
-Tensor::Tensor(const TensorMeta &meta, TensorBuffer *buf) : tensor_buffer_(nullptr){
+Tensor::Tensor(const TensorMeta &meta, std::shared_ptr<TensorBuffer> buffer) : tensor_buffer_(nullptr) {
     set_meta(meta);
-    set_buffer(buf);
+    set_buffer(buffer);
 }
 
-Tensor::~Tensor() {
-    if (tensor_buffer_) {
-        tensor_buffer_->dec_ref();
-        tensor_buffer_ = nullptr;
-    }
-}
+Tensor::~Tensor() {}
 
 template<typename T>
 void to_string_impl(const Tensor *tensor, std::string *prefix, std::string *ret, int dim, index_t offset) {
@@ -350,19 +345,6 @@ const TensorMeta &Tensor::meta() const {
 
 void Tensor::set_meta(const TensorMeta &meta) {
     tensor_meta_ = meta;
-}
-
-TensorBuffer *Tensor::buffer() const {
-    return tensor_buffer_;
-}
-
-void Tensor::set_buffer(TensorBuffer *buf) {
-    if (tensor_buffer_ != buf) {
-        if (tensor_buffer_)
-            tensor_buffer_->dec_ref();
-        tensor_buffer_ = buf;
-        tensor_buffer_->inc_ref();
-    }
 }
 
 TensorShape Tensor::unravel_index(index_t idx, const TensorShape &shape) {

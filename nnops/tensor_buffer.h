@@ -12,12 +12,7 @@ public:
     TensorBuffer() = delete;
     TensorBuffer(Device *device, int size);
 
-    inline void inc_ref() { ++ref_count_; }
-    void dec_ref();
-    inline int count() { return ref_count_; }
-
     void *data_ptr_;
-    mutable std::atomic<int> ref_count_;
     Device *device_;
     int size_;
 };

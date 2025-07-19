@@ -6,6 +6,7 @@
 #include <nnops/tensor_buffer.h>
 #include <nnops/device.h>
 #include <string>
+#include <memory>
 
 namespace nnops {
 
@@ -16,7 +17,7 @@ public:
     Tensor(DataType dtype, const TensorShape &dims, DeviceType device);
     Tensor(DataType dtype, const TensorShape &dims, Device *device);
     Tensor(const Tensor &other);
-    Tensor(const TensorMeta &meta, TensorBuffer *buf);
+    Tensor(const TensorMeta &meta, std::shared_ptr<TensorBuffer> buffer);
     ~Tensor();
 
     inline const Tensor &operator*() { return *this; }
@@ -47,7 +48,7 @@ public:
         return (void *)((char *)this->tensor_buffer_->data_ptr_ + (this->offset() + offset) * this->itemsize());
     }
     inline int ndim() const { return this->shape().size(); }
-    inline int ref_count() { return this->tensor_buffer_->count(); }
+    inline int ref_count() { return this->tensor_buffer_.use_count(); }
     inline Device *device() const { return this->tensor_buffer_->device_; }
     inline DeviceType device_type() const { return this->device()->get_device_type(); }
     inline size_t nelems() const { return this->tensor_meta_.nelems_; }
@@ -73,8 +74,8 @@ public:
     inline void set_stride(const TensorStride &stride) { this->tensor_meta_.strides_ = stride; }
     const TensorMeta &meta() const;
     void set_meta(const TensorMeta &meta);
-    TensorBuffer *buffer() const;
-    void set_buffer(TensorBuffer *buf);
+    std::shared_ptr<TensorBuffer> buffer() const { return this->tensor_buffer_; }
+    void set_buffer(std::shared_ptr<TensorBuffer> buffer) { this->tensor_buffer_ = buffer; }
 
     static TensorShape unravel_index(index_t idx, const TensorShape &shape);
     inline TensorShape unravel_index(index_t idx) const { return unravel_index(idx, this->shape()); }
@@ -83,7 +84,7 @@ public:
 
 private:
     TensorMeta tensor_meta_;
-    TensorBuffer *tensor_buffer_;
+    std::shared_ptr<TensorBuffer> tensor_buffer_;
 };
 
 void tensor_clone_impl(const Tensor *src, int src_offset, Tensor *dst, int dst_offset, int axis);
