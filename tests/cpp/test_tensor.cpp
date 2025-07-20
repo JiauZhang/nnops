@@ -12,7 +12,7 @@
 
 using nnops::DataType, nnops::DeviceType;
 using nnops::Tensor, nnops::TensorShape, nnops::index_t;
-using nnops::TensorIterator, nnops::TensorAccessor, nnops::TensorPartialIterator;
+using nnops::TensorIterator, nnops::TensorAccessor;
 
 class TensorTest : public testing::Test {
 protected:
@@ -149,16 +149,22 @@ TEST_F(TensorTest, TensorPartialIteratorAndAccessor) {
     float *data_ptr = (float *)t.data_ptr();
     for (int i = 0; i < t.nelems(); i++)
         data_ptr[i] = (float)i;
-    // make a 3-d sub tensor iterator
-    TensorPartialIterator iter(t.meta(), t.buffer(), 0, s.size() - 3);
+    TensorIterator iter(t.meta(), t.buffer(), 0, s.size() - 3);
+    Tensor &&iter_t = tensor_from(iter);
+    ASSERT_EQ(iter_t.ndim(), 2);
+    ASSERT_EQ(iter_t.nelems(), 4);
+    ASSERT_EQ(iter_t.ref_count(), 3);
     int iter_count = 0;
+    float *ptr = (float *)t.data_ptr();
     for (; !iter.is_end(); ++iter, ++iter_count) {
-        int sub_iter_count = 0;
-        Tensor &&sub_t = tensor_from(iter);
+        ASSERT_EQ(*(float *)(*iter), (float)(iter_count * 18));
+        // make a 3-d sub tensor iterator
+        TensorIterator sub_iter(t.meta(), t.buffer(), s.size() - 3, s.size(), iter.offset());
+        Tensor &&sub_t = tensor_from(sub_iter);
         ASSERT_EQ(sub_t.ndim(), 3);
         ASSERT_EQ(sub_t.nelems(), 18);
-        ASSERT_EQ(sub_t.ref_count(), 3);
-        TensorIterator sub_iter(sub_t.meta(), sub_t.buffer());
+        ASSERT_EQ(sub_t.ref_count(), 5);
+        int sub_iter_count = 0;
         for (; !sub_iter.is_end(); ++sub_iter, ++sub_iter_count) {
             float *sub_ptr = (float *)(*sub_iter);
             ASSERT_EQ(*sub_ptr, (float)(iter_count * 18 + sub_iter_count));

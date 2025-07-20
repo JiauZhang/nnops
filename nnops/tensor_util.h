@@ -6,7 +6,7 @@
 
 namespace nnops {
 
-Tensor tensor_from(const TensorPartialIterator &iter);
+inline Tensor tensor_from(const TensorIterator &iter) { return Tensor(iter.meta(), iter.buffer()); }
 
 } // namespace nnops
 
