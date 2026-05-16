@@ -1,0 +1,1 @@
+pub(crate) const SHADER_SOURCE: &str = include_str!("shaders.metal");

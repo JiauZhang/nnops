@@ -1,4 +1,4 @@
-from nnops._C import (
+from nnops._rs import (
     float64, float32,
     int64, uint64,
     int32, uint32,

@@ -1,5 +1,5 @@
-from nnops._C import (
+from nnops._rs import (
     add, sub, mul, truediv,
     iadd, isub, imul, itruediv,
-    matmul,
+    matmul, linear,
 )

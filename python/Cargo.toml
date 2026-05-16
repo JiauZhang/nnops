@@ -1,0 +1,18 @@
+[package]
+name = "nnops-python"
+version = "0.1.1"
+edition = "2021"
+
+[lib]
+name = "_rs"
+crate-type = ["cdylib"]
+
+[features]
+default = ["cpu"]
+cpu = ["nnops/cpu"]
+cuda = ["nnops/cuda"]
+mps = ["nnops/mps"]
+
+[dependencies]
+nnops = { path = ".." }
+pyo3 = { version = "0.22", features = ["extension-module"] }

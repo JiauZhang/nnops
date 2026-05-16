@@ -1,31 +1,44 @@
+import pytest
 from nnops.tensor import Tensor, from_numpy
 from nnops import device, dtype
+from conftest import devices as _devices
 import numpy as np
 
 class TestDeviceType():
-    def test_device_type(self):
-        dev_types = {
-            'cpu': device.CPU,
-            'cuda': device.CUDA,
-        }
-        for device_name, device_type in dev_types.items():
-            t_a = Tensor(shape=[1], device=device_name)
-            t_b = Tensor(shape=[1], device=device_type)
-            assert t_a.device == device_type and t_b.device == device_type
+    @pytest.mark.parametrize('dev', _devices)
+    def test_device_type(self, dev):
+        t = Tensor(shape=[1], device=dev)
+        assert t.device == dev
 
 class TestDeviceTo():
-    def test_cpu_and_cpu(self):
-        a_cpu = from_numpy(np.random.randn(3, 6, 9).astype(np.float32))
-        b_cpu = a_cpu.to(device.CPU)
-        assert a_cpu.dtype == dtype.float32 and a_cpu.device == device.CPU
-        assert b_cpu.dtype == a_cpu.dtype and b_cpu.device == a_cpu.device
-        assert (a_cpu.numpy() == b_cpu.numpy()).all()
-
-    def test_cpu_and_cuda(self):
+    @pytest.mark.parametrize('dev', _devices)
+    def test_to(self, dev):
         a_cpu = from_numpy(np.random.randn(2, 5, 8).astype(np.float32))
-        a_cuda = a_cpu.to(device.CUDA)
-        assert a_cuda.device == device.CUDA
 
-        b_cpu = a_cuda.to(device.CPU)
-        assert b_cpu.device == a_cpu.device and b_cpu.dtype == a_cpu.dtype
+        a_dev = a_cpu.to(dev)
+        assert a_dev.device == dev
+        assert a_dev.dtype == a_cpu.dtype
+        assert (a_cpu.numpy() == a_dev.numpy()).all()
+
+        b_cpu = a_dev.to(device.CPU)
+        assert b_cpu.device == device.CPU
+        assert b_cpu.dtype == a_cpu.dtype
         assert (a_cpu.numpy() == b_cpu.numpy()).all()
+
+        c_dev = a_dev.to(dev)
+        assert c_dev.device == dev
+        assert c_dev.dtype == a_dev.dtype
+        assert (a_dev.numpy() == c_dev.numpy()).all()
+
+        a_cpu_int = from_numpy(np.random.randint(0, 100, (3, 4), dtype=np.int32))
+        a_dev_int = a_cpu_int.to(dev)
+        assert a_dev_int.device == dev
+        assert a_dev_int.dtype == a_cpu_int.dtype
+        b_cpu_int = a_dev_int.to(device.CPU)
+        assert (a_cpu_int.numpy() == b_cpu_int.numpy()).all()
+
+        a_cpu_strided = from_numpy(np.random.randn(4, 6, 8).astype(np.float32))[::2, ::2, ::2]
+        a_dev_strided = a_cpu_strided.to(dev)
+        assert a_dev_strided.device == dev
+        b_cpu_strided = a_dev_strided.to(device.CPU)
+        assert (a_cpu_strided.numpy() == b_cpu_strided.numpy()).all()
