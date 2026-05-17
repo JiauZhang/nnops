@@ -1,0 +1,8 @@
+indent_style = "space"
+max_width = 120
+tab_spaces = 4
+newline_style = "Unix"
+fn_single_line = true
+imports_granularity = "Crate"
+reorder_impl_items = true
+match_block_trailing_comma = true

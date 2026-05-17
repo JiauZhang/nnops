@@ -1,4 +1,5 @@
-import pytest, random
+import pytest
+import random
 import nnops.ops as ops
 import nnops.tensor
 from nnops import device as device_mod
@@ -16,7 +17,7 @@ class TestOperators():
     )
     def test_binary_ops(self, nnops_op, np_op, dtype_pair, device):
         nps_type, np_type = dtype_pair
-        if np_type == np.bool and nnops_op is ops.sub:
+        if np_type == bool and nnops_op is ops.sub:
             # numpy boolean subtract is not supported
             return
 
@@ -64,9 +65,13 @@ class TestOperators():
         assert t_c.is_contiguous() == False and t_d.is_contiguous() == False
         assert (nnops_op(t_c, t_d).to(device_mod.CPU).numpy() == np_op(np_c_stride, np_d_stride)).all()
 
+    @staticmethod
     def _np_iadd(a, b): a += b
+    @staticmethod
     def _np_isub(a, b): a -= b
+    @staticmethod
     def _np_imul(a, b): a *= b
+    @staticmethod
     def _np_itruediv(a, b): a /= b
 
     @pytest.mark.parametrize(
@@ -113,7 +118,7 @@ class TestOperators():
     def test_matmul_op(self, s1, s2, s3, device):
         n1 = np.random.randn(*s1).astype(np.float32)
         n2 = np.random.randn(*s2).astype(np.float32)
-        no = n1 @ n2
+        no = (np.einsum('...ij,...jk->...ik', n1, n2)).astype(np.float32)
         t1 = nnops.tensor.from_numpy(n1).to(device)
         t2 = nnops.tensor.from_numpy(n2).to(device)
         to = nnops.ops.matmul(t1, t2).to(device_mod.CPU).numpy()

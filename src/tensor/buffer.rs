@@ -1,7 +1,8 @@
 use crate::device::{Device, DeviceType};
+use std::cell::UnsafeCell;
 
 pub enum TensorBuffer {
-    Cpu(Vec<u8>),
+    Cpu(UnsafeCell<Vec<u8>>),
     #[cfg(feature = "mps")]
     Mps(crate::mps::MpsBuffer),
 }
@@ -9,7 +10,7 @@ pub enum TensorBuffer {
 impl TensorBuffer {
     pub fn new(device: &Device, size: usize) -> Self {
         match device {
-            Device::Cpu(_) => TensorBuffer::Cpu(vec![0u8; size]),
+            Device::Cpu(_) => TensorBuffer::Cpu(UnsafeCell::new(vec![0u8; size])),
             Device::MPS(_) => {
                 #[cfg(feature = "mps")]
                 if crate::mps::is_available() {
@@ -34,7 +35,7 @@ impl TensorBuffer {
 
     pub fn data_ptr(&self) -> *const u8 {
         match self {
-            TensorBuffer::Cpu(data) => data.as_ptr(),
+            TensorBuffer::Cpu(data) => unsafe { (*data.get()).as_ptr() },
             #[cfg(feature = "mps")]
             TensorBuffer::Mps(buf) => buf.data_ptr(),
         }
@@ -42,7 +43,7 @@ impl TensorBuffer {
 
     pub fn data_mut_ptr(&mut self) -> *mut u8 {
         match self {
-            TensorBuffer::Cpu(data) => data.as_mut_ptr(),
+            TensorBuffer::Cpu(data) => unsafe { (*data.get()).as_mut_ptr() },
             #[cfg(feature = "mps")]
             TensorBuffer::Mps(buf) => buf.data_mut_ptr(),
         }
@@ -50,38 +51,36 @@ impl TensorBuffer {
 
     pub fn size(&self) -> usize {
         match self {
-            TensorBuffer::Cpu(data) => data.len(),
+            TensorBuffer::Cpu(data) => unsafe { (*data.get()).len() },
             #[cfg(feature = "mps")]
             TensorBuffer::Mps(buf) => buf.size,
         }
     }
 
-    pub fn copy_from_cpu(&self, src: *const u8, size: usize) {
+    pub fn copy_from_cpu(&self, src: &[u8]) {
         match self {
             TensorBuffer::Cpu(data) => {
-                let dst = data.as_ptr() as *mut u8;
-                unsafe {
-                    std::ptr::copy_nonoverlapping(src, dst, size.min(data.len()));
-                }
+                let data = unsafe { &mut *data.get() };
+                let len = src.len().min(data.len());
+                data[..len].copy_from_slice(&src[..len]);
             }
             #[cfg(feature = "mps")]
             TensorBuffer::Mps(buf) => {
-                buf.copy_from_cpu(src, size);
+                buf.copy_from_cpu(src);
             }
         }
     }
 
-    pub fn copy_to_cpu(&self, dst: *mut u8, size: usize) {
+    pub fn copy_to_cpu(&self, dst: &mut [u8]) {
         match self {
             TensorBuffer::Cpu(data) => {
-                let src = data.as_ptr();
-                unsafe {
-                    std::ptr::copy_nonoverlapping(src, dst, size.min(data.len()));
-                }
+                let data = unsafe { &*data.get() };
+                let len = dst.len().min(data.len());
+                dst[..len].copy_from_slice(&data[..len]);
             }
             #[cfg(feature = "mps")]
             TensorBuffer::Mps(buf) => {
-                buf.copy_to_cpu(dst, size);
+                buf.copy_to_cpu(dst);
             }
         }
     }

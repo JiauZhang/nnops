@@ -8,19 +8,23 @@ pip install nnops
 pip install nnops[mps]
 ```
 
-> **Note**: For local development, use `maturin develop --features mps` to build with MPS support.
-
 ### Build from source
 
 ```shell
 # CPU only
-maturin develop
+python3 scripts/build.py
 
-# With MPS support (macOS)
-maturin develop --features mps
+# With MPS acceleration (macOS)
+python3 scripts/build.py --feature mps
 
-# With CUDA support (Linux/Windows)
-maturin build --features cuda
+# Build wheel without installing
+python3 scripts/build.py --wheel
+```
+
+### Run tests
+
+```shell
+python3 -m pytest tests/
 ```
 
 ### Example

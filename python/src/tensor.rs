@@ -336,7 +336,7 @@ impl PyTensor {
             _ => return Err(PyTypeError::new_err(format!("unsupported numpy dtype: {}", dtype_name))),
         };
 
-        let tensor = Tensor::with_device_type(dtype, &shape, DeviceType::Cpu);
+        let mut tensor = Tensor::with_device_type(dtype, &shape, DeviceType::Cpu);
         let nbytes = tensor.nbytes();
         let flat_bytes = array.call_method1("tobytes", ())?;
         let flat_bytes = flat_bytes.extract::<Vec<u8>>()?;
@@ -344,7 +344,7 @@ impl PyTensor {
         unsafe {
             std::ptr::copy_nonoverlapping(
                 flat_bytes.as_ptr(),
-                tensor.data_ptr() as *mut u8,
+                tensor.data_mut_ptr(),
                 nbytes.min(flat_bytes.len()),
             );
         }

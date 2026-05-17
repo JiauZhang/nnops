@@ -1,5 +1,4 @@
 use crate::common::Index;
-use std::mem;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -19,19 +18,19 @@ pub enum DataType {
 
 pub const NUM_DATA_TYPES: usize = 11;
 
-pub fn sizeof_dtype(dtype: DataType) -> Index {
+pub const fn sizeof_dtype(dtype: DataType) -> Index {
     match dtype {
-        DataType::Bool => mem::size_of::<bool>() as Index,
-        DataType::Uint8 => mem::size_of::<u8>() as Index,
-        DataType::Int8 => mem::size_of::<i8>() as Index,
-        DataType::Uint16 => mem::size_of::<u16>() as Index,
-        DataType::Int16 => mem::size_of::<i16>() as Index,
-        DataType::Uint32 => mem::size_of::<u32>() as Index,
-        DataType::Int32 => mem::size_of::<i32>() as Index,
-        DataType::Uint64 => mem::size_of::<u64>() as Index,
-        DataType::Int64 => mem::size_of::<i64>() as Index,
-        DataType::Float32 => mem::size_of::<f32>() as Index,
-        DataType::Float64 => mem::size_of::<f64>() as Index,
+        DataType::Bool => 1,
+        DataType::Uint8 => 1,
+        DataType::Int8 => 1,
+        DataType::Uint16 => 2,
+        DataType::Int16 => 2,
+        DataType::Uint32 => 4,
+        DataType::Int32 => 4,
+        DataType::Uint64 => 8,
+        DataType::Int64 => 8,
+        DataType::Float32 => 4,
+        DataType::Float64 => 8,
     }
 }
 
@@ -133,6 +132,7 @@ macro_rules! type_cast_body_float_to_uint {
     }};
 }
 
+#[inline]
 pub fn type_cast(dst: &mut [u8], src: &[u8], dst_stride: Index, src_stride: Index, size: Index, from: DataType, to: DataType) {
     match (from, to) {
         (DataType::Bool, DataType::Bool) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u8),

@@ -20,7 +20,7 @@ dtype_pairs = [
     (dtype.uint16, np.uint16),
     (dtype.int8, np.int8),
     (dtype.uint8, np.uint8),
-    (dtype.bool, np.bool),
+    (dtype.bool, bool),
 ]
 
 @pytest.fixture(params=dtype_pairs)
@@ -34,8 +34,8 @@ def device(request):
 def random_data(shape, np_dtype):
     if np.issubdtype(np_dtype, np.floating):
         return np.random.uniform(0, 100, size=shape).astype(np_dtype)
-    elif np_dtype == np.bool:
-        return np.random.randint(0, 2, size=shape).astype(np.bool)
+    elif np_dtype == bool:
+        return np.random.randint(0, 2, size=shape).astype(bool)
     else:
         iinfo = np.iinfo(np_dtype)
         low = max(iinfo.min, 0)

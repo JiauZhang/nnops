@@ -1,12 +1,26 @@
 #!/usr/bin/env python3
-import subprocess, argparse
+import subprocess
+import argparse
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+PYTHON = sys.executable
+DIST = ROOT / "target" / "wheels"
 
 def run(cmd):
     print(f"+ {' '.join(cmd)}")
     subprocess.check_call(cmd, cwd=ROOT)
+
+# auto-install maturin if missing
+try:
+    subprocess.check_call(
+        [PYTHON, "-m", "maturin", "--version"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+except (subprocess.CalledProcessError, FileNotFoundError):
+    print("maturin not found, installing...")
+    run([PYTHON, "-m", "pip", "install", "maturin", "numpy"])
 
 parser = argparse.ArgumentParser(description="Build nnops locally")
 parser.add_argument("--feature", "-f", choices=["mps", "cuda"],
@@ -26,8 +40,19 @@ if args.clean:
 if args.release:
     feature_args.append("--release")
 
+# build wheel
+run([PYTHON, "-m", "maturin", "build", "--out", str(DIST), *feature_args])
+
 if args.wheel:
-    run(["maturin", "build", *feature_args])
-    print("\nDone! Install with: pip install target/wheels/nnops-*.whl")
+    print(f"\nDone! Install with: pip install {DIST}/nnops-*.whl")
 else:
-    run(["maturin", "develop", *feature_args])
+    # find the built wheel and install to current Python
+    wheels = sorted(DIST.glob("nnops-*.whl"))
+    if not wheels:
+        print("No wheel found in", DIST)
+        exit(1)
+    wheel = wheels[-1]
+    run([PYTHON, "-m", "pip", "install", "--force-reinstall", "--no-deps", str(wheel)])
+    print("\nDone! Run 'pytest' to verify.")
+    if args.feature == "mps":
+        print("MPS tests will be included because MPS is available.")

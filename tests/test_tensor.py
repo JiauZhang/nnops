@@ -1,4 +1,5 @@
-import nnops, pytest
+import nnops
+import pytest
 from nnops.tensor import Tensor
 from nnops import dtype
 from conftest import random_data

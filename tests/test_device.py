@@ -1,6 +1,6 @@
 import pytest
 from nnops.tensor import Tensor, from_numpy
-from nnops import device, dtype
+from nnops import device
 from conftest import devices as _devices
 import numpy as np
 

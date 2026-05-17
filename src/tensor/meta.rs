@@ -8,6 +8,12 @@ pub struct Slice {
     pub step: Option<Index>,
 }
 
+impl Default for Slice {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Slice {
     pub fn new() -> Self {
         Slice { start: None, stop: None, step: None }
@@ -33,6 +39,12 @@ pub struct TensorMeta {
     pub dims: TensorShape,
     pub strides: TensorStride,
     pub dtype: DataType,
+}
+
+impl Default for TensorMeta {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TensorMeta {
@@ -78,6 +90,7 @@ impl TensorMeta {
         sizeof_dtype(self.dtype)
     }
 
+    #[inline]
     pub fn nbytes(&self) -> usize {
         self.nelems * self.itemsize() as usize
     }
@@ -87,8 +100,7 @@ impl TensorMeta {
         nnops_check!(len == self.dims.len(), "axes size don't match!");
         let mut count = vec![0i64; len];
         let mut indices = index.clone();
-        for i in 0..len {
-            let idx = &mut indices[i];
+        for idx in indices.iter_mut() {
             nnops_check!(
                 !(*idx < -(len as Index) || *idx >= len as Index),
                 "axis {} is out of bounds for tensor of dimension {}",
@@ -102,9 +114,9 @@ impl TensorMeta {
         }
 
         let mut meta = self.clone();
-        for i in 0..self.dims.len() {
-            meta.dims[i] = self.dims[indices[i] as usize];
-            meta.strides[i] = self.strides[indices[i] as usize];
+        for (i, &idx) in indices.iter().enumerate() {
+            meta.dims[i] = self.dims[idx as usize];
+            meta.strides[i] = self.strides[idx as usize];
         }
         meta
     }
@@ -112,14 +124,14 @@ impl TensorMeta {
     pub fn transpose(&self, dim0: Index, dim1: Index) -> Self {
         let size = self.ndim() as Index;
         let mut dims = [dim0, dim1];
-        for i in 0..2 {
+        for d in &mut dims {
             nnops_check!(
-                !(dims[i] < -size || dims[i] >= size),
+                !(*d < -size || *d >= size),
                 "axis {} is out of bounds for tensor of dimension {}",
-                dims[i], size
+                *d, size
             );
-            if dims[i] < 0 {
-                dims[i] += size;
+            if *d < 0 {
+                *d += size;
             }
         }
         nnops_check!(dims[0] != dims[1], "repeated axis in transpose");
@@ -138,8 +150,7 @@ impl TensorMeta {
         let mut count = 0;
         let mut nelems: usize = 1;
 
-        for i in 0..indices.len() {
-            let value = indices[i];
+        for (i, &value) in indices.iter().enumerate() {
             if value < 0 {
                 idx = i;
                 count += 1;
@@ -151,7 +162,7 @@ impl TensorMeta {
         if count > 1 {
             panic!("can only specify one unknown dimension!");
         } else if count == 1 {
-            if nelems == 0 || self.nelems % nelems != 0 {
+            if nelems == 0 || !self.nelems.is_multiple_of(nelems) {
                 let info = format!(
                     "cannot reshape tensor of shape {} into shape {}",
                     self.shape_as_string(),

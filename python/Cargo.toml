@@ -1,7 +1,7 @@
 [package]
 name = "nnops-python"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 
 [lib]
 name = "_rs"

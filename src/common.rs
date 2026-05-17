@@ -107,9 +107,7 @@ pub fn broadcast_shape(s1: &TensorShape, s2: &TensorShape, offset: usize) -> Ten
     };
     let dims = shape_long.len() - offset;
     let mut shape = vec![0i64; dims];
-    for i in 0..dims {
-        shape[i] = shape_long[i];
-    }
+    shape[..dims].copy_from_slice(&shape_long[..dims]);
     let mut dims = dims as isize - 1;
     for i in (0..shape_short.len() - offset).rev() {
         if shape_short[i] != shape[dims as usize] {
@@ -171,8 +169,8 @@ pub fn broadcast_to(
     for i in (diff..=s_size).rev() {
         new_strides[i] = new_strides[i - diff];
     }
-    for i in 0..diff {
-        new_strides[i] = 0;
+    for item in new_strides.iter_mut().take(diff) {
+        *item = 0;
     }
 
     (shape_cp, new_strides)

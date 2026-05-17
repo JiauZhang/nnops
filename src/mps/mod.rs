@@ -4,6 +4,7 @@ pub mod kernel;
 
 use crate::tensor::Tensor;
 use crate::tensor::TensorBuffer;
+use std::sync::LazyLock;
 
 pub fn tensor_metal_buffer(tensor: &Tensor) -> Option<&metal::Buffer> {
     match &*tensor.buffer {
@@ -28,9 +29,7 @@ impl MpsContext {
     }
 }
 
-lazy_static::lazy_static! {
-    static ref MPS_CONTEXT: Option<MpsContext> = MpsContext::new();
-}
+static MPS_CONTEXT: LazyLock<Option<MpsContext>> = LazyLock::new(MpsContext::new);
 
 pub fn is_available() -> bool {
     MPS_CONTEXT.is_some()
@@ -40,7 +39,7 @@ pub fn with_context<F, R>(f: F) -> Option<R>
 where
     F: FnOnce(&MpsContext) -> R,
 {
-    MPS_CONTEXT.as_ref().map(|ctx| f(ctx))
+    MPS_CONTEXT.as_ref().map(f)
 }
 
 pub struct MpsBuffer {
@@ -78,18 +77,20 @@ impl MpsBuffer {
         self.metal_buffer.contents() as *mut u8
     }
 
-    pub fn copy_from_cpu(&self, src: *const u8, size: usize) {
+    pub fn copy_from_cpu(&self, src: &[u8]) {
         let dst = self.data_mut_ptr();
+        let len = src.len().min(self.size);
         unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size.min(self.size));
+            std::ptr::copy_nonoverlapping(src.as_ptr(), dst, len);
         }
-        self.metal_buffer.did_modify_range(metal::NSRange::new(0, size as u64));
+        self.metal_buffer.did_modify_range(metal::NSRange::new(0, len as u64));
     }
 
-    pub fn copy_to_cpu(&self, dst: *mut u8, size: usize) {
+    pub fn copy_to_cpu(&self, dst: &mut [u8]) {
         let src = self.data_ptr();
+        let len = dst.len().min(self.size);
         unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size.min(self.size));
+            std::ptr::copy_nonoverlapping(src, dst.as_mut_ptr(), len);
         }
     }
 }

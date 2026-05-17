@@ -7,7 +7,7 @@ use std::sync::Arc;
 pub struct TensorIterator {
     meta: TensorMeta,
     index: TensorShape,
-    offset: Index,
+    offset: Option<Index>,
     buffer: Arc<TensorBuffer>,
 }
 
@@ -17,7 +17,7 @@ impl TensorIterator {
         TensorIterator {
             meta: meta.clone(),
             index,
-            offset: 0,
+            offset: Some(0),
             buffer,
         }
     }
@@ -36,7 +36,7 @@ impl TensorIterator {
         TensorIterator {
             meta: new_meta,
             index,
-            offset: 0,
+            offset: Some(0),
             buffer,
         }
     }
@@ -67,7 +67,7 @@ impl TensorIterator {
         }
     }
 
-    pub fn offset(&self) -> Index {
+    pub fn offset(&self) -> Option<Index> {
         self.offset
     }
 
@@ -91,28 +91,31 @@ impl TensorIterator {
         while ax >= 0 {
             if self.index[ax as usize] < shape[ax as usize] - 1 {
                 self.index[ax as usize] += 1;
-                self.offset += stride[ax as usize];
+                self.offset = Some(self.offset.unwrap_or(0) + stride[ax as usize]);
                 return;
             } else {
-                self.offset -= self.index[ax as usize] * stride[ax as usize];
+                self.offset = Some(self.offset.unwrap_or(0) - self.index[ax as usize] * stride[ax as usize]);
                 self.index[ax as usize] = 0;
                 ax -= 1;
             }
         }
 
-        self.offset = -1;
+        self.offset = None;
     }
 
     pub fn current(&self) -> *const u8 {
-        self.data_ptr(self.offset)
+        match self.offset {
+            Some(off) => self.data_ptr(off),
+            None => std::ptr::null(),
+        }
     }
 
     pub fn is_end(&self) -> bool {
-        self.offset == -1
+        self.offset.is_none()
     }
 
     pub fn end(&mut self) {
-        self.offset = -1;
+        self.offset = None;
     }
 }
 

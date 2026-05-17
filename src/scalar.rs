@@ -38,7 +38,7 @@ impl Scalar {
     pub fn data_ptr(&self) -> *const u8 {
         match self {
             Scalar::Bool(v) => (v as *const bool) as *const u8,
-            Scalar::Uint8(v) => (v as *const u8) as *const u8,
+            Scalar::Uint8(v) => v as *const u8,
             Scalar::Int8(v) => (v as *const i8) as *const u8,
             Scalar::Uint16(v) => (v as *const u16) as *const u8,
             Scalar::Int16(v) => (v as *const i16) as *const u8,

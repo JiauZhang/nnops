@@ -30,6 +30,12 @@ impl Clone for Tensor {
     }
 }
 
+impl Default for Tensor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Tensor {
     pub fn new() -> Self {
         let device = Device::from_type(DeviceType::Cpu);
@@ -67,66 +73,81 @@ impl Tensor {
         clone_impl(&type_value, 0, self, 0, 0);
     }
 
-    pub fn dtype(&self) -> DataType {
+    #[inline]
+pub fn dtype(&self) -> DataType {
         self.meta.dtype
     }
 
+    #[inline]
     pub fn data_ptr(&self) -> *const u8 {
         self.buffer.data_ptr()
     }
 
+    #[inline]
     pub fn data_ptr_with_offset(&self, offset: Index) -> *const u8 {
         unsafe {
             self.buffer.data_ptr().offset((self.meta.offset + offset) as isize * self.itemsize() as isize)
         }
     }
 
+    #[inline]
     pub fn data_mut_ptr(&mut self) -> *mut u8 {
         Arc::get_mut(&mut self.buffer).map(|b| b.data_mut_ptr()).unwrap_or_else(|| {
             panic!("cannot mutate tensor buffer: multiple references exist");
         })
     }
 
+    #[inline]
     pub fn ndim(&self) -> usize {
         self.meta.ndim()
     }
 
+    #[inline]
     pub fn ref_count(&self) -> usize {
         Arc::strong_count(&self.buffer)
     }
 
+    #[inline]
     pub fn device(&self) -> Device {
         Device::from_type(self.buffer.device_type())
     }
 
+    #[inline]
     pub fn device_type(&self) -> DeviceType {
         self.buffer.device_type()
     }
 
+    #[inline]
     pub fn nelems(&self) -> usize {
         self.meta.nelems
     }
 
+    #[inline]
     pub fn nbytes(&self) -> usize {
         self.meta.nbytes()
     }
 
+    #[inline]
     pub fn itemsize(&self) -> Index {
         self.meta.itemsize()
     }
 
+    #[inline]
     pub fn offset(&self) -> Index {
         self.meta.offset
     }
 
+    #[inline]
     pub fn is_contiguous(&self) -> bool {
         self.meta.is_contiguous()
     }
 
+    #[inline]
     pub fn shape(&self) -> &TensorShape {
         &self.meta.dims
     }
 
+    #[inline]
     pub fn shape_at(&self, index: Index) -> Index {
         let ndim = self.ndim() as Index;
         nnops_check!(index >= -ndim && index < ndim, "shape index is out of bounds");
@@ -134,10 +155,12 @@ impl Tensor {
         self.meta.dims[idx]
     }
 
+    #[inline]
     pub fn stride(&self) -> &TensorStride {
         &self.meta.strides
     }
 
+    #[inline]
     pub fn stride_at(&self, index: Index) -> Index {
         let ndim = self.ndim() as Index;
         nnops_check!(index >= -ndim && index < ndim, "stride index is out of bounds");
@@ -176,10 +199,14 @@ impl Tensor {
         let mut dst = Tensor::with_device_type(self.meta.dtype, &self.meta.dims, device_type);
         let src = self.contiguous();
         if src.device_type() == DeviceType::Cpu {
-            dev.copy_from_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
+            unsafe {
+                dev.copy_from_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
+            }
         } else {
             let src_dev = src.device();
-            src_dev.copy_to_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
+            unsafe {
+                src_dev.copy_to_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
+            }
         }
         dst
     }
@@ -213,7 +240,7 @@ impl Tensor {
     }
 
     pub fn is_broadcast(&self) -> bool {
-        self.meta.strides.iter().any(|&s| s == 0)
+        self.meta.strides.contains(&0)
     }
 
     pub fn broadcast_to_shape(&self, shape: &TensorShape, offset: usize) -> Self {
@@ -224,25 +251,16 @@ impl Tensor {
         Tensor::with_meta_buffer(meta, self.buffer.clone())
     }
 
-    pub fn to_string(&self) -> String {
-        if self.meta.nelems == 0 {
-            return String::new();
-        }
-        let mut ret = String::new();
-        self.to_string_impl(&mut ret, 0, 0);
-        ret
-    }
-
-    fn to_string_impl(&self, ret: &mut String, dim: usize, offset: Index) {
+    fn format_tensor(&self, ret: &mut String, dim: usize, offset: Index) {
         if dim < self.ndim() - 1 {
             ret.push('[');
             for i in 0..self.meta.dims[dim] {
-                self.to_string_impl(ret, dim + 1, offset + i * self.meta.strides[dim]);
+                self.format_tensor(ret, dim + 1, offset + i * self.meta.strides[dim]);
             }
             let len = ret.len();
             if len >= 2 {
                 let c = ret.as_bytes()[len - 2];
-                if c == b',' as u8 {
+                if c == b',' {
                     ret.truncate(len - 1);
                 }
             }
@@ -285,7 +303,7 @@ impl Tensor {
 
     pub fn to_repr(&self) -> String {
         let mut ret = "Tensor(".to_string();
-        let s = self.to_string();
+        let s = format!("{}", self);
         ret.push_str(&s);
         ret.push(')');
         ret
@@ -437,7 +455,7 @@ fn read_as_f64(ptr: *const u8, dtype: DataType) -> f64 {
     unsafe {
         match dtype {
             DataType::Bool => *ptr as f64,
-            DataType::Uint8 => *(ptr as *const u8) as f64,
+            DataType::Uint8 => *ptr as f64,
             DataType::Int8 => *(ptr as *const i8) as f64,
             DataType::Uint16 => *(ptr as *const u16) as f64,
             DataType::Int16 => *(ptr as *const i16) as f64,
@@ -491,7 +509,12 @@ pub fn clone_impl(src: &Tensor, src_offset: Index, dst: &mut Tensor, dst_offset:
 
 impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        if self.meta.nelems == 0 {
+            return write!(f, "");
+        }
+        let mut ret = String::new();
+        self.format_tensor(&mut ret, 0, 0);
+        write!(f, "{}", ret)
     }
 }
 

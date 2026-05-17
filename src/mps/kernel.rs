@@ -45,7 +45,7 @@ pub fn dispatch_1d(
 
     let thread_group_size = pso.max_total_threads_per_threadgroup();
     let w = thread_group_size.min(1024);
-    let groups = (count + w - 1) / w;
+    let groups = count.div_ceil(w);
     encoder.dispatch_thread_groups(
         metal::MTLSize::new(groups, 1, 1),
         metal::MTLSize::new(w, 1, 1),
@@ -85,8 +85,8 @@ pub fn dispatch_2d(
 
     let w = pso.max_total_threads_per_threadgroup().min(16);
     let h = pso.max_total_threads_per_threadgroup().min(16);
-    let gw = (width + w - 1) / w;
-    let gh = (height + h - 1) / h;
+    let gw = width.div_ceil(w);
+    let gh = height.div_ceil(h);
     encoder.dispatch_thread_groups(
         metal::MTLSize::new(gw, gh, 1),
         metal::MTLSize::new(w, h, 1),

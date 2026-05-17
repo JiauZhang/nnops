@@ -3,11 +3,12 @@ members = ["python"]
 
 [workspace.package]
 version = "0.2.0"
+edition = "2021"
 
 [package]
 name = "nnops"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 description = "A lightweight neural network operator library (Rust port)"
 
 [features]
@@ -19,7 +20,6 @@ mps = ["dep:metal"]
 [dependencies]
 rand = "0.8"
 rand_distr = "0.4"
-lazy_static = "1.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 metal = { version = "0.28", optional = true }

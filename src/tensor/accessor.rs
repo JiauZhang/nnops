@@ -12,8 +12,8 @@ impl TensorAccessor {
 
     pub fn data_ptr_unsafe(&self, dims: &TensorShape) -> *const u8 {
         let mut offset: Index = 0;
-        for i in 0..self.tensor.ndim() {
-            offset += dims[i] * self.tensor.stride_at(i as Index);
+        for (i, &d) in dims.iter().enumerate().take(self.tensor.ndim()) {
+            offset += d * self.tensor.stride_at(i as Index);
         }
         self.tensor.data_ptr_with_offset(offset)
     }

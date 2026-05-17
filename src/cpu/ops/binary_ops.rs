@@ -13,9 +13,8 @@ struct ScalarBinaryOpParams {
 
 fn calc_slice_span(itemsize: Index, stride: Index, size: Index) -> usize {
     if size <= 0 { return 0; }
-    let elem_bytes = itemsize as usize;
     let s = stride as usize;
-    s * (size as usize - 1) + elem_bytes.max(s)
+    s * (size as usize - 1) + itemsize as usize
 }
 
 fn do_binary_op_tensor_tensor_impl(
@@ -69,23 +68,23 @@ pub fn binary_op_tensor_tensor(op_type: ScalarBinaryOpType, self_t: &Tensor, oth
 
     if std::ptr::eq(self_t, ret) {
         nnops_check!(
-            is_broadcastable_to(&other.shape(), &self_t.shape(), 0),
+            is_broadcastable_to(other.shape(), self_t.shape(), 0),
             "could not broadcast tensor from shape {} into shape {}",
             other.shape_as_string(),
             self_t.shape_as_string()
         );
         dtype = self_t.dtype();
         self_ref = self_t.clone();
-        other_ref = other.astype(dtype).broadcast_to_shape(&self_t.shape(), 0);
+        other_ref = other.astype(dtype).broadcast_to_shape(self_t.shape(), 0);
         out_ref = self_t.clone();
     } else {
         nnops_check!(
-            is_broadcastable(&self_t.shape(), &other.shape(), 0),
+            is_broadcastable(self_t.shape(), other.shape(), 0),
             "operands could not be broadcast together with shape {} and shape {}",
             self_t.shape_as_string(),
             other.shape_as_string()
         );
-        let shape = broadcast_shape(&self_t.shape(), &other.shape(), 0);
+        let shape = broadcast_shape(self_t.shape(), other.shape(), 0);
         dtype = get_promote_type(op_type, self_t.dtype(), other.dtype());
         self_ref = self_t.astype(dtype).broadcast_to_shape(&shape, 0);
         other_ref = other.astype(dtype).broadcast_to_shape(&shape, 0);

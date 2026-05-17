@@ -69,11 +69,11 @@ pub fn matmul(lvalue: &Tensor, rvalue: &Tensor) -> Tensor {
     nnops_check!(lvalue.ndim() >= 2 && rvalue.ndim() >= 2, "matmul lvalue and rvalue ndim must be greater than 2.");
     nnops_check!(lvalue.shape_at(-1) == rvalue.shape_at(-2), "matmul lvalue and rvalue are incompatible.");
     nnops_check!(
-        is_broadcastable(&lvalue.shape(), &rvalue.shape(), 2),
+        is_broadcastable(lvalue.shape(), rvalue.shape(), 2),
         "matmul lvalue and rvalue are not broadcastable."
     );
 
-    let mut shape = broadcast_shape(&lvalue.shape(), &rvalue.shape(), 2);
+    let mut shape = broadcast_shape(lvalue.shape(), rvalue.shape(), 2);
     let size = shape.len();
     shape.resize(size + 2, 0);
 

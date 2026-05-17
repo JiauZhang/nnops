@@ -54,7 +54,11 @@ impl Device {
         }
     }
 
-    pub fn free(&self, ptr: *mut u8) {
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned by [`Device::malloc`] and must not be
+    /// aliased or freed before this call.
+    pub unsafe fn free(&self, ptr: *mut u8) {
         match self {
             Device::Cpu(d) => d.free(ptr),
             Device::Cuda(d) => d.free(ptr),
@@ -63,7 +67,12 @@ impl Device {
         }
     }
 
-    pub fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
         match self {
             Device::Cpu(d) => d.copy_to_cpu(src, dst, size),
             Device::Cuda(d) => d.copy_to_cpu(src, dst, size),
@@ -72,7 +81,12 @@ impl Device {
         }
     }
 
-    pub fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
         match self {
             Device::Cpu(d) => d.copy_from_cpu(src, dst, size),
             Device::Cuda(d) => d.copy_from_cpu(src, dst, size),
@@ -111,22 +125,30 @@ impl CpuDevice {
         ptr
     }
 
-    pub fn free(&self, ptr: *mut u8) {
-        unsafe {
-            let _ = Vec::from_raw_parts(ptr, 0, 0);
-        }
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned by [`CpuDevice::malloc`] and must not have
+    /// been freed already. The original `Vec` allocation will be reconstructed and dropped.
+    pub unsafe fn free(&self, ptr: *mut u8) {
+        let _ = Vec::from_raw_parts(ptr, 0, 0);
     }
 
-    pub fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size);
-        }
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+        std::ptr::copy_nonoverlapping(src, dst, size);
     }
 
-    pub fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size);
-        }
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+        std::ptr::copy_nonoverlapping(src, dst, size);
     }
 }
 
@@ -138,15 +160,26 @@ impl CudaDevice {
         unimplemented!("CudaDevice::malloc")
     }
 
-    pub fn free(&self, _ptr: *mut u8) {
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned by [`CudaDevice::malloc`].
+    pub unsafe fn free(&self, _ptr: *mut u8) {
         unimplemented!("CudaDevice::free")
     }
 
-    pub fn copy_to_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    pub unsafe fn copy_to_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
         unimplemented!("CudaDevice::copy_to_cpu")
     }
 
-    pub fn copy_from_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    pub unsafe fn copy_from_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
         unimplemented!("CudaDevice::copy_from_cpu")
     }
 }
@@ -159,15 +192,26 @@ impl NpuDevice {
         unimplemented!("NpuDevice::malloc")
     }
 
-    pub fn free(&self, _ptr: *mut u8) {
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned by [`NpuDevice::malloc`].
+    pub unsafe fn free(&self, _ptr: *mut u8) {
         unimplemented!("NpuDevice::free")
     }
 
-    pub fn copy_to_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    pub unsafe fn copy_to_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
         unimplemented!("NpuDevice::copy_to_cpu")
     }
 
-    pub fn copy_from_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    pub unsafe fn copy_from_cpu(&self, _src: *const u8, _dst: *mut u8, _size: usize) {
         unimplemented!("NpuDevice::copy_from_cpu")
     }
 }
@@ -192,18 +236,28 @@ impl MpsDevice {
         panic!("MPS device is not available on this system");
     }
 
-    pub fn free(&self, _ptr: *mut u8) {
+    /// # Safety
+    ///
+    /// `ptr` must be a valid pointer returned by [`MpsDevice::malloc`].
+    /// Note: Currently a no-op as MPS buffer lifecycle is managed by [`MpsBuffer`](crate::mps::MpsBuffer).
+    pub unsafe fn free(&self, _ptr: *mut u8) {
     }
 
-    pub fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size);
-        }
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_to_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+        std::ptr::copy_nonoverlapping(src, dst, size);
     }
 
-    pub fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dst, size);
-        }
+    /// # Safety
+    ///
+    /// - `src` must point to a valid allocation of at least `size` bytes.
+    /// - `dst` must point to a valid, writable allocation of at least `size` bytes.
+    /// - The memory regions must not overlap.
+    pub unsafe fn copy_from_cpu(&self, src: *const u8, dst: *mut u8, size: usize) {
+        std::ptr::copy_nonoverlapping(src, dst, size);
     }
 }
