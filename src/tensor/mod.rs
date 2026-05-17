@@ -211,14 +211,14 @@ pub fn dtype(&self) -> DataType {
         dst
     }
 
-    pub fn reshape(&self, dims: &mut TensorShape) -> Self {
+    pub fn reshape(&self, dims: &mut TensorShape) -> Result<Self, String> {
         let mut tensor = self.contiguous();
-        tensor.meta.reshape_inplace(dims);
-        tensor
+        tensor.meta.reshape_inplace(dims)?;
+        Ok(tensor)
     }
 
-    pub fn reshape_inplace(&mut self, dims: &mut TensorShape) {
-        self.meta.reshape_inplace(dims);
+    pub fn reshape_inplace(&mut self, dims: &mut TensorShape) -> Result<(), String> {
+        self.meta.reshape_inplace(dims)
     }
 
     pub fn permute(&self, index: &TensorShape) -> Self {

@@ -355,15 +355,7 @@ impl PyTensor {
     #[pyo3(signature = (*args))]
     fn reshape(&self, args: &Bound<'_, PyTuple>) -> PyResult<PyTensor> {
         let indices = parse_int_args(args)?;
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            self.inner.reshape(&mut indices.clone())
-        }));
-        match result {
-            Ok(tensor) => Ok(PyTensor { inner: tensor }),
-            Err(_) => Err(PyRuntimeError::new_err(
-                format!("cannot reshape tensor of shape {:?} into shape {:?}", self.inner.shape(), indices)
-            )),
-        }
+        self.inner.reshape(&mut indices.clone()).map(|inner| PyTensor { inner }).map_err(|e| PyRuntimeError::new_err(e))
     }
 
     #[pyo3(signature = (*args))]

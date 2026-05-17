@@ -145,7 +145,7 @@ impl TensorMeta {
         meta
     }
 
-    pub fn reshape_inplace(&mut self, indices: &mut TensorShape) {
+    pub fn reshape_inplace(&mut self, indices: &mut TensorShape) -> Result<(), String> {
         let mut idx = indices.len();
         let mut count = 0;
         let mut nelems: usize = 1;
@@ -160,7 +160,7 @@ impl TensorMeta {
         }
 
         if count > 1 {
-            panic!("can only specify one unknown dimension!");
+            return Err("can only specify one unknown dimension!".to_string());
         } else if count == 1 {
             if nelems == 0 || !self.nelems.is_multiple_of(nelems) {
                 let info = format!(
@@ -168,7 +168,7 @@ impl TensorMeta {
                     self.shape_as_string(),
                     shape_as_string(indices)
                 );
-                panic!("{}", info);
+                return Err(info);
             }
             indices[idx] = (self.nelems / nelems) as Index;
             nelems *= indices[idx] as usize;
@@ -180,7 +180,7 @@ impl TensorMeta {
                 self.shape_as_string(),
                 shape_as_string(indices)
             );
-            panic!("{}", info);
+            return Err(info);
         }
 
         nelems = 1;
@@ -190,6 +190,7 @@ impl TensorMeta {
             self.strides[i] = nelems as Index;
             nelems *= self.dims[i] as usize;
         }
+        Ok(())
     }
 
     pub fn index_inplace(&mut self, mut index: Index, axis: usize) {
