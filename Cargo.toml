@@ -1,6 +1,12 @@
+[workspace]
+members = ["python"]
+
+[workspace.package]
+version = "0.2.0"
+
 [package]
 name = "nnops"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 description = "A lightweight neural network operator library (Rust port)"
 

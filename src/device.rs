@@ -7,6 +7,26 @@ pub enum DeviceType {
     MPS,
 }
 
+impl DeviceType {
+    pub fn is_available(&self) -> bool {
+        match self {
+            DeviceType::Cpu => true,
+            DeviceType::Cuda => false,
+            DeviceType::Npu => false,
+            DeviceType::MPS => {
+                #[cfg(feature = "mps")]
+                {
+                    crate::mps::is_available()
+                }
+                #[cfg(not(feature = "mps"))]
+                {
+                    false
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Device {
     Cpu(CpuDevice),
@@ -156,28 +176,20 @@ impl NpuDevice {
 pub struct MpsDevice;
 
 impl MpsDevice {
-    pub fn malloc(&self, size: usize) -> *mut u8 {
+    pub fn malloc(&self, _size: usize) -> *mut u8 {
         #[cfg(feature = "mps")]
         if crate::mps::is_available() {
             return crate::mps::with_context(|ctx| {
                 let buffer = ctx.device.new_buffer(
-                    size as u64,
+                    _size as u64,
                     metal::MTLResourceOptions::StorageModeShared,
                 );
                 let ptr = buffer.contents() as *mut u8;
                 std::mem::forget(buffer);
                 ptr
-            }).unwrap_or_else(|| {
-                let mut v = vec![0u8; size];
-                let ptr = v.as_mut_ptr();
-                std::mem::forget(v);
-                ptr
-            });
+            }).expect("MPS context is available but context creation failed");
         }
-        let mut v = vec![0u8; size];
-        let ptr = v.as_mut_ptr();
-        std::mem::forget(v);
-        ptr
+        panic!("MPS device is not available on this system");
     }
 
     pub fn free(&self, _ptr: *mut u8) {

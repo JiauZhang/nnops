@@ -74,5 +74,7 @@ fn _rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(linear, m)?)?;
     m.add_function(wrap_pyfunction!(show_device_info, m)?)?;
 
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
     Ok(())
 }

@@ -2,8 +2,8 @@ import pytest
 from nnops import device, dtype
 import numpy as np
 
-cuda_available = device.is_device_available(device.CUDA)
-mps_available = device.is_device_available(device.MPS)
+cuda_available = device.CUDA.is_available()
+mps_available = device.MPS.is_available()
 
 devices = [device.CPU]
 if mps_available:

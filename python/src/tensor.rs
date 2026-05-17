@@ -262,6 +262,11 @@ impl PyTensor {
         } else {
             return Err(PyRuntimeError::new_err("unsupported device type"));
         };
+        if device_type != DeviceType::Cpu && !device_type.is_available() {
+            return Err(PyRuntimeError::new_err(
+                format!("{:?} device is not available", device_type)
+            ));
+        }
         Ok(PyTensor { inner: self.inner.to_device(device_type) })
     }
 

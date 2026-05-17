@@ -63,6 +63,24 @@ impl PyDeviceType {
             PyDeviceType::MPS => "MPS",
         })
     }
+
+    fn is_available(&self) -> bool {
+        match self {
+            PyDeviceType::CPU => true,
+            PyDeviceType::CUDA => false,
+            PyDeviceType::NPU => false,
+            PyDeviceType::MPS => {
+                #[cfg(feature = "mps")]
+                {
+                    nnops::mps::is_available()
+                }
+                #[cfg(not(feature = "mps"))]
+                {
+                    false
+                }
+            }
+        }
+    }
 }
 
 #[pyfunction]

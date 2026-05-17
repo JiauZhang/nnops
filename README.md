@@ -1,6 +1,26 @@
 ### Install
+
 ```shell
+# CPU only (default)
 pip install nnops
+
+# With MPS acceleration (macOS)
+pip install nnops[mps]
+```
+
+> **Note**: For local development, use `maturin develop --features mps` to build with MPS support.
+
+### Build from source
+
+```shell
+# CPU only
+maturin develop
+
+# With MPS support (macOS)
+maturin develop --features mps
+
+# With CUDA support (Linux/Windows)
+maturin build --features cuda
 ```
 
 ### Example

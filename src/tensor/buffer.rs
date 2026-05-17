@@ -10,13 +10,17 @@ impl TensorBuffer {
     pub fn new(device: &Device, size: usize) -> Self {
         match device {
             Device::Cpu(_) => TensorBuffer::Cpu(vec![0u8; size]),
-            #[cfg(feature = "mps")]
             Device::MPS(_) => {
-                crate::mps::MpsBuffer::new(size)
-                    .map(TensorBuffer::Mps)
-                    .unwrap_or_else(|| TensorBuffer::Cpu(vec![0u8; size]))
+                #[cfg(feature = "mps")]
+                if crate::mps::is_available() {
+                    if let Some(buf) = crate::mps::MpsBuffer::new(size) {
+                        return TensorBuffer::Mps(buf);
+                    }
+                }
+                panic!("MPS device is not available on this system. Build with `--features mps` and ensure Metal is supported.");
             }
-            _ => TensorBuffer::Cpu(vec![0u8; size]),
+            Device::Cuda(_) => panic!("CUDA device is not available. Build with `--features cuda`."),
+            Device::Npu(_) => panic!("NPU device is not available."),
         }
     }
 

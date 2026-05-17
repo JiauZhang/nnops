@@ -15,6 +15,10 @@ class TestDeviceTo():
     def test_to(self, dev):
         a_cpu = from_numpy(np.random.randn(2, 5, 8).astype(np.float32))
 
+        if dev != device.CPU and not dev.is_available():
+            with pytest.raises(RuntimeError):
+                a_cpu.to(dev)
+
         a_dev = a_cpu.to(dev)
         assert a_dev.device == dev
         assert a_dev.dtype == a_cpu.dtype

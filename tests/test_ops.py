@@ -17,7 +17,8 @@ class TestOperators():
     def test_binary_ops(self, nnops_op, np_op, dtype_pair, device):
         nps_type, np_type = dtype_pair
         if np_type == np.bool and nnops_op is ops.sub:
-            pytest.skip("numpy boolean subtract is not supported")
+            # numpy boolean subtract is not supported
+            return
 
         np_a = random_data((2, 3, 4), np_type)
         np_b = random_data((2, 3, 4), np_type)
