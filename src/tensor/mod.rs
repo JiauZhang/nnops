@@ -1,14 +1,8 @@
 mod meta;
 mod buffer;
-mod accessor;
-mod iterator;
-mod util;
 
 pub use meta::{TensorMeta, Slice};
 pub use buffer::TensorBuffer;
-pub use accessor::TensorAccessor;
-pub use iterator::TensorIterator;
-pub use util::tensor_from;
 
 use crate::common::{Index, TensorShape, TensorStride, is_broadcastable, is_broadcastable_to, broadcast_shape, broadcast_to};
 use crate::data_type::{DataType, DtypeValue, type_cast};
@@ -195,19 +189,10 @@ pub fn dtype(&self) -> DataType {
         if device_type == self.device_type() {
             return self.clone();
         }
-        let dev = Device::from_type(device_type);
-        let mut dst = Tensor::with_device_type(self.meta.dtype, &self.meta.dims, device_type);
+        let dst = Tensor::with_device_type(self.meta.dtype, &self.meta.dims, device_type);
         let src = self.contiguous();
-        if src.device_type() == DeviceType::Cpu {
-            unsafe {
-                dev.copy_from_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
-            }
-        } else {
-            let src_dev = src.device();
-            unsafe {
-                src_dev.copy_to_cpu(src.data_ptr(), dst.data_mut_ptr(), src.nbytes());
-            }
-        }
+        let nbytes = src.nbytes();
+        dst.buffer.copy_from_cpu(&src.buffer.as_bytes()[..nbytes]);
         dst
     }
 

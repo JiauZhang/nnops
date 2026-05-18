@@ -35,29 +35,39 @@ impl Scalar {
         }
     }
 
-    pub fn data_ptr(&self) -> *const u8 {
-        match self {
-            Scalar::Bool(v) => (v as *const bool) as *const u8,
-            Scalar::Uint8(v) => v as *const u8,
-            Scalar::Int8(v) => (v as *const i8) as *const u8,
-            Scalar::Uint16(v) => (v as *const u16) as *const u8,
-            Scalar::Int16(v) => (v as *const i16) as *const u8,
-            Scalar::Uint32(v) => (v as *const u32) as *const u8,
-            Scalar::Int32(v) => (v as *const i32) as *const u8,
-            Scalar::Uint64(v) => (v as *const u64) as *const u8,
-            Scalar::Int64(v) => (v as *const i64) as *const u8,
-            Scalar::Float32(v) => (v as *const f32) as *const u8,
-            Scalar::Float64(v) => (v as *const f64) as *const u8,
-        }
-    }
-
     pub fn itemsize(&self) -> Index {
         sizeof_dtype(self.dtype())
     }
 
     pub fn as_bytes(&self) -> &[u8] {
-        unsafe {
-            std::slice::from_raw_parts(self.data_ptr(), self.itemsize() as usize)
+        match self {
+            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 1) },
+            Scalar::Uint8(v) => unsafe { std::slice::from_raw_parts(v, 1) },
+            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 1) },
+            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 2) },
+            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 2) },
+            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
+            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
+            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
+            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
+            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
+            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
+        }
+    }
+
+    fn as_bytes_mut(&mut self) -> &mut [u8] {
+        match self {
+            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 1) },
+            Scalar::Uint8(v) => unsafe { std::slice::from_raw_parts_mut(v, 1) },
+            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 1) },
+            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 2) },
+            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 2) },
+            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
+            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
+            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
+            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
+            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
+            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
         }
     }
 
@@ -65,28 +75,23 @@ impl Scalar {
         if self.dtype() != T::DTYPE {
             return None;
         }
-        unsafe {
-            Some(std::ptr::read(self.data_ptr() as *const T))
-        }
+        let bytes = self.as_bytes();
+        unsafe { Some(std::ptr::read_unaligned(bytes.as_ptr() as *const T)) }
     }
 
     pub fn astype(&self, dtype: DataType) -> Self {
-        let result = zero_for_dtype(dtype);
+        let mut result = zero_for_dtype(dtype);
         let src_slice = self.as_bytes();
-        let dst_slice = unsafe {
-            std::slice::from_raw_parts_mut(result.data_ptr() as *mut u8, result.itemsize() as usize)
-        };
-        type_cast(dst_slice, src_slice, result.itemsize(), self.itemsize(), 1, self.dtype(), dtype);
+        let dst_itemsize = result.itemsize();
+        let src_itemsize = self.itemsize();
+        let dst_slice = result.as_bytes_mut();
+        type_cast(dst_slice, src_slice, dst_itemsize, src_itemsize, 1, self.dtype(), dtype);
         result
     }
 
     pub fn to_tensor(&self) -> Tensor {
         let t = Tensor::with_device_type(self.dtype(), &vec![1], DeviceType::Cpu);
-        let src_slice = self.as_bytes();
-        let dst_slice = unsafe {
-            std::slice::from_raw_parts_mut(t.data_ptr() as *mut u8, t.itemsize() as usize)
-        };
-        type_cast(dst_slice, src_slice, t.itemsize(), self.itemsize(), 1, self.dtype(), self.dtype());
+        t.buffer.copy_from_cpu(self.as_bytes());
         t
     }
 }

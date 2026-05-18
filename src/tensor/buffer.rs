@@ -57,6 +57,14 @@ impl TensorBuffer {
         }
     }
 
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            TensorBuffer::Cpu(data) => unsafe { &*data.get() },
+            #[cfg(feature = "mps")]
+            TensorBuffer::Mps(buf) => unsafe { std::slice::from_raw_parts(buf.data_ptr(), buf.size) },
+        }
+    }
+
     pub fn copy_from_cpu(&self, src: &[u8]) {
         match self {
             TensorBuffer::Cpu(data) => {
