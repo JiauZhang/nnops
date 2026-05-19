@@ -8,7 +8,7 @@ from nnops._rs import add, sub, mul, truediv
 from nnops._rs import iadd, isub, imul, itruediv
 from nnops._rs import matmul, linear
 from nnops._rs import DeviceType, DataType
-from nnops._rs import CPU, CUDA, NPU, MPS
+from nnops._rs import CPU, CUDA, MPS
 from nnops._rs import float64, float32, int64, uint64, int32, uint32
 from nnops._rs import int16, uint16, int8, uint8, bool
 from nnops._rs import is_device_available, show_device_info
@@ -26,7 +26,7 @@ __all__ = [
     "iadd", "isub", "imul", "itruediv",
     "matmul", "linear",
     "DeviceType", "DataType",
-    "CPU", "CUDA", "NPU", "MPS",
+    "CPU", "CUDA", "MPS",
     "float64", "float32", "int64", "uint64", "int32", "uint32",
     "int16", "uint16", "int8", "uint8", "bool",
     "is_device_available", "show_device_info",

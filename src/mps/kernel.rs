@@ -59,7 +59,7 @@ pub fn dispatch_2d(
     queue: &metal::CommandQueueRef,
     pso: &metal::ComputePipelineStateRef,
     buffers: &[&metal::BufferRef],
-    constants: &[(u32, u32)],
+    constants: &[u32],
     width: u64,
     height: u64,
 ) {
@@ -72,7 +72,7 @@ pub fn dispatch_2d(
         encoder.set_buffer(buf_idx as u64, Some(*buf), 0);
         buf_idx += 1;
     }
-    for &(val, _idx) in constants {
+    for &val in constants {
         let data = val.to_ne_bytes();
         let buf = queue.device().new_buffer_with_data(
             data.as_ptr() as *const std::ffi::c_void,

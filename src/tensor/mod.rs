@@ -325,7 +325,7 @@ pub fn dtype(&self) -> DataType {
         }
         unsafe {
             Some(std::slice::from_raw_parts(
-                self.buffer.data_ptr().add(offset) as *const T,
+                self.buffer.data_ptr().add(offset).cast::<T>(),
                 self.nelems(),
             ))
         }
@@ -344,7 +344,7 @@ pub fn dtype(&self) -> DataType {
         }
         unsafe {
             Some(std::slice::from_raw_parts_mut(
-                buffer.data_mut_ptr().add(offset) as *mut T,
+                buffer.data_mut_ptr().add(offset).cast::<T>(),
                 nelems,
             ))
         }
@@ -354,84 +354,27 @@ pub fn dtype(&self) -> DataType {
     where
         F: FnMut(usize) -> f64,
     {
+        macro_rules! fill_dtype {
+            ($ty:ty, $convert:expr) => {
+                if let Some(slice) = self.as_slice_mut::<$ty>() {
+                    for (i, v) in slice.iter_mut().enumerate() {
+                        *v = $convert(f(i));
+                    }
+                }
+            };
+        }
         match self.meta.dtype {
-            DataType::Float32 => {
-                if let Some(slice) = self.as_slice_mut::<f32>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as f32;
-                    }
-                }
-            }
-            DataType::Float64 => {
-                if let Some(slice) = self.as_slice_mut::<f64>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i);
-                    }
-                }
-            }
-            DataType::Int32 => {
-                if let Some(slice) = self.as_slice_mut::<i32>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as i32;
-                    }
-                }
-            }
-            DataType::Int64 => {
-                if let Some(slice) = self.as_slice_mut::<i64>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as i64;
-                    }
-                }
-            }
-            DataType::Uint8 => {
-                if let Some(slice) = self.as_slice_mut::<u8>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as u8;
-                    }
-                }
-            }
-            DataType::Int8 => {
-                if let Some(slice) = self.as_slice_mut::<i8>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as i8;
-                    }
-                }
-            }
-            DataType::Uint16 => {
-                if let Some(slice) = self.as_slice_mut::<u16>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as u16;
-                    }
-                }
-            }
-            DataType::Int16 => {
-                if let Some(slice) = self.as_slice_mut::<i16>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as i16;
-                    }
-                }
-            }
-            DataType::Uint32 => {
-                if let Some(slice) = self.as_slice_mut::<u32>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as u32;
-                    }
-                }
-            }
-            DataType::Uint64 => {
-                if let Some(slice) = self.as_slice_mut::<u64>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = f(i) as u64;
-                    }
-                }
-            }
-            DataType::Bool => {
-                if let Some(slice) = self.as_slice_mut::<u8>() {
-                    for (i, v) in slice.iter_mut().enumerate() {
-                        *v = if f(i) != 0.0 { 1 } else { 0 };
-                    }
-                }
-            }
+            DataType::Float32 => fill_dtype!(f32, |x| x as f32),
+            DataType::Float64 => fill_dtype!(f64, |x| x),
+            DataType::Int32 => fill_dtype!(i32, |x| x as i32),
+            DataType::Int64 => fill_dtype!(i64, |x| x as i64),
+            DataType::Uint8 => fill_dtype!(u8, |x| x as u8),
+            DataType::Int8 => fill_dtype!(i8, |x| x as i8),
+            DataType::Uint16 => fill_dtype!(u16, |x| x as u16),
+            DataType::Int16 => fill_dtype!(i16, |x| x as i16),
+            DataType::Uint32 => fill_dtype!(u32, |x| x as u32),
+            DataType::Uint64 => fill_dtype!(u64, |x| x as u64),
+            DataType::Bool => fill_dtype!(u8, |x| if x != 0.0 { 1 } else { 0 }),
         }
     }
 }
@@ -441,15 +384,15 @@ fn read_as_f64(ptr: *const u8, dtype: DataType) -> f64 {
         match dtype {
             DataType::Bool => *ptr as f64,
             DataType::Uint8 => *ptr as f64,
-            DataType::Int8 => *(ptr as *const i8) as f64,
-            DataType::Uint16 => *(ptr as *const u16) as f64,
-            DataType::Int16 => *(ptr as *const i16) as f64,
-            DataType::Uint32 => *(ptr as *const u32) as f64,
-            DataType::Int32 => *(ptr as *const i32) as f64,
-            DataType::Uint64 => *(ptr as *const u64) as f64,
-            DataType::Int64 => *(ptr as *const i64) as f64,
-            DataType::Float32 => *(ptr as *const f32) as f64,
-            DataType::Float64 => *(ptr as *const f64),
+            DataType::Int8 => *(ptr.cast::<i8>()) as f64,
+            DataType::Uint16 => *(ptr.cast::<u16>()) as f64,
+            DataType::Int16 => *(ptr.cast::<i16>()) as f64,
+            DataType::Uint32 => *(ptr.cast::<u32>()) as f64,
+            DataType::Int32 => *(ptr.cast::<i32>()) as f64,
+            DataType::Uint64 => *(ptr.cast::<u64>()) as f64,
+            DataType::Int64 => *(ptr.cast::<i64>()) as f64,
+            DataType::Float32 => *(ptr.cast::<f32>()) as f64,
+            DataType::Float64 => *(ptr.cast::<f64>()),
         }
     }
 }

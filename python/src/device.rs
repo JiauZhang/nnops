@@ -3,19 +3,17 @@ use pyo3::prelude::*;
 #[pyclass(name = "DeviceType", eq, eq_int)]
 #[derive(Clone, PartialEq)]
 pub enum PyDeviceType {
-    CPU = 0,
-    CUDA = 1,
-    NPU = 2,
-    MPS = 3,
+    Cpu = 0,
+    Cuda = 1,
+    Mps = 2,
 }
 
 impl From<nnops::DeviceType> for PyDeviceType {
     fn from(dt: nnops::DeviceType) -> Self {
         match dt {
-            nnops::DeviceType::Cpu => PyDeviceType::CPU,
-            nnops::DeviceType::Cuda => PyDeviceType::CUDA,
-            nnops::DeviceType::Npu => PyDeviceType::NPU,
-            nnops::DeviceType::MPS => PyDeviceType::MPS,
+            nnops::DeviceType::Cpu => PyDeviceType::Cpu,
+            nnops::DeviceType::Cuda => PyDeviceType::Cuda,
+            nnops::DeviceType::Mps => PyDeviceType::Mps,
         }
     }
 }
@@ -23,10 +21,9 @@ impl From<nnops::DeviceType> for PyDeviceType {
 impl From<PyDeviceType> for nnops::DeviceType {
     fn from(dt: PyDeviceType) -> Self {
         match dt {
-            PyDeviceType::CPU => nnops::DeviceType::Cpu,
-            PyDeviceType::CUDA => nnops::DeviceType::Cuda,
-            PyDeviceType::NPU => nnops::DeviceType::Npu,
-            PyDeviceType::MPS => nnops::DeviceType::MPS,
+            PyDeviceType::Cpu => nnops::DeviceType::Cpu,
+            PyDeviceType::Cuda => nnops::DeviceType::Cuda,
+            PyDeviceType::Mps => nnops::DeviceType::Mps,
         }
     }
 }
@@ -36,10 +33,9 @@ impl PyDeviceType {
     #[new]
     fn new(name: &str) -> PyResult<Self> {
         match name.to_lowercase().as_str() {
-            "cpu" => Ok(PyDeviceType::CPU),
-            "cuda" => Ok(PyDeviceType::CUDA),
-            "npu" => Ok(PyDeviceType::NPU),
-            "mps" => Ok(PyDeviceType::MPS),
+            "cpu" => Ok(PyDeviceType::Cpu),
+            "cuda" => Ok(PyDeviceType::Cuda),
+            "mps" => Ok(PyDeviceType::Mps),
             _ => Err(pyo3::exceptions::PyRuntimeError::new_err(
                 format!("unknown device type: {}", name)
             )),
@@ -48,28 +44,25 @@ impl PyDeviceType {
 
     fn __str__(&self) -> String {
         match self {
-            PyDeviceType::CPU => "cpu".to_string(),
-            PyDeviceType::CUDA => "cuda".to_string(),
-            PyDeviceType::NPU => "npu".to_string(),
-            PyDeviceType::MPS => "mps".to_string(),
+            PyDeviceType::Cpu => "cpu".to_string(),
+            PyDeviceType::Cuda => "cuda".to_string(),
+            PyDeviceType::Mps => "mps".to_string(),
         }
     }
 
     fn __repr__(&self) -> String {
         format!("<DeviceType.{}>", match self {
-            PyDeviceType::CPU => "CPU",
-            PyDeviceType::CUDA => "CUDA",
-            PyDeviceType::NPU => "NPU",
-            PyDeviceType::MPS => "MPS",
+            PyDeviceType::Cpu => "CPU",
+            PyDeviceType::Cuda => "CUDA",
+            PyDeviceType::Mps => "MPS",
         })
     }
 
     fn is_available(&self) -> bool {
         match self {
-            PyDeviceType::CPU => true,
-            PyDeviceType::CUDA => false,
-            PyDeviceType::NPU => false,
-            PyDeviceType::MPS => {
+            PyDeviceType::Cpu => true,
+            PyDeviceType::Cuda => false,
+            PyDeviceType::Mps => {
                 #[cfg(feature = "mps")]
                 {
                     nnops::mps::is_available()
@@ -87,13 +80,12 @@ impl PyDeviceType {
 fn is_device_available(device: &Bound<'_, PyAny>) -> PyResult<bool> {
     let py_dt = device.extract::<PyDeviceType>()?;
     match py_dt {
-        PyDeviceType::CPU => Ok(true),
-        PyDeviceType::CUDA => Ok(false),
-        PyDeviceType::NPU => Ok(false),
-        PyDeviceType::MPS => {
+        PyDeviceType::Cpu => Ok(true),
+        PyDeviceType::Cuda => Ok(false),
+        PyDeviceType::Mps => {
             #[cfg(feature = "mps")]
             {
-                return Ok(nnops::mps::is_available());
+                Ok(nnops::mps::is_available())
             }
             #[cfg(not(feature = "mps"))]
             {
@@ -105,10 +97,9 @@ fn is_device_available(device: &Bound<'_, PyAny>) -> PyResult<bool> {
 
 pub fn register_device_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDeviceType>()?;
-    m.add("CPU", PyDeviceType::CPU)?;
-    m.add("CUDA", PyDeviceType::CUDA)?;
-    m.add("NPU", PyDeviceType::NPU)?;
-    m.add("MPS", PyDeviceType::MPS)?;
+    m.add("CPU", PyDeviceType::Cpu)?;
+    m.add("CUDA", PyDeviceType::Cuda)?;
+    m.add("MPS", PyDeviceType::Mps)?;
     m.add_function(wrap_pyfunction!(is_device_available, m)?)?;
     Ok(())
 }

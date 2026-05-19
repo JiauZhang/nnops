@@ -66,7 +66,7 @@ fn extract_slice(py_slice: &Bound<'_, PySlice>, dim_size: i64) -> PyResult<(i64,
 }
 
 fn is_ellipsis(obj: &Bound<'_, PyAny>) -> bool {
-    obj.get_type().name().map_or(false, |n| n == "ellipsis")
+    obj.get_type().name().is_ok_and(|n| n == "ellipsis")
 }
 
 fn indexing(meta: &mut nnops::tensor::TensorMeta, indices: &Bound<'_, PyAny>, axis: usize) -> PyResult<()> {
@@ -145,6 +145,12 @@ pub struct PyTensor {
     pub inner: Tensor,
 }
 
+impl From<Tensor> for PyTensor {
+    fn from(inner: Tensor) -> Self {
+        PyTensor { inner }
+    }
+}
+
 #[pymethods]
 impl PyTensor {
     #[new]
@@ -173,8 +179,7 @@ impl PyTensor {
                     match name.to_lowercase().as_str() {
                         "cpu" => DeviceType::Cpu,
                         "cuda" => DeviceType::Cuda,
-                        "npu" => DeviceType::Npu,
-                        "mps" => DeviceType::MPS,
+                        "mps" => DeviceType::Mps,
                         _ => return Err(PyRuntimeError::new_err(
                             format!("unknown device type: {}", name)
                         )),
@@ -253,8 +258,7 @@ impl PyTensor {
             match name.to_lowercase().as_str() {
                 "cpu" => DeviceType::Cpu,
                 "cuda" => DeviceType::Cuda,
-                "npu" => DeviceType::Npu,
-                "mps" => DeviceType::MPS,
+                "mps" => DeviceType::Mps,
                 _ => return Err(PyRuntimeError::new_err(
                     format!("unknown device type: {}", name)
                 )),
@@ -355,7 +359,7 @@ impl PyTensor {
     #[pyo3(signature = (*args))]
     fn reshape(&self, args: &Bound<'_, PyTuple>) -> PyResult<PyTensor> {
         let indices = parse_int_args(args)?;
-        self.inner.reshape(&mut indices.clone()).map(|inner| PyTensor { inner }).map_err(|e| PyRuntimeError::new_err(e))
+        self.inner.reshape(&mut indices.clone()).map(PyTensor::from).map_err(PyRuntimeError::new_err)
     }
 
     #[pyo3(signature = (*args))]

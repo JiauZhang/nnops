@@ -67,8 +67,8 @@ macro_rules! type_cast_body {
         let ts = $dst_stride as usize;
         for i in 0..$size as usize {
             unsafe {
-                let from_val = *($src.as_ptr().add(i * fs) as *const $from_ty);
-                *($dst.as_mut_ptr().add(i * ts) as *mut $to_ty) = from_val as $to_ty;
+                let from_val = *($src.as_ptr().add(i * fs).cast::<$from_ty>());
+                *($dst.as_mut_ptr().add(i * ts).cast::<$to_ty>()) = from_val as $to_ty;
             }
         }
     }};
@@ -80,10 +80,10 @@ macro_rules! type_cast_body_float_to_int {
         let ts = $dst_stride as usize;
         for i in 0..$size as usize {
             unsafe {
-                let from_val = *($src.as_ptr().add(i * fs) as *const $from_ty);
+                let from_val = *($src.as_ptr().add(i * fs).cast::<$from_ty>());
                 let truncated = from_val.trunc() as i128;
                 let wrapped = ((truncated + $min as i128).rem_euclid($range) + $min as i128) as $to_ty;
-                *($dst.as_mut_ptr().add(i * ts) as *mut $to_ty) = wrapped;
+                *($dst.as_mut_ptr().add(i * ts).cast::<$to_ty>()) = wrapped;
             }
         }
     }};
@@ -95,8 +95,8 @@ macro_rules! type_cast_body_float_to_bool {
         let ts = $dst_stride as usize;
         for i in 0..$size as usize {
             unsafe {
-                let from_val = *($src.as_ptr().add(i * fs) as *const $from_ty);
-                *($dst.as_mut_ptr().add(i * ts) as *mut u8) = (from_val != 0.0) as u8;
+                let from_val = *($src.as_ptr().add(i * fs).cast::<$from_ty>());
+                *($dst.as_mut_ptr().add(i * ts).cast::<u8>()) = (from_val != 0.0) as u8;
             }
         }
     }};
@@ -108,8 +108,8 @@ macro_rules! type_cast_body_int_to_bool {
         let ts = $dst_stride as usize;
         for i in 0..$size as usize {
             unsafe {
-                let from_val = *($src.as_ptr().add(i * fs) as *const $from_ty);
-                *($dst.as_mut_ptr().add(i * ts) as *mut u8) = (from_val != 0) as u8;
+                let from_val = *($src.as_ptr().add(i * fs).cast::<$from_ty>());
+                *($dst.as_mut_ptr().add(i * ts).cast::<u8>()) = (from_val != 0) as u8;
             }
         }
     }};
@@ -122,150 +122,84 @@ macro_rules! type_cast_body_float_to_uint {
         let max_val: $to_ty = $max;
         for i in 0..$size as usize {
             unsafe {
-                let from_val = *($src.as_ptr().add(i * fs) as *const $from_ty);
+                let from_val = *($src.as_ptr().add(i * fs).cast::<$from_ty>());
                 let clipped = if from_val < 0.0 { 0.0 } else { from_val };
                 let truncated = clipped.trunc();
                 let result = if truncated > max_val as $from_ty { max_val } else { truncated as $to_ty };
-                *($dst.as_mut_ptr().add(i * ts) as *mut $to_ty) = result;
+                *($dst.as_mut_ptr().add(i * ts).cast::<$to_ty>()) = result;
             }
         }
     }};
 }
 
+macro_rules! define_type_cast_from_int_fn {
+    ($fn_name:ident, $from_ty:ty) => {
+        #[inline(always)]
+        fn $fn_name(dst: &mut [u8], src: &[u8], dst_stride: Index, src_stride: Index, size: Index, to: DataType) {
+            match to {
+                DataType::Bool => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, $from_ty),
+                DataType::Uint8 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, u8),
+                DataType::Int8 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, i8),
+                DataType::Uint16 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, u16),
+                DataType::Int16 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, i16),
+                DataType::Uint32 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, u32),
+                DataType::Int32 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, i32),
+                DataType::Uint64 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, u64),
+                DataType::Int64 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, i64),
+                DataType::Float32 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, f32),
+                DataType::Float64 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, f64),
+            }
+        }
+    };
+}
+
+macro_rules! define_type_cast_from_float_fn {
+    ($fn_name:ident, $from_ty:ty) => {
+        #[inline(always)]
+        fn $fn_name(dst: &mut [u8], src: &[u8], dst_stride: Index, src_stride: Index, size: Index, to: DataType) {
+            match to {
+                DataType::Bool => type_cast_body_float_to_bool!(dst, src, dst_stride, src_stride, size, $from_ty),
+                DataType::Uint8 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, u8, 0, 256),
+                DataType::Int8 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, i8, -128, 256),
+                DataType::Uint16 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, u16, 0, 65536),
+                DataType::Int16 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, i16, -32768, 65536),
+                DataType::Uint32 => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, $from_ty, u32, 4294967295),
+                DataType::Int32 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, i32, -2147483648, 4294967296),
+                DataType::Uint64 => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, $from_ty, u64, 18446744073709551615),
+                DataType::Int64 => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, $from_ty, i64, -9223372036854775808, 18446744073709551616),
+                DataType::Float32 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, f32),
+                DataType::Float64 => type_cast_body!(dst, src, dst_stride, src_stride, size, $from_ty, f64),
+            }
+        }
+    };
+}
+
+define_type_cast_from_int_fn!(type_cast_from_bool, u8);
+define_type_cast_from_int_fn!(type_cast_from_uint8, u8);
+define_type_cast_from_int_fn!(type_cast_from_int8, i8);
+define_type_cast_from_int_fn!(type_cast_from_uint16, u16);
+define_type_cast_from_int_fn!(type_cast_from_int16, i16);
+define_type_cast_from_int_fn!(type_cast_from_uint32, u32);
+define_type_cast_from_int_fn!(type_cast_from_int32, i32);
+define_type_cast_from_int_fn!(type_cast_from_uint64, u64);
+define_type_cast_from_int_fn!(type_cast_from_int64, i64);
+define_type_cast_from_float_fn!(type_cast_from_float32, f32);
+define_type_cast_from_float_fn!(type_cast_from_float64, f64);
+
 #[inline]
 pub fn type_cast(dst: &mut [u8], src: &[u8], dst_stride: Index, src_stride: Index, size: Index, from: DataType, to: DataType) {
-    match (from, to) {
-        (DataType::Bool, DataType::Bool) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u8),
-        (DataType::Bool, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u8),
-        (DataType::Bool, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i8),
-        (DataType::Bool, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u16),
-        (DataType::Bool, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i16),
-        (DataType::Bool, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u32),
-        (DataType::Bool, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i32),
-        (DataType::Bool, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u64),
-        (DataType::Bool, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i64),
-        (DataType::Bool, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, f32),
-        (DataType::Bool, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, f64),
-
-        (DataType::Uint8, DataType::Bool) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u8),
-        (DataType::Uint8, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u8),
-        (DataType::Uint8, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i8),
-        (DataType::Uint8, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u16),
-        (DataType::Uint8, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i16),
-        (DataType::Uint8, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u32),
-        (DataType::Uint8, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i32),
-        (DataType::Uint8, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, u64),
-        (DataType::Uint8, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, i64),
-        (DataType::Uint8, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, f32),
-        (DataType::Uint8, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u8, f64),
-
-        (DataType::Int8, DataType::Bool) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, u8),
-        (DataType::Int8, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, u8),
-        (DataType::Int8, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, i8),
-        (DataType::Int8, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, u16),
-        (DataType::Int8, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, i16),
-        (DataType::Int8, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, u32),
-        (DataType::Int8, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, i32),
-        (DataType::Int8, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, u64),
-        (DataType::Int8, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, i64),
-        (DataType::Int8, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, f32),
-        (DataType::Int8, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i8, f64),
-
-        (DataType::Uint16, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, u16),
-        (DataType::Uint16, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, u8),
-        (DataType::Uint16, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, i8),
-        (DataType::Uint16, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, u16),
-        (DataType::Uint16, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, i16),
-        (DataType::Uint16, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, u32),
-        (DataType::Uint16, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, i32),
-        (DataType::Uint16, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, u64),
-        (DataType::Uint16, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, i64),
-        (DataType::Uint16, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, f32),
-        (DataType::Uint16, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u16, f64),
-
-        (DataType::Int16, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, i16),
-        (DataType::Int16, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, u8),
-        (DataType::Int16, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, i8),
-        (DataType::Int16, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, u16),
-        (DataType::Int16, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, i16),
-        (DataType::Int16, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, u32),
-        (DataType::Int16, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, i32),
-        (DataType::Int16, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, u64),
-        (DataType::Int16, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, i64),
-        (DataType::Int16, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, f32),
-        (DataType::Int16, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i16, f64),
-
-        (DataType::Uint32, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, u32),
-        (DataType::Uint32, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, u8),
-        (DataType::Uint32, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, i8),
-        (DataType::Uint32, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, u16),
-        (DataType::Uint32, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, i16),
-        (DataType::Uint32, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, u32),
-        (DataType::Uint32, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, i32),
-        (DataType::Uint32, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, u64),
-        (DataType::Uint32, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, i64),
-        (DataType::Uint32, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, f32),
-        (DataType::Uint32, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u32, f64),
-
-        (DataType::Int32, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, i32),
-        (DataType::Int32, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, u8),
-        (DataType::Int32, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, i8),
-        (DataType::Int32, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, u16),
-        (DataType::Int32, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, i16),
-        (DataType::Int32, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, u32),
-        (DataType::Int32, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, i32),
-        (DataType::Int32, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, u64),
-        (DataType::Int32, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, i64),
-        (DataType::Int32, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, f32),
-        (DataType::Int32, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i32, f64),
-
-        (DataType::Uint64, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, u64),
-        (DataType::Uint64, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, u8),
-        (DataType::Uint64, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, i8),
-        (DataType::Uint64, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, u16),
-        (DataType::Uint64, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, i16),
-        (DataType::Uint64, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, u32),
-        (DataType::Uint64, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, i32),
-        (DataType::Uint64, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, u64),
-        (DataType::Uint64, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, i64),
-        (DataType::Uint64, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, f32),
-        (DataType::Uint64, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, u64, f64),
-
-        (DataType::Int64, DataType::Bool) => type_cast_body_int_to_bool!(dst, src, dst_stride, src_stride, size, i64),
-        (DataType::Int64, DataType::Uint8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, u8),
-        (DataType::Int64, DataType::Int8) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, i8),
-        (DataType::Int64, DataType::Uint16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, u16),
-        (DataType::Int64, DataType::Int16) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, i16),
-        (DataType::Int64, DataType::Uint32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, u32),
-        (DataType::Int64, DataType::Int32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, i32),
-        (DataType::Int64, DataType::Uint64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, u64),
-        (DataType::Int64, DataType::Int64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, i64),
-        (DataType::Int64, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, f32),
-        (DataType::Int64, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, i64, f64),
-
-        (DataType::Float32, DataType::Bool) => type_cast_body_float_to_bool!(dst, src, dst_stride, src_stride, size, f32),
-        (DataType::Float32, DataType::Uint8) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, u8, 0, 256),
-        (DataType::Float32, DataType::Int8) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, i8, -128, 256),
-        (DataType::Float32, DataType::Uint16) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, u16, 0, 65536),
-        (DataType::Float32, DataType::Int16) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, i16, -32768, 65536),
-        (DataType::Float32, DataType::Uint32) => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, f32, u32, 4294967295),
-        (DataType::Float32, DataType::Int32) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, i32, -2147483648, 4294967296),
-        (DataType::Float32, DataType::Uint64) => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, f32, u64, 18446744073709551615),
-        (DataType::Float32, DataType::Int64) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f32, i64, -9223372036854775808, 18446744073709551616),
-        (DataType::Float32, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, f32, f32),
-        (DataType::Float32, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, f32, f64),
-
-        (DataType::Float64, DataType::Bool) => type_cast_body_float_to_bool!(dst, src, dst_stride, src_stride, size, f64),
-        (DataType::Float64, DataType::Uint8) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, u8, 0, 256),
-        (DataType::Float64, DataType::Int8) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, i8, -128, 256),
-        (DataType::Float64, DataType::Uint16) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, u16, 0, 65536),
-        (DataType::Float64, DataType::Int16) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, i16, -32768, 65536),
-        (DataType::Float64, DataType::Uint32) => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, f64, u32, 4294967295),
-        (DataType::Float64, DataType::Int32) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, i32, -2147483648, 4294967296),
-        (DataType::Float64, DataType::Uint64) => type_cast_body_float_to_uint!(dst, src, dst_stride, src_stride, size, f64, u64, 18446744073709551615),
-        (DataType::Float64, DataType::Int64) => type_cast_body_float_to_int!(dst, src, dst_stride, src_stride, size, f64, i64, -9223372036854775808, 18446744073709551616),
-        (DataType::Float64, DataType::Float32) => type_cast_body!(dst, src, dst_stride, src_stride, size, f64, f32),
-        (DataType::Float64, DataType::Float64) => type_cast_body!(dst, src, dst_stride, src_stride, size, f64, f64),
+    match from {
+        DataType::Bool => type_cast_from_bool(dst, src, dst_stride, src_stride, size, to),
+        DataType::Uint8 => type_cast_from_uint8(dst, src, dst_stride, src_stride, size, to),
+        DataType::Int8 => type_cast_from_int8(dst, src, dst_stride, src_stride, size, to),
+        DataType::Uint16 => type_cast_from_uint16(dst, src, dst_stride, src_stride, size, to),
+        DataType::Int16 => type_cast_from_int16(dst, src, dst_stride, src_stride, size, to),
+        DataType::Uint32 => type_cast_from_uint32(dst, src, dst_stride, src_stride, size, to),
+        DataType::Int32 => type_cast_from_int32(dst, src, dst_stride, src_stride, size, to),
+        DataType::Uint64 => type_cast_from_uint64(dst, src, dst_stride, src_stride, size, to),
+        DataType::Int64 => type_cast_from_int64(dst, src, dst_stride, src_stride, size, to),
+        DataType::Float32 => type_cast_from_float32(dst, src, dst_stride, src_stride, size, to),
+        DataType::Float64 => type_cast_from_float64(dst, src, dst_stride, src_stride, size, to),
     }
 }
 
@@ -306,9 +240,9 @@ macro_rules! binary_op_body {
         let rhs_s = $rhs_stride as usize;
         for i in 0..$size as usize {
             unsafe {
-                let l = *($lhs.as_ptr().add(i * lhs_s) as *const $type);
-                let r = *($rhs.as_ptr().add(i * rhs_s) as *const $type);
-                *($out.as_mut_ptr().add(i * out_s) as *mut $type) = $func(l, r);
+                let l = *($lhs.as_ptr().add(i * lhs_s).cast::<$type>());
+                let r = *($rhs.as_ptr().add(i * rhs_s).cast::<$type>());
+                *($out.as_mut_ptr().add(i * out_s).cast::<$type>()) = $func(l, r);
             }
         }
     }};
@@ -356,59 +290,52 @@ fn sub_op<T: WrappingArith>(l: T, r: T) -> T { l.wrapping_sub(r) }
 fn mul_op<T: WrappingArith>(l: T, r: T) -> T { l.wrapping_mul(r) }
 fn div_op<T: std::ops::Div<Output = T>>(l: T, r: T) -> T { l / r }
 
+macro_rules! define_binary_op_on_type {
+    ($fn_name:ident, $op_type:ty, $div_type:ty) => {
+        #[inline(always)]
+        fn $fn_name(
+            op_type: ScalarBinaryOpType,
+            out: &mut [u8], lhs: &[u8], rhs: &[u8],
+            out_stride: Index, lhs_stride: Index, rhs_stride: Index, size: Index,
+        ) {
+            match op_type {
+                ScalarBinaryOpType::Add => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, $op_type),
+                ScalarBinaryOpType::Sub => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, $op_type),
+                ScalarBinaryOpType::Mul => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, $op_type),
+                ScalarBinaryOpType::Div => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, $div_type),
+            }
+        }
+    };
+}
+
+define_binary_op_on_type!(binary_op_bool, u8, f64);
+define_binary_op_on_type!(binary_op_uint8, u8, f64);
+define_binary_op_on_type!(binary_op_int8, i8, f64);
+define_binary_op_on_type!(binary_op_uint16, u16, f64);
+define_binary_op_on_type!(binary_op_int16, i16, f64);
+define_binary_op_on_type!(binary_op_uint32, u32, f64);
+define_binary_op_on_type!(binary_op_int32, i32, f64);
+define_binary_op_on_type!(binary_op_uint64, u64, f64);
+define_binary_op_on_type!(binary_op_int64, i64, f64);
+define_binary_op_on_type!(binary_op_float32, f32, f32);
+define_binary_op_on_type!(binary_op_float64, f64, f64);
+
 pub fn scalar_binary_op(
     op_type: ScalarBinaryOpType, dtype: DataType,
     out: &mut [u8], lhs: &[u8], rhs: &[u8],
     out_stride: Index, lhs_stride: Index, rhs_stride: Index, size: Index,
 ) {
-    match (op_type, dtype) {
-        (ScalarBinaryOpType::Add, DataType::Bool) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, u8),
-        (ScalarBinaryOpType::Add, DataType::Uint8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, u8),
-        (ScalarBinaryOpType::Add, DataType::Int8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, i8),
-        (ScalarBinaryOpType::Add, DataType::Uint16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, u16),
-        (ScalarBinaryOpType::Add, DataType::Int16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, i16),
-        (ScalarBinaryOpType::Add, DataType::Uint32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, u32),
-        (ScalarBinaryOpType::Add, DataType::Int32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, i32),
-        (ScalarBinaryOpType::Add, DataType::Uint64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, u64),
-        (ScalarBinaryOpType::Add, DataType::Int64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, i64),
-        (ScalarBinaryOpType::Add, DataType::Float32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, f32),
-        (ScalarBinaryOpType::Add, DataType::Float64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, add_op, f64),
-
-        (ScalarBinaryOpType::Sub, DataType::Bool) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, u8),
-        (ScalarBinaryOpType::Sub, DataType::Uint8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, u8),
-        (ScalarBinaryOpType::Sub, DataType::Int8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, i8),
-        (ScalarBinaryOpType::Sub, DataType::Uint16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, u16),
-        (ScalarBinaryOpType::Sub, DataType::Int16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, i16),
-        (ScalarBinaryOpType::Sub, DataType::Uint32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, u32),
-        (ScalarBinaryOpType::Sub, DataType::Int32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, i32),
-        (ScalarBinaryOpType::Sub, DataType::Uint64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, u64),
-        (ScalarBinaryOpType::Sub, DataType::Int64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, i64),
-        (ScalarBinaryOpType::Sub, DataType::Float32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, f32),
-        (ScalarBinaryOpType::Sub, DataType::Float64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, sub_op, f64),
-
-        (ScalarBinaryOpType::Mul, DataType::Bool) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, u8),
-        (ScalarBinaryOpType::Mul, DataType::Uint8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, u8),
-        (ScalarBinaryOpType::Mul, DataType::Int8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, i8),
-        (ScalarBinaryOpType::Mul, DataType::Uint16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, u16),
-        (ScalarBinaryOpType::Mul, DataType::Int16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, i16),
-        (ScalarBinaryOpType::Mul, DataType::Uint32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, u32),
-        (ScalarBinaryOpType::Mul, DataType::Int32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, i32),
-        (ScalarBinaryOpType::Mul, DataType::Uint64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, u64),
-        (ScalarBinaryOpType::Mul, DataType::Int64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, i64),
-        (ScalarBinaryOpType::Mul, DataType::Float32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, f32),
-        (ScalarBinaryOpType::Mul, DataType::Float64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, mul_op, f64),
-
-        (ScalarBinaryOpType::Div, DataType::Bool) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Uint8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Int8) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Uint16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Int16) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Uint32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Int32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Uint64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Int64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-        (ScalarBinaryOpType::Div, DataType::Float32) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f32),
-        (ScalarBinaryOpType::Div, DataType::Float64) => binary_op_body!(out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size, div_op, f64),
-
-        }
+    match dtype {
+        DataType::Bool => binary_op_bool(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Uint8 => binary_op_uint8(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Int8 => binary_op_int8(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Uint16 => binary_op_uint16(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Int16 => binary_op_int16(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Uint32 => binary_op_uint32(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Int32 => binary_op_int32(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Uint64 => binary_op_uint64(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Int64 => binary_op_int64(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Float32 => binary_op_float32(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+        DataType::Float64 => binary_op_float64(op_type, out, lhs, rhs, out_stride, lhs_stride, rhs_stride, size),
+    }
 }

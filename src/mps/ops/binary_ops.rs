@@ -21,7 +21,7 @@ fn try_gpu_binary_op(
     let a_buf = mps::tensor_metal_buffer(self_t)?;
     let b_buf = mps::tensor_metal_buffer(other)?;
 
-    let out = Tensor::with_device_type(DataType::Float32, self_t.shape(), DeviceType::MPS);
+    let out = Tensor::with_device_type(DataType::Float32, self_t.shape(), DeviceType::Mps);
     let out_buf = mps::tensor_metal_buffer(&out)?;
 
     let nelems = self_t.nelems() as u64;
@@ -41,7 +41,7 @@ fn try_gpu_binary_op(
 }
 
 pub fn add(self_t: &Tensor, other: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS {
+    if self_t.device_type() == DeviceType::Mps {
         if let Some(result) = try_gpu_binary_op("add_f32", self_t, other) {
             return result;
         }
@@ -50,7 +50,7 @@ pub fn add(self_t: &Tensor, other: &Tensor) -> Tensor {
 }
 
 pub fn sub(self_t: &Tensor, other: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS {
+    if self_t.device_type() == DeviceType::Mps {
         if let Some(result) = try_gpu_binary_op("sub_f32", self_t, other) {
             return result;
         }
@@ -59,7 +59,7 @@ pub fn sub(self_t: &Tensor, other: &Tensor) -> Tensor {
 }
 
 pub fn mul(self_t: &Tensor, other: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS {
+    if self_t.device_type() == DeviceType::Mps {
         if let Some(result) = try_gpu_binary_op("mul_f32", self_t, other) {
             return result;
         }
@@ -68,7 +68,7 @@ pub fn mul(self_t: &Tensor, other: &Tensor) -> Tensor {
 }
 
 pub fn truediv(self_t: &Tensor, other: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS {
+    if self_t.device_type() == DeviceType::Mps {
         if let Some(result) = try_gpu_binary_op("div_f32", self_t, other) {
             return result;
         }
@@ -86,7 +86,7 @@ fn scalar_to_tensor(s: &Scalar) -> Tensor {
 }
 
 pub fn add_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("add_f32", self_t, &other_br) {
@@ -97,7 +97,7 @@ pub fn add_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
 }
 
 pub fn sub_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("sub_f32", self_t, &other_br) {
@@ -108,7 +108,7 @@ pub fn sub_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
 }
 
 pub fn mul_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("mul_f32", self_t, &other_br) {
@@ -119,7 +119,7 @@ pub fn mul_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
 }
 
 pub fn truediv_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("div_f32", self_t, &other_br) {
@@ -130,7 +130,7 @@ pub fn truediv_scalar(self_t: &Tensor, other: &Scalar) -> Tensor {
 }
 
 pub fn add_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("add_f32", &other_br, self_t) {
@@ -141,7 +141,7 @@ pub fn add_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
 }
 
 pub fn sub_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("sub_f32", &other_br, self_t) {
@@ -152,7 +152,7 @@ pub fn sub_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
 }
 
 pub fn mul_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("mul_f32", &other_br, self_t) {
@@ -163,7 +163,7 @@ pub fn mul_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
 }
 
 pub fn truediv_scalar_reverse(other: &Scalar, self_t: &Tensor) -> Tensor {
-    if self_t.device_type() == DeviceType::MPS && self_t.dtype() == DataType::Float32 {
+    if self_t.device_type() == DeviceType::Mps && self_t.dtype() == DataType::Float32 {
         let other_t = scalar_to_tensor(other);
         let other_br = other_t.broadcast_to_shape(self_t.shape(), 0);
         if let Some(result) = try_gpu_binary_op("div_f32", &other_br, self_t) {

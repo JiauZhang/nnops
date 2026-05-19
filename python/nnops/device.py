@@ -3,7 +3,6 @@
 from nnops._rs import (
     CPU,
     CUDA,
-    NPU,
     MPS,
     show_device_info,
     is_device_available,
@@ -12,7 +11,6 @@ from nnops._rs import (
 __all__ = [
     "CPU",
     "CUDA",
-    "NPU",
     "MPS",
     "show_device_info",
     "is_device_available",

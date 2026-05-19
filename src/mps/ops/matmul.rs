@@ -4,7 +4,7 @@ use crate::device::DeviceType;
 use crate::mps;
 
 pub fn matmul(lvalue: &Tensor, rvalue: &Tensor) -> Tensor {
-    if lvalue.device_type() != DeviceType::MPS
+    if lvalue.device_type() != DeviceType::Mps
         || lvalue.dtype() != DataType::Float32
         || rvalue.dtype() != DataType::Float32
     {
@@ -24,7 +24,7 @@ pub fn matmul(lvalue: &Tensor, rvalue: &Tensor) -> Tensor {
     let k = lvalue.shape_at(-1) as u32;
     let n = rvalue.shape_at(-1) as u32;
 
-    let out = Tensor::with_device_type(DataType::Float32, &vec![m as i64, n as i64], DeviceType::MPS);
+    let out = Tensor::with_device_type(DataType::Float32, &vec![m as i64, n as i64], DeviceType::Mps);
     let out_buf = match mps::tensor_metal_buffer(&out) {
         Some(buf) => buf,
         None => return crate::cpu::ops::matmul::matmul(lvalue, rvalue),
@@ -36,7 +36,7 @@ pub fn matmul(lvalue: &Tensor, rvalue: &Tensor) -> Tensor {
                 &ctx.queue,
                 pso,
                 &[a_buf, b_buf, out_buf],
-                &[(m, 3), (n, 4), (k, 5)],
+                &[m, n, k],
                 m as u64,
                 n as u64,
             );

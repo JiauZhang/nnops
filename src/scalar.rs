@@ -41,33 +41,33 @@ impl Scalar {
 
     pub fn as_bytes(&self) -> &[u8] {
         match self {
-            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 1) },
+            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 1) },
             Scalar::Uint8(v) => unsafe { std::slice::from_raw_parts(v, 1) },
-            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 1) },
-            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 2) },
-            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 2) },
-            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
-            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
-            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
-            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
-            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 4) },
-            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v) as *const u8, 8) },
+            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 1) },
+            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 2) },
+            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 2) },
+            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 4) },
+            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 4) },
+            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 4) },
+            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 8) },
+            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 8) },
+            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts(std::ptr::from_ref(v).cast(), 8) },
         }
     }
 
     fn as_bytes_mut(&mut self) -> &mut [u8] {
         match self {
-            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 1) },
+            Scalar::Bool(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 1) },
             Scalar::Uint8(v) => unsafe { std::slice::from_raw_parts_mut(v, 1) },
-            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 1) },
-            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 2) },
-            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 2) },
-            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
-            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
-            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
-            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
-            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 4) },
-            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v) as *mut u8, 8) },
+            Scalar::Int8(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 1) },
+            Scalar::Uint16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 2) },
+            Scalar::Int16(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 2) },
+            Scalar::Uint32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 4) },
+            Scalar::Int32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 4) },
+            Scalar::Float32(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 4) },
+            Scalar::Uint64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 8) },
+            Scalar::Int64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 8) },
+            Scalar::Float64(v) => unsafe { std::slice::from_raw_parts_mut(std::ptr::from_mut(v).cast(), 8) },
         }
     }
 

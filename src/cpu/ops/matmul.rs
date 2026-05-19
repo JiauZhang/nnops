@@ -16,21 +16,21 @@ fn matmul_2d_impl(lvalue: *const u8, rvalue: *const u8, out: *mut u8, shape: &[I
         let mut lv_ns: Index = 0;
         let mut rv_ns: Index = 0;
 
-        let mut out_mk = out_m as *mut f32;
+        let mut out_mk = out_m.cast::<f32>();
         for _ in 0..shape[2] {
             unsafe { *out_mk = 0.0; }
-            out_mk = unsafe { (out_mk as *mut u8).offset(strides[5] as isize) as *mut f32 };
+            out_mk = unsafe { out_mk.cast::<u8>().offset(strides[5] as isize).cast::<f32>() };
         }
 
         for _ in 0..shape[1] {
-            let lv_mn = unsafe { (lvalue.offset(lv_ms as isize).offset(lv_ns as isize)) as *const f32 };
-            let mut rv_nk = unsafe { (rvalue.offset(rv_ns as isize)) as *const f32 };
-            out_mk = out_m as *mut f32;
+            let lv_mn = unsafe { lvalue.offset(lv_ms as isize).offset(lv_ns as isize).cast::<f32>() };
+            let mut rv_nk = unsafe { rvalue.offset(rv_ns as isize).cast::<f32>() };
+            out_mk = out_m.cast::<f32>();
             for _ in 0..shape[2] {
                 unsafe {
                     *out_mk += (*lv_mn) * (*rv_nk);
-                    out_mk = (out_mk as *mut u8).offset(strides[5] as isize) as *mut f32;
-                    rv_nk = (rv_nk as *const u8).offset(strides[3] as isize) as *const f32;
+                    out_mk = out_mk.cast::<u8>().offset(strides[5] as isize).cast::<f32>();
+                    rv_nk = rv_nk.cast::<u8>().offset(strides[3] as isize).cast::<f32>();
                 }
             }
             lv_ns += strides[1];

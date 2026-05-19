@@ -3,8 +3,7 @@
 pub enum DeviceType {
     Cpu = 0,
     Cuda,
-    Npu,
-    MPS,
+    Mps,
 }
 
 impl DeviceType {
@@ -12,8 +11,7 @@ impl DeviceType {
         match self {
             DeviceType::Cpu => true,
             DeviceType::Cuda => false,
-            DeviceType::Npu => false,
-            DeviceType::MPS => {
+            DeviceType::Mps => {
                 #[cfg(feature = "mps")]
                 {
                     crate::mps::is_available()
@@ -31,8 +29,7 @@ impl DeviceType {
 pub enum Device {
     Cpu(CpuDevice),
     Cuda(CudaDevice),
-    Npu(NpuDevice),
-    MPS(MpsDevice),
+    Mps(MpsDevice),
 }
 
 impl Device {
@@ -40,8 +37,7 @@ impl Device {
         match device_type {
             DeviceType::Cpu => Device::Cpu(CpuDevice),
             DeviceType::Cuda => Device::Cuda(CudaDevice),
-            DeviceType::Npu => Device::Npu(NpuDevice),
-            DeviceType::MPS => Device::MPS(MpsDevice),
+            DeviceType::Mps => Device::Mps(MpsDevice),
         }
     }
 
@@ -49,8 +45,7 @@ impl Device {
         match self {
             Device::Cpu(_) => DeviceType::Cpu,
             Device::Cuda(_) => DeviceType::Cuda,
-            Device::Npu(_) => DeviceType::Npu,
-            Device::MPS(_) => DeviceType::MPS,
+            Device::Mps(_) => DeviceType::Mps,
         }
     }
 
@@ -58,8 +53,7 @@ impl Device {
         match self {
             Device::Cpu(_) => "cpu",
             Device::Cuda(_) => "cuda",
-            Device::Npu(_) => "npu",
-            Device::MPS(_) => "mps",
+            Device::Mps(_) => "mps",
         }
     }
 }
@@ -72,8 +66,6 @@ impl CpuDevice {
 
 #[derive(Debug, Clone)]
 pub struct CudaDevice;
-#[derive(Debug, Clone)]
-pub struct NpuDevice;
 
 #[derive(Debug, Clone)]
 pub struct MpsDevice;

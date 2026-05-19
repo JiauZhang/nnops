@@ -1,3 +1,5 @@
+#![allow(clippy::useless_conversion)]
+
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 use pyo3::exceptions::PyTypeError;
@@ -50,10 +52,9 @@ fn linear(input: &PyTensor, weight: &PyTensor, bias: Option<&PyTensor>) -> PyTen
 fn show_device_info(device: &Bound<'_, PyAny>) -> PyResult<String> {
     let name = if let Ok(py_dt) = device.extract::<PyDeviceType>() {
         match py_dt {
-            PyDeviceType::CPU => "CPU".to_string(),
-            PyDeviceType::CUDA => "CUDA".to_string(),
-            PyDeviceType::NPU => "NPU".to_string(),
-            PyDeviceType::MPS => "MPS".to_string(),
+            PyDeviceType::Cpu => "CPU".to_string(),
+            PyDeviceType::Cuda => "CUDA".to_string(),
+            PyDeviceType::Mps => "MPS".to_string(),
         }
     } else if let Ok(s) = device.extract::<String>() {
         s

@@ -11,7 +11,7 @@ impl TensorBuffer {
     pub fn new(device: &Device, size: usize) -> Self {
         match device {
             Device::Cpu(_) => TensorBuffer::Cpu(UnsafeCell::new(vec![0u8; size])),
-            Device::MPS(_) => {
+            Device::Mps(_) => {
                 #[cfg(feature = "mps")]
                 if crate::mps::is_available() {
                     if let Some(buf) = crate::mps::MpsBuffer::new(size) {
@@ -21,7 +21,6 @@ impl TensorBuffer {
                 panic!("MPS device is not available on this system. Build with `--features mps` and ensure Metal is supported.");
             }
             Device::Cuda(_) => panic!("CUDA device is not available. Build with `--features cuda`."),
-            Device::Npu(_) => panic!("NPU device is not available."),
         }
     }
 
@@ -29,7 +28,7 @@ impl TensorBuffer {
         match self {
             TensorBuffer::Cpu(_) => DeviceType::Cpu,
             #[cfg(feature = "mps")]
-            TensorBuffer::Mps(_) => DeviceType::MPS,
+            TensorBuffer::Mps(_) => DeviceType::Mps,
         }
     }
 

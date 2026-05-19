@@ -137,11 +137,10 @@ impl TensorMeta {
         nnops_check!(dims[0] != dims[1], "repeated axis in transpose");
 
         let mut meta = self.clone();
-        for i in 0..2 {
-            let idx = i ^ 1;
-            meta.dims[dims[i] as usize] = self.dims[dims[idx] as usize];
-            meta.strides[dims[i] as usize] = self.strides[dims[idx] as usize];
-        }
+        meta.dims[dims[0] as usize] = self.dims[dims[1] as usize];
+        meta.strides[dims[0] as usize] = self.strides[dims[1] as usize];
+        meta.dims[dims[1] as usize] = self.dims[dims[0] as usize];
+        meta.strides[dims[1] as usize] = self.strides[dims[0] as usize];
         meta
     }
 
