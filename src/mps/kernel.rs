@@ -7,7 +7,11 @@ pub struct KernelCache {
 impl KernelCache {
     pub fn new(device: &metal::Device, library: &metal::Library) -> Self {
         let mut pipelines = HashMap::new();
-        let kernel_names = ["add_f32", "sub_f32", "mul_f32", "div_f32", "matmul_f32"];
+        let kernel_names = [
+            "add_f32", "sub_f32", "mul_f32", "div_f32",
+            "matmul_f32", "matmul_i32", "matmul_u32",
+            "matmul_i16", "matmul_u16", "matmul_i8", "matmul_u8",
+        ];
         for name in &kernel_names {
             if let Ok(func) = library.get_function(name, None) {
                 if let Ok(pso) = device.new_compute_pipeline_state_with_function(&func) {
